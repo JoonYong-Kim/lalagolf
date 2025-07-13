@@ -44,30 +44,67 @@ def round_detail(round_id):
     round_info = cursor.fetchone()
 
     cursor.execute("SELECT * FROM holes WHERE roundid = %s ORDER BY holenum", (round_id,))
-    holes = cursor.fetchall()
+    holes_from_db = cursor.fetchall()
 
     cursor.execute("SELECT * FROM shots WHERE roundid = %s ORDER BY id", (round_id,))
-    shots = cursor.fetchall()
+    shots_from_db = cursor.fetchall()
 
     # Map 'feelgrade' from DB to 'feel' for data_parser compatibility
-    for shot in shots:
-        if 'feelgrade' in shot:
-            shot['feel'] = shot['feelgrade']
-            del shot['feelgrade']
-        if 'retgrade' in shot:
-            shot['result'] = shot['retgrade']
-            del shot['retgrade']
-        if 'shotplace' in shot:
-            shot['on'] = shot['shotplace']
-            del shot['shotplace']
+    # And prepare shots for GIR calculation
+    processed_shots = []
+    for shot in shots_from_db:
+        processed_shot = shot.copy() # Create a copy to avoid modifying original dict from cursor
+        if 'feelgrade' in processed_shot:
+            processed_shot['feel'] = processed_shot['feelgrade']
+            del processed_shot['feelgrade']
+        if 'retgrade' in processed_shot:
+            processed_shot['result'] = processed_shot['retgrade']
+            del processed_shot['retgrade']
+        if 'shotplace' in processed_shot:
+            processed_shot['on'] = processed_shot['shotplace']
+            del processed_shot['shotplace']
+        if processed_shot['error']:
+            tmp = processed_shot['error'] / processed_shot['distance']
+            processed_shot['eresult'] = 'A' if tmp < 0.05 else 'B' if tmp < 0.1 else 'C'
+        processed_shots.append(processed_shot)
 
-        if shot['error']:
-            tmp = shot['error'] / shot['distance']
-            shot['eresult'] = 'A' if tmp < 0.05 else 'B' if tmp < 0.1 else 'C'
+    # Group shots by hole for easier GIR calculation
+    holes_with_shots = {}
+    for hole_info in holes_from_db:
+        holes_with_shots[hole_info['holenum']] = {
+            'hole_info': hole_info,
+            'shots': []
+        }
+    for shot in processed_shots:
+        if shot['holenum'] in holes_with_shots:
+            holes_with_shots[shot['holenum']]['shots'].append(shot)
+
+    # Calculate GIR for each hole and prepare for 9-hole display
+    front_nine_holes = []
+    back_nine_holes = []
+    for holenum in sorted(holes_with_shots.keys()):
+        hole_data = holes_with_shots[holenum]['hole_info']
+        hole_shots = holes_with_shots[holenum]['shots']
+        
+        gir_status = False
+        strokes_to_green = 0
+        for shot_idx, shot in enumerate(hole_shots):
+            strokes_to_green += shot['score'] # Assuming shot['score'] is 1 for normal shots, >1 for penalties
+            if shot['on'] == 'G': # Ball landed on the green
+                if strokes_to_green <= hole_data['par'] - 2:
+                    gir_status = True
+                break # Found the shot that landed on the green, no need to check further shots for GIR
+        
+        hole_data['gir'] = gir_status # Add GIR status to hole data
+        
+        if holenum <= 9:
+            front_nine_holes.append(hole_data)
+        else:
+            back_nine_holes.append(hole_data)
 
     # Prepare data for club analysis chart
     club_counts = {}
-    for shot in shots:
+    for shot in processed_shots:
         club = shot['club']
         if club in club_counts:
             club_counts[club] += 1
@@ -78,12 +115,19 @@ def round_detail(round_id):
     club_data = list(club_counts.values())
 
     # Analyze detailed shot statistics
-    detailed_shot_stats = analyze_shots_and_stats(shots)
+    detailed_shot_stats = analyze_shots_and_stats(processed_shots)
 
     cursor.close()
     conn.close()
 
-    return render_template('round_detail.html', round_info=round_info, holes=holes, shots=shots, club_labels=club_labels, club_data=club_data, detailed_shot_stats=detailed_shot_stats)
+    return render_template('round_detail.html', 
+                           round_info=round_info, 
+                           front_nine_holes=front_nine_holes, 
+                           back_nine_holes=back_nine_holes, 
+                           shots=processed_shots, # Still pass processed_shots for the detailed shots table
+                           club_labels=club_labels, 
+                           club_data=club_data, 
+                           detailed_shot_stats=detailed_shot_stats)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

@@ -104,26 +104,82 @@
     </div>
 
     <h2>Holes</h2>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Hole</th>
-                <th>Par</th>
-                <th>Score</th>
-                <th>Putts</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for hole in holes %}
-            <tr>
-                <td>{{ hole.holenum }}</td>
-                <td>{{ hole.par }}</td>
-                <td>{{ hole.score }}</td>
-                <td>{{ hole.putt }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+    <div class="row">
+        <div class="col-md-6">
+            <h5>Front Nine</h5>
+            <table class="table table-bordered table-sm">
+                <thead>
+                    <tr>
+                        <th>Hole</th>
+                        {% for i in range(1, 10) %}
+                        <th>{{ i }}</th>
+                        {% endfor %}
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Par</td>
+                        {% for hole in front_nine_holes %}
+                        <td>{{ hole.par }}</td>
+                        {% endfor %}
+                        <td>{{ front_nine_holes | sum(attribute='par') }}</td>
+                    </tr>
+                    <tr>
+                        <td>Score</td>
+                        {% for hole in front_nine_holes %}
+                        <td>{{ hole.score }}</td>
+                        {% endfor %}
+                        <td>{{ front_nine_holes | sum(attribute='score') }}</td>
+                    </tr>
+                    <tr>
+                        <td>GIR</td>
+                        {% for hole in front_nine_holes %}
+                        <td>{{ '&#10003;' if hole.gir else '&#10007;' }}</td>
+                        {% endfor %}
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <h5>Back Nine</h5>
+            <table class="table table-bordered table-sm">
+                <thead>
+                    <tr>
+                        <th>Hole</th>
+                        {% for i in range(10, 19) %}
+                        <th>{{ i }}</th>
+                        {% endfor %}
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Par</td>
+                        {% for hole in back_nine_holes %}
+                        <td>{{ hole.par }}</td>
+                        {% endfor %}
+                        <td>{{ back_nine_holes | sum(attribute='par') }}</td>
+                    </tr>
+                    <tr>
+                        <td>Score</td>
+                        {% for hole in back_nine_holes %}
+                        <td>{{ hole.score }}</td>
+                        {% endfor %}
+                        <td>{{ back_nine_holes | sum(attribute='score') }}</td>
+                    </tr>
+                    <tr>
+                        <td>GIR</td>
+                        {% for hole in back_nine_holes %}
+                        <td>{{ '&#10003;' if hole.gir else '&#10007;' }}</td>
+                        {% endfor %}
+                        <td>-</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 
     <h2>Shots</h2>
     <table class="table table-bordered">
