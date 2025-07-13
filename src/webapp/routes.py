@@ -18,12 +18,28 @@ def login_required(f):
     return decorated_function
 
 @app.route('/')
+@app.route('/rounds')
 def round_list():
     db_config = current_app.config['DB_CONFIG']
     conn = get_db_connection(db_config)
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM rounds WHERE score IS NOT NULL ORDER BY playdate ASC")
+    current_year = datetime.now().year
+    selected_year = request.args.get('year', 'all')
+
+    query = "SELECT * FROM rounds WHERE score IS NOT NULL"
+    params = []
+
+    if selected_year == 'current':
+        query += " AND YEAR(playdate) = %s"
+        params.append(current_year)
+    elif selected_year == 'previous':
+        query += " AND YEAR(playdate) = %s"
+        params.append(current_year - 1)
+    
+    query += " ORDER BY playdate ASC"
+
+    cursor.execute(query, params)
     rounds = cursor.fetchall()
 
     cursor.close()
@@ -33,7 +49,20 @@ def round_list():
     labels = [r['playdate'].strftime('%Y-%m-%d') for r in rounds]
     data = [r['score'] for r in rounds]
 
-    return render_template('rounds.html', rounds=rounds, labels=labels, data=data)
+    # Get all unique years from the database
+    cursor.execute("SELECT DISTINCT YEAR(playdate) AS year FROM rounds ORDER BY year DESC")
+    unique_years = [row['year'] for row in cursor.fetchall()]
+
+    cursor.close()
+    conn.close()
+
+    return render_template('rounds.html', 
+                           rounds=rounds, 
+                           labels=labels, 
+                           data=data, 
+                           current_year=current_year,
+                           selected_year=selected_year,
+                           unique_years=unique_years)
 
 @app.route('/delete_round/<int:round_id>', methods=['POST'])
 @login_required

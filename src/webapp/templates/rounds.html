@@ -15,6 +15,15 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>Golf Rounds</h1>
+            <div class="form-group mb-0">
+                <label for="yearFilter" class="sr-only">Filter by Year</label>
+                <select class="form-control" id="yearFilter" onchange="filterRounds(this.value)">
+                    <option value="all" {% if selected_year == 'all' %}selected{% endif %}>전체보기</option>
+                    {% for year in unique_years %}
+                        <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}년</option>
+                    {% endfor %}
+                </select>
+            </div>
             <div>
                 {% if session.logged_in %}
                     <span class="mr-3">Logged in as: {{ session.username }}</span>
@@ -77,6 +86,10 @@
                 }
             }
         });
+
+        function filterRounds(year) {
+            window.location.href = "{{ url_for('round_list') }}?year=" + year;
+        }
     </script>
 </body>
 </html>
