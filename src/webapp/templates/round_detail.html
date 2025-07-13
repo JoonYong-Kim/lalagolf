@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Round Details</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { padding-top: 20px; }
+        .container { max-width: 960px; }
+        table { width: 100%; margin-top: 20px; }
+        th, td { padding: 8px; border: 1px solid #dee2e6; }
+        th { background-color: #f8f9fa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>Round on {{ round_info.playdate.strftime('%Y-%m-%d') }}</h1>
+            <div>
+                {% if session.logged_in %}
+                    <span class="mr-3">Logged in as: {{ session.username }}</span>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <p>Score: {{ round_info.score }}</p>
+
+        <h3 class="mt-4">Detailed Shot Statistics</h3>
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Penalty & Concede Stats</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th>Type</th><th>Count</th><th>Percentage</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Hazard (H)</td><td>{{ detailed_shot_stats.raw_stats.H }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.H * 100) }}%</td></tr>
+                        <tr><td>Out of Bounds (OB)</td><td>{{ detailed_shot_stats.raw_stats.OB }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.OB * 100) }}%</td></tr>
+                        <tr><td>Unplayable (UN)</td><td>{{ detailed_shot_stats.raw_stats.UN }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.UN * 100) }}%</td></tr>
+                        <tr><td>Conceded (OK)</td><td>{{ detailed_shot_stats.raw_stats.OK }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.OK * 100) }}%</td></tr>
+                        <tr><td>Wedge Conceded (WOK)</td><td>{{ detailed_shot_stats.raw_stats.WOK }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.WOK * 100) }}%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h5>Feel-Result Combinations</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th>Combination</th><th>Count</th><th>Percentage</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Solid Shot (SA)</td><td>{{ detailed_shot_stats.raw_stats.SA }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.SA * 100) }}%</td></tr>
+                        <tr><td>Bad Touch (BT)</td><td>{{ detailed_shot_stats.raw_stats.BT }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.BT * 100) }}%</td></tr>
+                        <tr><td>Weak Shot (WS)</td><td>{{ detailed_shot_stats.raw_stats.WS }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.WS * 100) }}%</td></tr>
+                    </tbody>
+                </table>
+                <h5>Bunker Stats</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th>Type</th><th>Percentage</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Bunker Shots</td><td>{{ "%.2f" % (detailed_shot_stats.bunker_stats.B * 100) }}%</td></tr>
+                        <tr><td>Exited Sand Bunker (ESB)</td><td>{{ "%.2f" % (detailed_shot_stats.bunker_stats.ESB * 100) }}%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <h5 class="mt-4">Club Feel Statistics (A/B/C Percentages)</h5>
+        <table class="table table-bordered table-sm">
+            <thead>
+                <tr>
+                    <th>Club Type</th>
+                    <th>A (%)</th>
+                    <th>B (%)</th>
+                    <th>C (%)</th>
+                    <th>Total Usage (%)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for club_type, stats in detailed_shot_stats.club_feel_stats.items() %}
+                <tr>
+                    <td>{{ club_type }}</td>
+                    <td>{{ "%.2f" % (stats.A * 100) }}</td>
+                    <td>{{ "%.2f" % (stats.B * 100) }}</td>
+                    <td>{{ "%.2f" % (stats.C * 100) }}</td>
+                    <td>{{ "%.2f" % (stats.total_percentage * 100) }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    <div style="width: 50%; margin: auto;">
+        <canvas id="clubChart"></canvas>
+    </div>
+
+    <h2>Holes</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Hole</th>
+                <th>Par</th>
+                <th>Score</th>
+                <th>Putts</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for hole in holes %}
+            <tr>
+                <td>{{ hole.holenum }}</td>
+                <td>{{ hole.par }}</td>
+                <td>{{ hole.score }}</td>
+                <td>{{ hole.putt }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Shots</h2>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Hole</th>
+                <th>Club</th>
+                <th>Feel</th>
+                <th>Result</th>
+                <th>Distance</th>
+                <th>Penalty</th>
+                <th>Concede</th>
+                <th>Retplace</th>
+                <th>Error</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for shot in shots %}
+            <tr>
+                <td>{{ shot.holenum }}</td>
+                <td>{{ shot.club }}</td>
+                <td>{{ shot.feelgrade }}</td>
+                <td>{{ shot.retgrade }}</td>
+                <td>{{ shot.distance }}</td>
+                <td>{{ shot.penalty if shot.penalty else '-' }}</td>
+                <td>{{ 'Yes' if shot.concede else 'No' }}</td>
+                <td>{{ shot.retplace if shot.retplace else '-' }}</td>
+                <td>{{ shot.error if shot.error is not none else '-' }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        const ctx = document.getElementById('clubChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: {{ club_labels | tojson }},
+                datasets: [{
+                    label: 'Club Usage',
+                    data: {{ club_data | tojson }},
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.2)',
+                        'rgba(54, 162, 235, 0.2)',
+                        'rgba(255, 206, 86, 0.2)',
+                        'rgba(75, 192, 192, 0.2)',
+                        'rgba(153, 102, 255, 0.2)',
+                        'rgba(255, 159, 64, 0.2)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)',
+                        'rgba(255, 159, 64, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            }
+        });
+    </script>
+</body>
+</html>

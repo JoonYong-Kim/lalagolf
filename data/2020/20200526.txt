@@ -1,0 +1,97 @@
+2020.05.26 08:09 
+히든밸리
+조인
+1 P5
+D B A
+U3 B B
+IP C B 97
+56 B B 10
+P B B 4 OK
+2 P4
+D B C
+I4 A C B
+56 C C
+56 C C
+P B B 10 OK
+3 P4
+D C C OB
+52 C C 60
+P B A 20 OK
+4 P3
+I6 C C
+56 B B
+P B B 7 OK
+5 P4
+D B A
+56 B B 40
+P A B 8
+6 P3
+I8 C C H
+56 C B 15
+P C C 2 OK
+7 P5
+D B B H
+I5 A C B
+I8 B B
+52 A B 60
+P A B 10 OK
+8 P4
+D B A
+I7 C C H
+56 B B
+P B B 5 OK
+9 P4
+D B C H
+IP C C
+56 B A
+P B A 3
+10 P4
+D B A
+I6 C B
+56 B B
+P C B 5 OK
+11 P4
+D B A
+IP B B
+P C C 20
+P B B 10 OK
+12 P5
+D A B
+U3 B C H
+I5 C B
+P C C 20
+P B C 4 OK
+13 P4
+D A B
+IP A A
+P C C 4
+P C B 3 OK
+14 P3
+I8 C C
+56 C A
+56 C C
+P B A 20
+P C C 2 OK
+15 P5
+D A B
+U3 A B
+52 C C
+56 B C
+56 C C
+P B B 10 OK
+16 P3
+U3 C C
+56 B C
+56 A B
+P B B 3
+17 P4
+D A B
+I5 C C
+56 B C
+P C C 10
+P B B 3 OK
+18 P4
+D C C
+I9 A B
+P C C 10
+P B B 3 OK

@@ -1,0 +1,93 @@
+2021.05.07 6:50
+메이플비치
+박수현 김수현 장타자
+1 P4
+D C B
+I8 C C H
+52 B B 70
+P B B 6 OK
+2 P5
+D C C H
+U4 B B
+I8 B C B
+58 B B
+P B B 5 OK
+3 P4
+D B B
+IP B B
+P B C 11
+P C A 2
+4 P3
+I8 B B
+P B B 7 OK
+5 P5
+D C C
+U4 C C UN
+U4 B B
+56 B C 50
+56 B B 10
+P B B 3 OK
+6 P3
+IP B B
+P B B 4 OK
+7 P4
+D B B
+I7 B A
+P B C 2 OK
+8 P4
+W3 B B
+I8 B B
+P C C 15
+P B B 12 OK
+9 P4
+D C C H
+I5 C C B
+56 C B
+P B B 7 OK
+10 P4
+D B B
+I7 C C
+52 B B 18
+P B B 6 OK
+11 P5
+D B B
+U4 B B
+52 B B 60
+P B C 10
+P B C 3 OK
+12 P4
+D B B
+52 B B 85
+P B B 4 OK
+13 P4
+D C C H
+U4 C C 160
+I7 A C 130
+I9 B B 20
+P B B 3
+14 P3
+I8 C C B
+56 C C H
+P B B 8 OK
+15 P5
+W3 C B
+U4 B B
+I6 B C B
+56 C C H
+56 B B
+P B B 4 OK
+16 P4
+D B C B
+I6 B B
+56 B B
+P B B 3 OK
+17 P3
+I8 B B
+P B C 14
+P B B 4
+P B C 1.5 OK
+18 P4
+D B C B
+IP C B
+IP C C 8
+P B B 6 OK

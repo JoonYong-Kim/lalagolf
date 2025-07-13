@@ -1,0 +1,102 @@
+2021.04.09 8:3 
+메이플비치
+박수현 김호연 송대근
+1 P4
+D C C H
+U3 C C H
+IP B B 70
+P C B 7
+P C C 1.5 OK
+2 P5
+D C C B
+I7 C C B
+I7 B B
+U4 B B
+56 B C 45
+52 C C 11
+P A A 4
+3 P4
+D C B
+I6 B B
+P A B 15 OK
+4 P4
+D C B
+52 C C 85
+IP A A 23 OK
+5 P3
+I5 C C H
+IP C C 15
+P C C 6
+P A B 2 OK
+6 P5
+W3 C C H
+U4 C B
+I6 C B
+P B B 17
+P C B 3 OK
+7 P4
+D B B
+I6 C C
+56 C C B 35
+56 C C B
+56 C B
+P B B 9
+P B B 3
+8 P3
+I4 B B
+P C B 7
+P C C 2 OK
+9 P4
+D B B
+W3 B C
+56 C C B 55
+56 B C
+P B B 14 OK
+10 P4
+D B B
+I7 B C B
+56 B B
+P B C 7
+P B B 2
+11 P5
+D B B
+W3 C C
+I5 C C
+I9 B C
+P C C 12
+P B B 2 OK
+12 P4
+D B B
+IP B B
+IP B B 11 OK
+13 P3
+I6 B B
+P C B 10
+P C C 2 OK
+14 P5
+D B B
+W3 C C
+W3 C C
+W3 B C H
+52 B B
+P B C 7
+P C C 3 OK
+15 P3
+I8 C A
+P B B 1
+16 P4
+D C B
+I9 B C
+IP B B 17
+P C B 4 OK
+17 P4
+W3 B B
+I8 A C
+IP C B
+P C A 7
+18 P4
+D B C
+I5 C C B
+56 C C
+IP A B
+P B B 2

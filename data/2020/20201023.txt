@@ -1,0 +1,103 @@
+2020.10.23 07:29
+히든밸리
+바시공 박수현 김수현 박수현사촌형
+1 P5
+D B B
+I5 B B
+I5 C C
+I8 B B
+P C C 25
+P C C 8
+P B B 3
+2 P4
+D B B
+I6 C C
+56 B A
+P B C 2 OK
+3 P4
+D B B
+I8 C B
+P B C 6
+P C B 3 OK
+4 P3
+I7 B A
+P C C 4
+P C B 4 OK
+5 P4
+D C C B
+I8 C C B
+IP B B
+P B C 20
+P B C 4 OK
+6 P3
+I6 B B
+P B B 8 OK
+7 P5
+D C B
+U3 C C H
+I5 C B
+56 C C
+P B B 20
+P C C 2 OK
+8 P4
+D B B
+I5 C C
+52 B B
+56 B C
+P B B 4
+P B C 3 OK
+9 P4
+D B B
+I7 C C H
+56 B B
+P C C 6 OK
+10 P4
+D B B
+I5 C C
+56 B B 40
+56 B B 15
+P B C 2.5 OK
+11 P4
+D B B
+52 C C
+52 B B
+56 B B
+P C B 6
+P B C 2 OK
+12 P5
+D C C
+I5 B B
+I5 C B
+56 A B
+P C B 11
+P B B 2
+13 P4
+D B B
+I8 C A
+P B C 4
+P B B 2.5
+14 P3
+I9 C C
+IP B B 14
+P B B 6 OK
+15 P5
+D A B
+I5 B B
+52 C C
+52 C C 24
+P C C 10
+P C C 4
+P B B 15 OK
+16 P3
+U3 A A
+P C C 2 OK
+17 P4
+D B B
+U3 B B
+56 C C 38
+56 C B 18
+P B B 6 OK
+18 P4
+D B B
+I8 B A
+P C B 4 OK

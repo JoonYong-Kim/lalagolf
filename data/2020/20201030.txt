@@ -1,0 +1,105 @@
+2020.10.30 07:35
+세이지우드
+조인 김수현 관계자1 관계자2
+1 P5
+U3 C B
+I7 B B
+I9 C C
+52 B B
+P C C 9
+P B A 2.5
+2 P3
+I6 C C
+56 C C
+P C C 20
+P C C 10
+P B B 4 OK
+3 P4
+D C C
+I5 C C
+I5 B B
+P C B 6 OK
+4 P3
+IP B C
+IP C C
+IP B B
+P B B 9 OK
+5 P4
+U3 B B
+52 C C
+56 B B
+P B C 15
+P C C 4 OK
+6 P4
+D C B
+I5 C C H
+52 C B
+P B C 20
+P B A 4
+7 P5
+D B B
+I5 B B
+I9 C C B
+56 B C B
+56 C C B
+56 B C
+56 B B
+P B B 3
+8 P3
+U3 C C
+52 B A
+P C B 3 OK
+9 P5
+D C C
+I5 B B
+I5 C C H
+U3 C C H
+I7 B B
+P B B 20
+P B C 3 OK
+10 P4
+D B C
+I6 C C
+I7 B C B
+56 B B
+P C B 5
+P B B 2
+11 P5
+D B B
+U3 B B
+I9 B B
+P A A 10
+12 P4
+D B C
+I8 B B
+IP B B
+P B B 4 OK
+13 P3
+I8 C B
+P B B 7 OK
+14 P5
+D C C
+I5 B B
+I5 C C
+52 B A 60
+P B B 1.5
+15 P4
+I5 B B
+I9 C B
+P B C 15
+P B B 2
+16 P4
+D C B
+U3 C C
+I9 B B
+P B B 20 OK
+17 P3
+U3 C C
+52 C C B
+56 C C B
+56 B C
+56 B A OK
+18 P4
+D B B
+56 B B
+52 B B 8 OK

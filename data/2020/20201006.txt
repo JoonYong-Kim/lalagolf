@@ -1,0 +1,88 @@
+2020.10.06 08:34
+여주신라
+안양 중형타자 그리미스 콤팍
+1 P4
+D B B
+I8 C C
+56 B B
+P B B 3 OK
+2 P4
+D C B
+IP C C
+56 B A OK
+3 P5
+D C C OB
+I5 B B
+I9 B B
+P B B 6 OK
+4 P3
+I6 C C
+56 B C
+P B B 3.5 OK
+5 P4
+D C C OB
+I6 B B
+P C C 12
+P B B 7 OK
+6 P4
+D B C
+I6 C C
+56 B A
+P B B 3
+7 P3
+I5 C B
+P B C 14 OK
+8 P5
+D B B
+I5 C B
+IP B B
+P B B 10
+P B B 1.5
+9 P4
+D B A
+IP B B
+P B B 5 OK
+10 P5
+D C C
+I5 A B
+IP B B
+52 B B OK
+11 P4
+D C B
+I7 C B
+P A B 7.5 OK
+12 P4
+D B B
+I6 B B
+P B C 18
+P B C 3 OK
+13 P4
+D C C OB
+I9 C C B
+56 C C
+56 A B 20
+P B B 7 OK
+14 P3
+I6 C C
+52 B B
+P B A 10
+15 P4
+D B B
+I5 C C
+P B B 20
+P C C 17
+P B B 4 OK
+16 P4
+D B B
+I8 C C
+P C C 17
+P B B 6 OK
+17 P3
+I7 C A
+P B C 4 OK
+18 P5
+D C C H
+U3 B B
+I6 B B
+P B C 10
+P C C 10 OK

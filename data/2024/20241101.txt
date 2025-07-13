@@ -1,0 +1,94 @@
+2024-11-01 영천오션힐스 정대현 박두산 서해근
+1 P5
+D C C
+I5 B B
+IP B B 75
+P B B 20
+P B B 2.5
+2 P4
+D D D
+I8 B B
+P B B 6 OK
+3 P4
+D C C
+IP C B
+P C B 17
+P B A 4
+4 P4
+D C B
+I5 C C
+56 B C 35
+56 C C 15
+P B B 15
+P B B 4 OK
+5 P3
+I8 B B
+P B B 10 OK
+6 P4
+D B B
+I4 B C
+56 B B 25
+P B B 6 OK
+7 P4
+D B B
+I6 C C
+56 B C 30
+56 B B 16
+P B B 12
+8 P5
+I5 C C
+56 C B 25
+P B C 15 OK
+9 P5
+D B B
+UW C B
+U3 C C H
+52 B B 60
+P C B 9
+P B B 4 Ok
+10 P5
+D C C
+UW B B
+UW B B
+56 C c 35
+P B A 10
+11 P3
+I8 B B
+P B B 7 OK
+12 P4
+D B B
+I8 B C H
+56 C C 10
+P B B 7 OK
+13 P4
+D C C
+I7 C B
+P B B 20 Ok
+14 P3
+I5 B C
+56 B B 20
+P B B 4 OK
+15 P5
+D C C
+UW B B
+UW A B
+56 B B 25
+P B B 2.5 OK
+16 P5
+D C C
+UW C C
+I9 C C 90 B
+56 C C 30
+56 C B 30
+P B B 15
+P B C 2 OK
+17 P4
+D B B
+52 C C 60
+56 C B 20
+P B B 15 OK
+18 P4
+D C C
+I6 C C
+56 B B 15
+P B B 3 OK

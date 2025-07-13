@@ -1,0 +1,92 @@
+2024.05.12 13:17 시그너스 그리님,샌디님,콤팍님
+1 P5
+D C B
+UW B B
+52 A A 65
+P B B 3.5 OK
+2 P4
+D B B
+I8 C C
+56 C C 23
+P B B 10
+P C C 2.5 OK
+3 P4
+D C C
+I6 B C
+56 A B
+P A A 3
+4 P3
+I7 A B
+P C B 15
+P C B 3 OK
+5 P5
+D B B
+UW B B
+I4 C C
+56 B C 35
+56 B B 14
+P B B 4 OK
+6 P4
+D B C
+I7 A C
+I8 C B 14
+P B B 3
+7 P3
+I7 C B
+P C C 8
+P B B 4
+8 P4
+D B B
+I9 C C
+IP C B 20
+P B B 13 OK
+9 P4
+D B B
+I7 B B
+P C B 15
+P B B 5
+10 P4
+D C C
+I8 B C
+I8 B B 100
+P C B 20
+P A A 6
+11 P5
+D C B
+I5 B B
+IP A B
+P B B 15
+P B B 6 OK
+12 P4
+D C B
+I7 C C
+56 B B 18
+P B B 7 OK
+13 P5
+D B B
+W3 A B
+56 B C 18
+56 C B 10
+P B B 7 OK
+14 P3
+I7 B C
+P B C 15
+P B B 4 OK
+15 P4
+D A B
+56 C C 20
+56 B B 10
+P B C 4 OK
+16 P4
+U4 C C OB
+I7 C C
+56 B A 15 OK
+17 P3
+I7 C C
+56 C B 20
+P B B 7 OK
+18 P4
+D C C OB
+52 B C 65
+56 B B 15
+P B B 6.5 OK

@@ -1,0 +1,90 @@
+2020.06.12 14:03
+마론뉴데이
+고객
+1 P4
+D B B
+I4 B C
+P C C 12
+P A A 5
+2 P5
+D B B
+I4 C C
+I9 B B
+P B B 6
+P A A 2
+3 P4
+D C C
+U3 C C
+U3 A B
+52 A A 58
+P C C 4 OK
+4 P3
+I8 B C
+P B B 23
+P A A 5
+5 P4
+D B B
+I7 B C
+56 A A 10 OK
+6 P3
+I6 C C
+56 A A 20
+P A A 2
+7 P4
+D C C OB
+I5 A A
+P B B 6 OK
+8 P5
+D C C OB
+U3 C C
+I6 A A
+P B B 7 OK
+9 P4
+D C C OB
+U3 C B
+56 B B 10
+P B B 3
+10 P4
+D B C
+I7 C C
+56 C C
+P B B 7
+11 P4
+D B B
+I4 B C H
+56 B B 
+P B B 17
+P C C 4 OK
+12 P5
+D B B
+U3 C C OB
+I5 C B
+56 C C
+56 B B
+P B B 13 OK
+13 P4
+D B B
+I7 B B
+P B B 11 OK
+14 P3
+I6 B B
+P B C 13 OK
+15 P5
+D B C
+U3 C C OB
+IP B B
+P B B 8 OK
+16 P4
+D B C H
+I6 C C
+56 B B
+P B B 7 OK
+17 P3
+U3 C C
+P C C 25
+P B B 7 OK
+18 P4
+D B B
+I5 C B
+56 B B
+P C C 3 OK

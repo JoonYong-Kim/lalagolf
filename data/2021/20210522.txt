@@ -1,0 +1,97 @@
+2021.05.22 6:47
+아난티코드
+김수현 관계자1 관계자2
+1 P5
+D B B
+U4 C B
+52 B B 60
+P B C 6
+P B B 3
+2 P3
+I6 B C
+56 B C 9
+P B B 3
+3 P4
+D B B
+I8 C C
+52 B C
+IP B B
+P B B 3 OK
+4 P4
+W3 C B
+I7 B B
+P B C 12
+P B B 9 OK
+5 P4
+D C C
+I7 B B
+I5 B B
+P B C 17
+P B C 5 OK
+6 P3
+I6 C C
+IP B A
+P B B 1
+7 P4
+W3 A B
+I6 C C
+56 B B
+P B B 4 OK
+8 P5
+D B B
+U4 B B
+IP C C B
+56 C C B
+56 C C B
+56 C C
+56 B A 25
+P B B 4
+9 P4
+D C C H
+U4 C C H
+56 B B 30
+P B B 6 OK
+10 P4
+D C C H
+I6 B C
+IP B A OK 8
+11 P4
+D C C H
+U4 C C H
+56 C C B
+56 B B
+P C B 7 OK
+12 P3
+I7 B B
+P B B 6
+P B C 3 OK
+13 P4
+W3 C C
+U4 B B
+U4 C C H
+IP B A 20 OK
+14 P3
+I7 C C
+IP B B
+P C B 4.5 OK
+15 P4
+D C B
+I4 C C B
+56 C C
+56 B A 20
+P B B 1.5
+16 P5
+D B B
+I5 C B
+IP B B
+P B C 8 OK
+17 P4
+D B C H
+I8 B B
+P B C 10
+P B C 2 OK
+18 P4
+D B B
+I7 B B
+P C C 14
+P B B 4 OK

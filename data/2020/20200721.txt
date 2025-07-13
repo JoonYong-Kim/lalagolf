@@ -1,0 +1,139 @@
+2020.07.21 06:38
+킹스데일
+바시공
+1 P4
+D A B
+I9 B C
+56 B B
+P C C 4 OK
+2 P5
+D B B
+I5 A B
+56 A A
+P C C 1.5 OK
+3 P4
+D B B
+56 B B
+P C C 8
+P B B 2.5
+4 P3
+I6 C C
+56 B B
+P C C 3 OK
+5 P4
+D C C
+I8 A B
+56 C B
+P B B 5 OK
+6 P3
+I8 B C
+56 A A
+P B B 1.5
+7 P4
+D B C
+IP C C
+56 C C B
+56 C C B
+56 B B
+P B B 4 OK
+8 P4
+D B B
+I9 B B
+P C C 12
+P C C 10
+P B B 3 OK
+9 P5
+D C B
+U3 C C
+52 B C B
+56 C C
+56 C C
+P B B 8 OK
+10 P4
+D C B
+I6 B C B
+56 A A
+P C C 3 OK
+11 P4
+D C B
+I6 C C
+56 B B
+P C C 4 OK
+12 P3
+I5 B B
+P C B 6 OK
+13 P4
+D C C
+IP B C 70
+56 B B 12
+P C C 3 OK
+14 P4
+D C B
+56 C C
+56 A A
+P B B 3
+15 P5
+D C C
+I5 C B
+I7 A C
+56 B B
+P B B 4 OK
+16 P4
+D B C
+I9 A B
+56 C C 10
+P B B 10 OK
+17 P4
+I4 C B
+P A A 28 OK
+18 P5
+D B B
+I5 A B
+I5 B B
+56 B B
+P B B 4 OK
+19 P4
+D B B
+56 B C 71
+56 C C 15
+P B B 6 OK
+20 P5
+D A B
+I5 A B
+56 C C
+P C C 16
+P B B 6 OK
+21 P4
+D C B
+IP B B
+P A B OK 13
+22 P3
+I6 C C
+56 B A
+P C C 3 OK
+23 P4
+D A B
+56 B C 50
+56 B B
+P A A 4
+24 P3
+I9 C B
+P A B OK 17
+25 P4
+U3 A B
+I5 A B
+56 C C
+P C C 7
+P C C 3
+P B B 3
+26 P4
+D C B
+I7 C C
+56 A A 25
+P C C 3 OK
+27 P5
+D B B
+U3 B B
+IP C C
+IP C C
+P B B OK 4

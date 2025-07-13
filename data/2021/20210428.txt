@@ -1,0 +1,93 @@
+2021.04.28 6:58
+남여주
+중형님 콤팍님 그리미스님
+1 P4
+D B C
+I6 B B
+IP B B 20
+P B A 4
+2 P4
+D C C H
+I4 B C
+56 B B 35
+P B A 5
+3 P5
+D B B
+U4 B B
+IP B C 70
+IP B C 12
+P B B 6 OK
+4 P4
+D C C B
+I7 B C
+56 B B 30
+P B A 4
+5 P4
+D B B
+I7 C C
+IP C B 15
+P B B 7
+P B B 2
+6 P3
+I5 C C
+IP B B 27
+P B B 8 OK
+7 P5
+W3 A B
+I5 B B
+I6 B B
+P B B 8 OK
+8 P3
+I6 B C
+56 B A 30 OK
+9 P4
+D B B
+I8 C C
+56 B B
+P B B 13
+P B B 2
+10 P4
+D B B
+I9 B B
+P B C 14
+P B B 2 OK
+11 P4
+D C C OB
+I9 A C
+IP B C 15
+P B A 7
+12 P3
+I5 C B
+P B B 12 OK
+13 P5
+D A B
+U4 B B
+I8 C C
+56 C B 20
+P A A 7
+14 P4
+D B B
+IP B C
+IP C B
+P B B 6
+P B B 2
+15 P3
+I5 B C
+IP B B
+P B B 5.5 OK
+16 P4
+D B B
+I9 B B 85
+I9 B B 15
+P A A 2
+17 P5
+D C C H
+I5 B B
+I9 B B 75
+P C C 14
+P B B 6 OK
+18 P4
+D C C UN
+I4 C B
+P B C 24
+P C C 5 OK

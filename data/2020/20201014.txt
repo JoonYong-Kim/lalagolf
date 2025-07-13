@@ -1,0 +1,94 @@
+2020.10.14 07:35
+아난티코드 
+바시공 김수현 박수현 수현사촌형
+1 P5
+D B B
+I5 C B
+I8 C B
+P B C 9
+P B B 1.5
+2 P3
+I7 C C
+56 B C
+P B C 5 OK
+3 P4
+D B B
+I9 C C
+56 A C
+P A B 8
+P B B 2
+4 P4
+D B B
+I4 B B
+P A B 15 OK
+5 P4
+D B B
+I6 C C
+56 C C
+P C C 20
+P B C 5 OK
+6 P3
+I9 C C
+56 A B
+P B C 4 OK
+7 P4
+U3 B B
+I7 B B
+P B C 20
+P B C 4 OK
+8 P5
+D C B
+U3 C C B
+I7 C B
+56 B B
+P B A 8
+9 P4
+D C B
+I7 B B
+P C B 6
+P B B 2
+10 P4
+D C C OB
+I9 B B
+P A A 10
+11 P4
+D B B
+I4 C C
+52 C C
+P B B 12 OK
+12 P3
+I6 C C
+56 C B
+P B B 4 OK
+13 P4
+D C C
+IP C B
+I7 B B
+P C C 16
+P B C 4 OK
+14 P3
+I6 C C
+P C C 25
+P A A 6
+15 P4
+D C B
+I4 B C B
+56 C B
+P B C 15
+P B B 6 OK
+16 P5
+D B B
+U3 C C
+I7 B B
+56 B B
+P B B 8 OK
+17 P4
+D B C B
+I6 B B
+56 C C 20
+P B C 12 OK
+18 P4
+D C C H
+I7 B C
+56 C C
+P B B 10 OK

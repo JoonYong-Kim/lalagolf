@@ -1,0 +1,98 @@
+2020.09.10 12:36
+에이원cc
+골프당 삼지님 케사장님 땡그랑님
+1 P4
+D B B
+I5 C C H
+I9 B C
+P B B 20
+P B B 4 OK
+2 P4
+D B C B
+I8 C C
+IP B B
+P B B 8
+P B B 1.5
+3 P3
+I7 B B
+P B B 5 OK
+4 P5
+D A B
+I6 B B
+56 B B
+P B B 13
+P B B 2
+5 P4
+D B B
+I4 B B
+P B B 10 OK
+6 P3 
+I3 C C H
+56 B B
+P B B 6
+P B B 2
+7 P4
+D A C B
+IP A B
+P C B 12
+P B B 2
+8 P5
+D B B
+I5 C C
+I6 B B
+56 B B
+P B C 3
+9 P4
+D B C
+I5 B B
+56 A B
+P B B 5 OK
+10 P4
+D C C B
+I5 B B
+52 A B
+P B B 12 OK
+11 P4
+D B B
+I5 B B
+56 B C
+P B C 10
+P C C 3 OK
+12 P5
+D B C
+I5 C C
+U3 B B
+52 C C 44 B
+56 B A
+P B B 2
+13 P3
+I7 A B
+P A B 12 OK
+14 P4
+D B B
+IP C B
+P B B 12
+P B B 2
+15 P3
+I5 A B
+56 C C
+P B B 10
+P B C 1.5 OK
+16 P4
+D C C B
+I6 C C B
+I6 B C B
+56 C C H
+P C C 4
+P C C 4 OK
+17 P4
+D C C
+I7 C C
+I5 B C
+56 B B
+P B B 14 OK
+18 P5
+D C C OB
+U3 C B
+I8 B B
+P B B 8 OK

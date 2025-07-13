@@ -1,0 +1,94 @@
+2021.02.10 09:51
+샌드파인
+박수현 김호연 김대근
+1 P5
+D C C H
+U4 B B
+52 A B 47
+P B B 15
+P B B 4 OK
+2 P4
+D B B
+52 B C B 70
+56 B C
+56 B B
+P C C 4 OK
+3 P4
+D B C H
+I5 C B
+P C C 40
+P C C 20
+P B C 5 OK
+4 P3
+I8 A A
+P C C 20
+P C C 6
+P B B 6 OK
+5 P4
+D B B
+I8 C B
+52 B B 20
+P B B 4 OK
+6 P4
+D B C H
+I7 C C
+52 B B 80
+P C C 20
+P B B 7 OK
+7 P4
+D C C H
+I7 B C
+56 B B 20
+P B B 4 OK
+8 P3
+I7 C C
+56 B B 15
+P C B 7 OK
+9 P5
+D C B
+U4 B B
+56 C C 75
+56 B B
+P B B 10 OK
+10 P4
+D B C OB
+I6 C B
+56 B B
+P B B 10 OK
+11 P4
+D B B
+U3 C C
+52 A A 34 OK
+12 P3
+I7 A A
+P A B 7 OK
+13 P5
+D B B
+I5 C C
+U4 B B
+56 A B
+P B C 3 OK
+14 P4
+D B B 
+I6 B B
+IP B B
+P B B 2
+15 P3
+I7 C B
+P B B 9 OK
+16 P5
+D B B
+U4 C C
+U4 C C
+52 A B 84
+P B B 10 OK
+17 P4
+D B B
+I8 B B
+P C C 11
+P A A 4.5
+18 P4
+D B C
+I7 C B
+56 B B
+P B B 8 OK

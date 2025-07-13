@@ -1,0 +1,96 @@
+2021.06.01 8:27
+히든밸리
+김경수 안장덕 양창환
+1 P4
+D C B
+I7 B B
+P B C 12
+P B B 7
+P B B 3
+2 P4
+D B C OB
+I7 C B
+P B B 7 OK
+3 P4
+D B B
+I9 B B
+P C C 12
+P B C 4 OK
+4 P3
+I6 C B
+P C C 15
+P B B 3 OK
+5 P5
+D B B
+I5 C C
+U4 B C B
+56 C B
+56 B C 30
+P B B 6 OK
+6 P3
+I7 C C B
+56 B B
+P B C 4 OK
+7 P4
+D C C
+I5 C C
+IP B B 25
+P B B 5 OK
+8 P5
+D C B
+I5 C C
+I5 C C
+56 B B 50
+P B B 10
+P B B 1.5
+9 P4
+W3 A B
+I9 C C 80
+IP A B
+P B C 1.5 OK
+10 P5
+D B B
+U4 B B
+IP B A
+P B B 4 OK
+11 P4
+D B C
+I9 C C
+P B B 40
+P B C 4
+P B B 2
+12 P4
+D C C
+I6 C C
+56 B B 53
+P B B 3.5 OK
+13 P3
+I8 C B
+P C B 25
+P B B 4 OK
+14 P4
+D C C OB
+I9 C C 80
+IP B B 15
+P B B 4 OK
+15 P3
+I8 C C H
+IP B A 20
+P B B 3
+16 P5
+D B B
+U4 C B
+I7 C C
+52 A B 60
+P C B 11
+P B B 3
+17 P4
+D B B
+I6 A B
+P B B 25
+P B B 4 OK
+18 P4
+D C C H
+I9 C C
+IP B B 20
+P B B 4 OK

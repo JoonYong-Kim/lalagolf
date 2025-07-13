@@ -1,0 +1,102 @@
+2021.02.19 11:01
+레이크사이드 남코스
+골당 행맨님 프레드님 럭키님
+1 P4
+D C B
+I5 C C
+56 B C
+P B B 25
+P B C 6
+P B B 1.5
+2 P5
+D B C
+U3 B B
+U3 B B
+56 C C B 55
+56 B C B 26
+52 B B 16
+P B C 2 OK
+3 P3
+I7 B C B
+56 C C B
+P C B 17
+P C C 4 OK
+4 P4
+D B B
+U3 C C B
+56 A B 30
+P C B 4
+5 P5
+D C C OB
+U3 A B
+56 A B
+P C C 8
+P B B 4
+6 P3
+I5 B C OB
+I5 C C
+56 C C 50
+P B C 20
+P C C 4 OK
+7 P4
+D B B
+I9 B C
+P B A 8 OK
+8 P4
+D B C H
+I8 C C
+56 B B 20
+P B C 3 OK
+9 P4
+D B B
+I9 C C OB
+I9 B B
+P B B 6 OK
+10 P4
+D C C H
+U3 B C
+I8 B B
+P B C 10
+P B C 3 OK
+11 P4
+D B B
+IP B B
+P B B 13
+P B B 1.5
+12 P3
+I6 C C
+56 C B
+P B C 4 OK
+13 P4
+D A C B
+I9 C B
+I7 C B
+P B B 13
+P B B 2
+14 P4
+D B B
+I5 C C B
+56 B B
+P C C 13
+P C C 5 OK
+15 P5
+D A B
+I5 A B
+I6 B C
+56 B B
+P B B 4
+P B B 1.5
+16 P3
+U4 A B
+P A B 15
+P B C 4 OK
+17 P4
+D C B
+I7 B B
+P B B 15
+P B B 2
+18 P5
+D C B
+U3 B B
+I9 A A
+P B B 5 OK

@@ -1,0 +1,97 @@
+2021.07.20 12:26
+지산cc 동코스
+카페인중독 땡그랑 엔듀최
+1 P4
+D C C
+I6 C C
+52 B B 70
+P C B 10
+P B B 4
+2 P5
+D B B
+W3 B B
+I8 A B
+P C C 8
+P B C 3 OK
+3 P4
+D B B
+IP B B 70
+P B B 6 OK
+4 P3
+I7 B C
+P C C 20
+P B B 9
+5 P4
+D B B
+I8 C C
+56 C C 35
+56 C C 18
+P B B 17
+P B B 3
+6 P4
+D B B
+52 C B 60
+P B C 15
+P B B 4
+7 P3
+I8 C C
+56 B B 
+P B C 7
+P C C 2.5 OK
+8 P5
+D C C B
+I7 C B
+I8 B B
+P B B 30
+P B B 5
+9 P4
+D B B
+IW C C
+P C C 30
+P B C 8
+P B B 2
+10 P4
+D C B
+I9 C C B
+56 A B
+P B B 6 OK
+11 P4
+D C B
+I8 C C
+56 B B 55
+P C B 4 OK
+12 P3
+I7 C C H
+52 B B 20
+P B C 3 OK
+13 P5
+D B B
+I9 B C
+I9 B B
+IW A A 100 OK
+14 P4
+D C B
+I7 B B
+P B B 10
+P B B 3
+15 P4
+D B B
+IW C C
+56 C C 15
+P B B 12
+P B C 2 OK
+16 P3
+I5 C B
+P A B 30
+P B B 3
+17 P5
+D C C B
+I6 B C H
+I9 B B 120
+56 C B 14
+P B B 6 OK
+18 P4
+D B B
+I7 C C
+52 B B 45
+P B B 10 OK

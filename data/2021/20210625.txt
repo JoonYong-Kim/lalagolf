@@ -1,0 +1,91 @@
+2021.06.25 14:17
+파가니카
+박수현 김호연 이혁찬
+1 P4
+D B C B
+IP B B
+IP B B 11
+P B B 4 OK
+2 P4
+D C C H
+IW B B
+P B B 8 OK
+3 P3
+I7 C C H
+56 B B
+P B B 4 OK
+4 P4
+W3 C C H
+I9 B B
+P B B 7
+P C C 2 OK
+5 P4
+IW C C
+P B B 15
+P C C 3
+P B C 1.5 OK
+6 P4
+D B B
+IP B C
+52 C C B 20
+56 C C B
+56 C C B
+56 C C B
+56 B B
+P B B 4 OK
+7 P5
+D C C OB
+U3 C B
+I7 B A
+P C C 2 OK
+8 P3
+IP B B
+P B B 4 OK
+9 P5
+D C C H
+I6 C C
+56 C B
+P B B 5 OK
+10 P4
+D C C OB
+I9 C B
+P B C 15
+P B B 3
+11 P4
+D B B
+IW C B
+P C B 6 OK
+12 P5
+U3 C C
+U4 A B
+I8 B B
+P A A 7
+13 P4
+D C C OB
+I9 C C
+56 B B
+P B B 5
+P C C 1.5 OK
+14 P3
+I6 C B
+P C C 15
+P B B 4
+15 P5
+D B B
+I6 B B
+IW A C
+IP B B
+P B B 4 OK
+16 P5
+D B B
+I6 C C OB
+I6 B B
+IP B B 10 OK
+17 P3
+I6 B B
+P B B 8 OK
+18 P4
+D B B
+IW C C
+IP B B 15
+P C C 2 OK

@@ -1,0 +1,89 @@
+2021.03.18 13:51
+더크로스비
+골당 삼지님 저초님 콤팍님
+1 P4
+D B C H
+I7 B B
+IP C C 20
+P B C 8
+P C C 3 OK
+2 P3 
+I8 C B
+P B B 25
+P B C 4 OK
+3 P4
+D B A
+56 B B 35
+P B A 4
+4 P5
+W3 A B
+U4 B B
+I8 A B
+P C C 20
+P B C 7
+P B B 2
+5 P4
+D C C H
+I6 B B
+P B B 25 OK
+6 P5
+D B B
+U4 B B
+I8 B B
+P A A 17
+7 P3
+U4 B C
+58 B C
+P B B 10 OK
+8 P4
+D B C B
+I8 C C
+I8 B B
+56 A C 55
+52 B B 12 OK
+9 P4
+D C C
+I8 C C OB
+I7 B B
+52 B B 15
+P B B 3
+10 P5
+D C C UN
+W3 B B
+56 B B 48
+P B B 8 OK
+11 P4
+D B B
+56 B A 48
+P B B 3
+12 P5
+D B B
+I5 B B
+P B B 18 OK
+13 P3
+I8 C C H
+IP B B 20
+P B C 3 OK
+14 P4
+D B B
+52 C C 62
+P C C 18
+P C C 4 OK
+15 P4
+D C C OB
+I5 B B
+P B B 18 OK
+16 P3
+I5 A B
+P B B 20
+P B B 3
+17 P4
+D A B
+52 A A 40
+P B B 6
+18 P4
+W3 B C B
+I6 C C H
+IP C B
+P C C 20
+P B B 10 OK

@@ -1,0 +1,97 @@
+2024-10-23 8:37 360 박수현 정대현 서해근
+1 P4
+D C C
+I9 B B
+U3 B C
+52 B B 40
+P B C 6 OK
+2 P4
+D C C
+I9 C C
+52 B C 25
+56 B C 25
+56 B B 15
+P B B 5
+3 P5
+D C C
+I7 B B
+UW C C
+I7 C C
+I8 B C 105
+P C C 7
+P C C 4 Ok
+4 P3
+I9 C C
+P B B 8 Ok
+5 P4
+D B C OB
+IP C C
+56 B C 10
+P B B 7 Ok
+6 P4
+D A B
+I9 B B
+P B B 9 OK
+7 P3
+I9 C C
+56 A B 15 OK
+8 P5
+D C B
+I5 C C
+I7 A C
+56 C B 8
+P B B 2.5
+9 P4
+D B B
+IA B B
+P B A 10
+10 P4
+D B B
+I5 C C
+52 C C 35
+56 C B 20
+P B B 20
+P B B 2
+11 P3
+I8 C C
+56 C C 15
+P B C 13
+P B B 2.5
+12 P5
+D B C
+UW B B
+I8 C C 100
+52 B B 40
+P B B 5.5
+P B B 1.5
+13 P4
+D B B
+56 B B
+P C C 23
+P B B 3
+14 P4
+D C C
+I6 C C B
+56 B C B 35
+56 C C 15
+52 B C 10
+P B B 7 OK
+15 P3
+I6 B 
+P B B 7 OK
+16 P5
+D B C H
+UW A B
+56 B B 50
+P C C 17
+P B B 5.5 OK
+17 P4
+D B A
+56 A B 25
+P B B 2.5
+P B B 1.5
+18 P4
+D B B
+I9 B C B
+56 C B 15
+P B B 10 OK

@@ -1,0 +1,90 @@
+2024-03-27 11:37 화순 서해근,이준열
+1 P5
+D B B
+U3 C C B
+I6 B C
+56 B B 30
+P B B 7 OK
+2 P4
+D B B
+IA C C 90
+52 B B 37
+P C C 2 OK
+3 P4
+I5 B B
+I7 C C
+52 C C
+52 C C 60
+56 B B 15
+P B B 5
+4 P3
+I5 C B
+P B B 20
+P C C 4 OK
+5 P4
+D C B
+52 C B 78
+P C B 8 OK
+6 P5
+D C C H
+U3 C B
+52 A A 87
+P B B 4
+7 P4
+D C C
+I6 C C B
+56 B B 20
+P B B 7 OK
+8 P3
+I6 B B
+P B B 13
+P B B 1.5
+9 P4
+D C C B
+I6 B C
+52 C C 65
+P B B 23 OK
+10 P4
+D B B
+I6 A B
+P B B 8 OK
+11 P4
+D C B
+U4 C C H
+52 B B 40
+P B B 5 OK
+12 P3
+I7 B C
+IA B B 10
+P B B 4 OK
+13 P5
+D B B
+U3 B B
+56 B B
+P C C 8
+P B B 3 OK
+14 P4
+D B B
+I8 B B
+P B B 15 OK
+15 P4
+D C C B
+I8 B B
+56 B B
+P C C 8
+P B C 2 OK
+16 P3
+I5 C C B
+52 A B
+P C C 15
+P B B 3
+17 P5
+D B B
+I5 A B
+52 A B
+P C B 3 OK
+18 P4
+D C C OB
+I9 B B
+P B B 7 OK
+

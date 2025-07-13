@@ -1,0 +1,95 @@
+2020.07.19 13:52
+오크밸리
+골프당
+1 P4
+D B B
+I7 B B
+P B B 17
+P C C 2 OK
+2 P4
+D B C
+I5 B C
+56 B B
+P C C 2 OK
+3 P3
+I8 C A
+P C C 3 OK
+4 P4
+D B B
+I9 B B
+P B B 16
+P B B 1.5 2
+5 P4
+D C B
+I6 C A
+P B B 5 OK
+6 P5
+D C C
+U3 B C
+I5 C B
+56 B B
+P B B
+P B B 3
+7 P4
+D C C
+U3 B B
+I8 A B
+P A A 5
+8 P3
+I4 C B
+P B B 17
+P B B 2
+9 P5
+D A B
+U3 A B
+IP A B
+P C C 6
+P C C 2 OK
+10 P4
+D B B
+I6 A B
+P C C 15
+P A A 5
+11 P5
+D A B
+I5 A B
+52 C C 65
+56 A A 30
+P A A 1
+12 P4
+D A B
+I8 A B
+P B B 10
+P B B 1
+13 P5
+D B B
+I5 C B
+I9 C C H
+56 B B 10
+P C C 4 OK
+14 P3
+I7 B B
+P C C 10
+P B B 3
+15 P4
+D C C
+I8 B B
+I7 A A
+P C C 6
+P C C 1.5 OK
+16 P3
+I5 B B
+P A B 8 OK
+17 P4
+D C B
+I7 B C
+56 C C
+56 C C
+P B B 10
+P B B 2
+18 P4
+D B B
+I7 C C
+56 B B
+P B B 4
+P B B 2

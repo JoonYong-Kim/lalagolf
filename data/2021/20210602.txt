@@ -1,0 +1,99 @@
+2021.06.02 7:21
+메이플비치
+박수현 송대근 최기영
+1 P4
+D B B
+I4 B C
+56 C C
+56 B B
+P B B 5 OK
+2 P5
+D C B
+U4 B B
+52 B C H 57
+56 B B 15
+P C C 3
+P B B 2
+3 P4
+D B B
+I7 C C
+IP B C
+56 B B 15
+P B B 4 OK
+4 P4
+D C B
+I7 B C
+56 B C
+56 B B
+P B B 3.5 OK
+5 P3
+I7 B C
+IP C C
+P B B 3 OK
+6 P5
+U4 A B
+U4 A B
+IP B C
+IP B C
+P B B 5
+P B C 2 OK
+7 P4
+D C C
+IP B B
+I8 C C
+IP B A 15
+P B B 1.5
+8 P3
+I7 C C
+P B A 20
+P B B 1.5
+9 P4
+D C C
+I4 C C
+56 A A
+P B C 1.5 OK
+10 P4
+D C C
+I7 C B
+56 B B
+P C B 9
+P B B 2
+11 P5
+D C C H
+U4 B B
+I7 B C
+IP B C 15
+P B B 4 OK
+12 P4
+D C C H
+I9 A A OK
+13 P3
+I7 C C
+IP B C 24
+P B C 7
+P C C 2 OK
+14 P5
+D B B
+U4 C B
+I5 C B
+IP B B 70
+P B B 10
+P B B 1.5
+15 P3
+I9 C C H
+56 C C
+P B B 5 OK
+16 P4
+D C C H
+I8 A B
+P B B 4 OK
+17 P4
+W3 A B
+IP B B
+P C B 7
+P B B 2.5
+18 P4
+D C C H
+I6 B B
+P C C 15
+P B B 4 OK

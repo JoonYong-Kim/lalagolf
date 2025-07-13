@@ -1,0 +1,91 @@
+2020.09.23 17:05
+파인스톤
+조인 수현 수현형님 지인
+1 P4
+D C C H
+I5 B B
+P C C 20
+P C C 3 OK
+2 P3
+I5 C C
+56 B B 29
+P C C 4 OK
+3 P4
+D B B
+I7 B A
+P C C 3 OK
+4 P5
+D B B
+U3 C B
+IP B B
+P C C 17
+P B B 4 OK
+5 P4
+D C B
+I5 B B
+P B C 17
+P C C 2 OK
+6 P5
+D C B
+IP C C H
+56 B B
+P C B 10
+P C C 2 OK
+7 P3
+I5 C B
+P B B 17 OK
+8 P5
+D C C OB
+I5 C C
+I8 C B
+56 C B
+P B B 20
+P B B 2
+9 P4
+D B B
+I7 B B
+P C A 8
+10 P4
+D C B
+I6 C C B
+52 C C
+56 B B
+P C C 4 OK
+11 P4
+D B B
+I6 B B
+P C C 6
+P B C 4 OK
+12 P3
+I6 B C
+P B B 15
+P C C 2 OK
+13 P5
+D C C OB
+U3 B B
+I8 B B
+P B C 14
+P C C 2 OK
+14 P4
+D B B
+I7 B B
+P B B 5 OK
+15 P4
+D B B
+IP B B
+P A B 12 OK
+16 P4
+D C C OB
+IP C C
+56 C C 20
+56 C A 10
+17 P3
+I7 C C
+56 B A
+P B B 4
+18 P5
+D B B
+I5 C C B
+IP C C
+56 B B
+P B B 6

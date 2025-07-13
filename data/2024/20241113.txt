@@ -1,0 +1,86 @@
+2024-11-13 17:40 메이플비치 박수현 송대근 신XX
+1 P4
+D B B
+I9 A A
+P C B 2.5 OK
+2 P5
+D C B
+UW B B
+IP C C B
+56 C B 30
+P B B 12 OK
+3 P4
+D B B
+56 B B 
+P B A 6
+4 P4
+D B B
+52 B B
+P B B 10 OK
+5 P3
+I9 C C
+52 B B 20
+P B B 13 OK
+6 P5
+D C C
+UW C C B
+IP B C
+56 C CC 26
+56 B A 10 OK
+7 P4
+D C B
+I6 C B
+P A B 13 OK
+8 P3
+I8 A B
+P B B 6 OK
+9 P4
+D C C B
+52 C B
+I9 A B
+P C C 10
+P B C 3 OK
+10 P4
+D C B
+I9 B B 90
+P B B 17
+P B B 3
+11 P5
+D C B
+I9 B B
+UW C B
+I7 C C
+56 B A 13 OK
+12 P4
+D C C
+I8 B C
+56 B B 15
+P B B 3
+13 P3
+I8 C C B
+56 B B 20
+P B B 12 Ok
+14 P5
+D C C H
+UW A B
+IP B C
+56 B B 14 OK
+15 P3
+I9 B B
+P B B 7 OK
+16 P4
+D B B
+I9 B B 90
+P B B 8 OK
+17 P4
+D B B
+I9 C C
+56 B C 15
+P C C 20
+P C B 6 OK
+18 P4
+D B B
+I5 C C B
+56 B C 25
+56 C C 10
+56 B B 5 OK

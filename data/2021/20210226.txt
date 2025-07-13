@@ -1,0 +1,103 @@
+2021.02.26 11:17
+금강CC
+골당 허박님 이너피스님 똑바로백님
+1 P4
+D C C
+IP B C UN
+I6 C C
+52 B B 45
+P B B 7 OK
+2 P5
+D B B
+I7 B B
+IP B B
+P B B 8 OK
+3 P4
+D B C
+U4 B C
+I6 C C B
+52 B B
+56 B A 35
+P B B 4 OK
+4 P3
+I5 C C
+52 C C
+IP B B 10
+P B B 4
+5 P4
+D C B
+U3 A C B
+56 C C B
+56 C C
+52 C C 13
+P C C 10
+P B B 2 OK
+6 P4
+D C C
+I7 A A
+52 B B 60
+P B C 5 OK
+7 P4
+D B B
+I8 C C B
+56 C C B
+56 C C
+56 B B 18
+P B B 4 OK
+8 P3
+I5 B B
+P C C 22
+P C C 8
+P C C 2 OK
+9 P5
+D B B
+U4 C C
+U4 B B 
+IP A A 70 OK
+10 P4
+D B B
+I6 B B
+P B B 22
+P B C 2 OK
+11 P5
+U3 C C
+U3 B A
+I5 C C
+52 C C 70
+56 C C 30
+IP C C 20
+P B B 8
+P B B 1.5
+12 P4
+D B C
+I8 B B
+52 C C 60
+56 B B 20
+P C C 10
+P B B 2.5 OK
+13 P3
+U4 B B
+P B B 7 OK
+14 P4
+D A B
+56 B B
+P B B 22
+P B C 1.5 OK
+15 P4
+D C B
+I9 B B
+P B B 6 OK
+16 P4
+D C C OB
+IP B B
+P B B 3 OK
+17 P3
+I7 C C 56 B C 
+IP B B
+P B C 2 OK
+18 P5
+D A B
+U4 B B
+I8 B C
+56 B A
+P B C 3 OK

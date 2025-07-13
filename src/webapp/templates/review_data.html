@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Parsed Data</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body { padding-top: 20px; }
+        .container { max-width: 900px; }
+        pre { background-color: #f8f9fa; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="mb-4">Review Parsed Golf Round Data</h2>
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <h4 class="mt-4">Round Data:</h4>
+        <pre>{{ parsed_data | tojson(indent=4) }}</pre>
+
+        <h4 class="mt-4">Scores and Statistics:</h4>
+        <pre>{{ scores_and_stats | tojson(indent=4) }}</pre>
+
+        <form action="{{ url_for('review_round') }}" method="post" class="mt-4">
+            <button type="submit" name="action" value="save" class="btn btn-success">Save to Database</button>
+            <button type="submit" name="action" value="cancel" class="btn btn-danger">Cancel</button>
+        </form>
+
+        <hr>
+        <p><a href="{{ url_for('round_list') }}">Back to Round List</a></p>
+    </div>
+</body>
+</html>

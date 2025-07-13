@@ -1,0 +1,87 @@
+2024-11-15 08:05 알펜시아 박수현 송대근 최용수
+1 P4
+D B B
+I9 B B 90
+P B B 6 OK
+2 P3
+I8 C C B 100
+56 A B 26
+P C C 3 OK
+3 P4
+D B B
+IA C C
+56 C B 15
+P C C 4 OK
+4 P4
+D B C B
+I5 B C
+I7 C C
+56 A B 10
+P B B 1.5 OK
+5 P5
+D B B
+UW B C B
+56 B C 30
+56 A A 15 OK
+6 P3
+I6 B B
+P C B 10
+P C C 6 OK
+7 P5
+D C C
+UW B B
+I4 C C
+56 C B 10
+P C C 3 OK
+8 P5
+D C C
+I7 B B
+U3 C C
+I7 B B
+IA B B
+P B C 4 OK
+9 P4
+D C C H
+IP B B
+P B B 12
+P B B 2
+10 P4
+D B B
+IP C B 80
+P C B 20
+P B B 2
+11 P3
+I5 A C
+56 C B 20 OK
+12 P5
+W3 A B
+UW C B
+I6 B B
+P B B 13
+P C C 2 OK
+13 P4
+P C C OB
+IA A A
+14 P3
+I6 C C
+56 C A 35
+P C C 2.5 OK
+15 P4
+D C C B
+56 B C 30
+P C B 6 OK
+16 P5
+D C C
+UW C C H
+UW C C H
+56 C B 50
+P C B 8 OK
+17 P3
+U3 B C
+56 C B 20
+P B B 6 OK
+18 P5
+D C B
+UW B B
+IP B B 70
+P B B 6 OK 

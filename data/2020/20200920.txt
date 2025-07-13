@@ -1,0 +1,93 @@
+2020.09.20 08:15
+골프존카운티 진천
+골프당 토마쑤님 정종혁님 핵스님
+1 P4
+D C C
+I5 B B
+I8 B B
+P C C 10
+P B B 4.5 OK
+2 P5
+D B B
+I5 B C
+I8 C B
+56 B B
+P B B 7 OK
+3 P3
+I9 B B
+P C C 3 OK
+4 P4
+D A B
+I9 B B
+P C C 7
+P C C 2 OK
+5 P4
+D B B
+52 B B
+P B B 12
+P C C 2
+6 P4
+D B B
+IP C C
+56 A A
+P C C 2 OK
+7 P3
+I7 C B
+P B B 15
+P C C 3 OK
+8 P4
+D C C OB
+I5 A B
+IP B B
+P B B 10 OK
+9 P4
+D C C
+I6 B B
+52 B A 25
+P B B 3
+10 P4
+D B B
+I4 A B
+P B B 15 OK
+11 P3
+I5 C C
+56 B B
+P C C 4 OK
+12 P5
+D C C OB
+I5 B C B
+52 C C
+56 C C
+56 B B
+P A B 7 OK
+13 P4
+D B B
+I8 C B
+P C C 25
+P B C 8
+P B B 3
+14 P4
+D B B
+I8 B B
+P C C 13
+P C C 3 OK
+15 P3
+I4 A C
+56 B B
+P B B 4
+16 P5
+D B B
+W3 C C
+I4 B A
+P B B 13
+P B B 1.5
+17 P4
+D B C
+I6 B B
+P B A 17 OK
+18 P4
+D B B
+I4 C C B
+56 C C
+56 C C 
+P B B 6 OK

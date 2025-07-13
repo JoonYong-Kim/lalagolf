@@ -1,0 +1,95 @@
+2021.09.25 11:07
+화성상록 서코스
+성걸 수현 길수
+1 P4
+D B C H
+I9 B B
+P C C 10
+P C C 3 OK
+2 P5
+D C C H
+W3 C C H
+52 B B
+P C C 7
+P C C 2 OK
+3 P3
+I6 C B
+P B C 22
+P B C 3
+P C C 3 OK
+4 P4
+D C B
+52 B A
+P B C 3
+P B B 2
+5 P4
+D C C 
+I9 B C
+56 B C
+P B B 4 OK
+6 P3
+I7 A B
+P B B 5.5 OK
+7 P5
+D B B
+U3 B C
+I8 C C
+56 B A 
+P B B 2
+8 P4
+U3 A B
+I8 B C
+48 B A 
+P B B 1
+9 P4
+D B C OB
+I9 C C
+56 B B 50
+P B B 5
+10 P4
+D C B
+I6 C C 
+56 C B
+P C C 10
+P B B 2.5
+11 P5
+D B B
+I7 B B
+IW B B
+P B B 7 OK
+12 P3
+I7 B C
+48 C C 15
+P A B 10 OK
+13 P4
+D C C H
+I9 B C
+56 B B 18
+P C C 2 OK
+14 P4
+D C C
+I5 C C 
+56 B B 48
+P A B 4.5 OK
+15 P3
+I6 C C 
+56 B B 
+P C C 8
+P B B 1.5 OK
+16 P5
+D C C
+W3 B C B
+I7 C C
+I5 C C
+52 B A 68
+P B A 4
+17 P4
+D C C
+I5 B B
+IW B B
+P A A 25 OK
+18 P4
+U3 B C
+I7 B B
+P B B 6
+P B B 1

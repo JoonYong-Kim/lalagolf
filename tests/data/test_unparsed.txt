@@ -1,0 +1,10 @@
+2024-07-13 10:00
+Unparsed Test Course
+Charlie, David
+1P4
+D B C
+This is an unparseable line
+I5 A C 150 H
+Another unparseable line
+2P3
+I7 A A

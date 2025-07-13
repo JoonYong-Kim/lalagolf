@@ -1,0 +1,98 @@
+2020.09.05 11:44
+페럼클럽
+골프당 행맨님 마이키님 이너피스님
+1 P4
+D A B
+I9 C C
+56 B C
+P B A 7 OK
+2 P4
+D C B
+I8 B B
+P A B 14 OK
+3 P5
+D C B
+I5 A B
+I6 A B
+P C B 10
+P B A 3
+4 P4
+D A B
+56 C C 70
+56 A A 15
+P B B 2
+5 P3
+I6 A A
+P A B 4 OK
+6 P4
+D B B
+I3 B C
+56 C C
+P B C 7
+P B A 2
+7 P3
+I6 A A
+P A A 4
+8 P4
+D A B
+I5 A A
+P A B 8 OK
+9 P5
+D B B
+I5 C B
+I7 B C
+P B B 17
+P B C 3 OK
+10 P4
+D A B
+I5 C C H
+I9 C C
+52 B B
+P B C 17
+P A A 4
+11 P4
+D B B
+56 B C
+56 C C 10
+P A B 12 OK
+12 P3 
+I4 C C
+52 C C 42
+56 C C 15
+P A A 7
+13 P4
+D C C
+I5 C C
+I5 B B
+P C C 20
+P C C 7 OK
+14 P5
+D B B
+U3 C B
+U3 C C H
+56 B B
+P C C 17
+P C C 4 OK
+15 P4
+D B B
+I5 C C
+56 C C
+56 B B
+P B C 5 OK
+16 P4
+U3 C C
+I7 C C
+56 A B
+P B B 7
+P B C 2 OK
+17 P3
+I5 C C H
+56 B B
+P B B 8
+P B B 2
+18 P5
+D B C
+I8 B B
+I7 B B
+56 C C
+P B B 10 OK

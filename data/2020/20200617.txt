@@ -1,0 +1,96 @@
+2020.06.17 7:35
+메이플비치
+바시공
+1 P4
+D B C OB
+I6 B C
+56 B B
+P B B 3.5 OK
+2 P5
+D B B
+U3 B B
+52 C C 60
+56 B B
+P B B 4 OK
+3 P4
+D B B
+I9 C C
+56 C C H
+56 A A OK
+4 P4
+D B B
+56 C C B
+56 C C
+56 B B
+P B B 6 OK
+5 P3
+I6 B B
+P B B 8 OK
+6 P5
+U3 B B
+U3 C C H
+U3 B C
+56 C C
+56 C C
+56 C C
+56 C B OK
+7 P4
+D A A
+I8 C C 
+I8 B B
+P C C 11
+P B B 2
+8 P3
+I7 B A
+P B B OK
+9 P4
+D B B
+I4 B B
+P C C 20
+P B B 6 OK
+10 P4
+D B C
+I5 B B
+P B B 7
+P B B 2
+11 P5
+D C C H
+I5 B B
+I5 B A
+P B B 10
+P B B 2 OK
+12 P4
+D A B
+I8 C B
+56 B B
+P B B 4
+P B B 2
+13 P3
+I6 C B
+P B A 18 OK
+14 P5
+D B B
+U3 C C H
+I5 C C H
+56 B B
+P B B 18 OK
+15 P3
+I8 B C
+56 B A OK
+16 P4
+D A B
+IP C C
+P B C 15
+P B B 4 OK
+17 P4
+D C B
+IP C C
+52 C B
+P B B 9 OK
+18 P4
+D B B
+I6 C C B
+56 C C
+56 B C
+56 B B
+P B B 4 OK

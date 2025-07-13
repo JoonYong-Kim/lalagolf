@@ -1,0 +1,87 @@
+2024-05-17 18:41 힐데스하임 정대현,조인2
+1 P4
+D C C H
+I5 C C
+I7 C C 15
+P B B 12 OK
+2 P3
+IP C B
+P B B 23
+P B B 5.5 OK
+3 P4
+D B B
+IP C b
+p b b 20
+p b c 3 OK
+4 P4
+d a b
+uw c c h
+52 a b
+p b b 3 ok
+5 P4
+d c b
+i9 c c
+i9 b a 6 ok
+6 p4
+d b b
+ip b b 65
+p b b 20
+p c c 2 ok
+7 p5
+d b b
+w3 b c
+56 c c 50
+56 b b 10
+p b b 7 OK
+8 p3
+i7 b b
+p b b 24 ok
+9 p4
+d b b
+i9 a c
+ip b b 10
+p b b 3
+10 p4
+d b b
+56 c c 50
+52 c c 15
+p b c 15
+p c b 4.5 ok
+11 p4
+d b b
+i5 b b
+ip b b 70
+p c b 10
+p c c 2 ok
+12 p3
+i4 a c
+ip b b 15
+p b b 9 ok
+13 p4
+d b b
+56 b b 
+p c c 10
+p c c 1.5 ok
+14 p4
+d b b
+56 b b
+p b b 17
+p b b 3
+15 p5
+d b b
+i5 b b
+ip a a
+p c b 5.5 ok
+16 p4
+d c b
+ip b b 80
+p b b 11 ok
+17 p3
+i7 a a 
+p c c 3 ok
+18 p5
+d b c h
+I5 b b
+ip b c
+ip b b 10
+p C b 3.5 ok

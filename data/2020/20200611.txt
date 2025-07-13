@@ -1,0 +1,95 @@
+2020.06.11 14:27
+골프존카운티 무주
+바시공
+1 P4
+D B B
+I7 B C
+P C C 10
+P C C 4 OK
+2 P5
+D B C
+U3 B B
+I6 C C
+I6 B B
+P C C 25
+P A A 8
+3 P3
+I6 C B
+56 A B
+P C C 3 OK
+4 P4
+D B B
+I6 C B
+P C B 30
+P C C 8
+P A A 3
+5 P4
+D B B
+I8 C C
+P C C 30
+P B C 10
+P A A 3
+6 P3
+I8 B C
+56 A A
+P A A 3
+7 P5
+D B B
+U3 B B
+56 C C
+P B C 20
+P B B 8 OK
+8 P4
+D C C H
+IP B B
+P B A 25 OK
+9 P4
+D C C OB
+52 B C
+P C C 25
+P A A 7
+10 P4
+D B B
+I9 C C H
+56 B B
+56 C C 20
+P B B 20
+P B B 2
+11 P5
+D B B
+U3 C B
+I6 B C
+56 C C 20
+56 B B 10
+P C C 3 OK
+12 P3
+I7 B B
+P B A 10 OK
+13 P4
+I5 B C
+I5 C C B
+56 A A OK
+14 P4
+D C B
+I6 C C
+56 C C
+P B B 10
+P B B 3
+15 P4
+U3 B B
+52 B B 60
+P B B 7 OK
+16 P3
+I8 B B
+P B B 10 OK
+17 P5
+U3 B B
+U3 C C OB
+56 C C 55
+P C C 20
+P C C 4 OK
+18 P4
+D B B
+IP B B
+P B B 12
+P C C 2 OK

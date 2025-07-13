@@ -1,0 +1,98 @@
+2020.08.13 13:26
+오너스
+바시공
+1 P4
+U3 A B
+I8 B B
+P B C 15
+P B B 4 OK
+2 P4
+D C C H
+I7 C B
+P A B 4 OK
+3 P5
+D B B
+U3 B B
+U3 B C
+52 C C
+56 B C
+P B C 8 OK
+4 P3
+I7 B C
+56 A A 20 OK
+5 P4
+D A B
+56 C C 60
+56 C C 25
+56 B A 10
+P B B 2
+6 P4
+D B B
+I8 B C
+56 C C
+56 C C
+P C B 15
+P B B 2
+7 P5
+D C B
+U3 B C
+I8 C C H
+56 C B
+P C C 15
+P B B 4 OK
+8 P3
+I8 A C
+52 C B
+P C B 4 OK
+9 P4
+D B B
+U3 B C
+56 C C 20
+P B C 15
+P B B 6 OK
+10 P4
+D B B
+IP B C
+56 C C
+P A B 4OK
+11 P4
+D A B
+I8 C B
+P B B 10 OK
+12 P3
+I4 A B
+P C C 12
+P A B 3 OK
+13 P4
+D B B
+I6 C C
+52 B C
+P A B 10 OK
+14 P4
+D B B
+I7 B C B
+56 B C
+P C C 20
+P C C 7 OK
+15 P5
+D A B
+U3 C C
+I5 A B
+56 A B 25
+P C C 4
+P C C 1.5 OK
+16 P3
+I8 A B
+P C C 8
+P C C 2 OK
+17 P4
+D A C
+IP B C
+56 C B
+P C C 3 OK
+18 P5
+D C B
+U3 A B
+I9 C C
+56 B C
+P A B 10 OK

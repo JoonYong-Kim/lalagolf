@@ -1,0 +1,86 @@
+2024-09-25 12:52 금산에딘버러 김태욱 서해근 정대현
+1 P5
+D C C
+I7 C C
+I5 B B
+I7 B B 110
+P B B 20
+P B C 4
+P B B 2.5 OK
+2 P4
+D C B
+I8 B A
+P B B 2.5 OK
+3 P4
+D B B
+IA C B
+P B B 10 OK
+4 P3
+I6 C B
+P B B 20
+P B C 3 OK
+5 P4
+D A B
+I5 B B
+P B B 14
+P B B 1.5
+6 P4
+UW C C
+U3 B C
+IP B B 20
+P B B 4 OK
+7 P3
+I6 C C
+56 B B 30
+P B B 5 OK
+8 P4
+D C C OB
+I7 B B
+P A A 5
+9 P5
+D B C 
+I5 B B
+56 A A
+P B B 3 OK
+10 P5
+UW B C
+I5 C B
+I5 B B
+P B B 12 OK
+11 P3
+I4 C C
+52 B B 40
+P B B 5 OK
+12 P4
+D B C
+I9 C B 95
+P C C 25
+P B B 7 OK
+13 P4
+D C C
+15 B B
+P C B 10
+P B B 2.5 Ok
+14 P5
+D C C OB
+I5 C B
+52 A B 60
+P B B 4 OK
+15 P4
+D C B
+IP B B 70
+P B B 4 OK
+16 P4
+D B B
+IP C B
+P B B 8 OK
+17 P3
+I4 B C
+56 B B 10
+P B B 3
+18 P4
+D C C
+I5 B C
+IP B C 45
+56 C C 20
+P B B 12 OK

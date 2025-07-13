@@ -1,0 +1,91 @@
+2021.06.22 7:33
+남여주
+허박님 마이키님 포비아님
+1 P4
+D B B
+I8 B B
+P B B 6 OK
+2 P4
+D B C
+I5 C B
+56 C C 25
+P B B 17
+P B A 3
+3 P5
+D C B
+U3 C B
+I9 B B
+P B C 14
+P C C 3 OK
+4 P4
+U3 B B
+I7 C C
+56 C B 30
+P B A 13 OK
+5 P4
+D C C H
+I9 C C
+56 B B 21
+P C C 3
+P B B 4 OK
+6 P3
+I6 C C H
+56 B B 31
+P B B 4 OK
+7 P5
+W3 A B
+I7 B B
+IW C C
+IP C C 15
+P B B 4 OK
+8 P3
+I5 C C
+P C C 25
+P B C 3 OK
+9 P4
+D B B
+I8 B C
+56 B C 15
+P B C 7 OK
+10 P4
+D B B
+IP B B
+P B B 3 OK
+11 P4
+D B B
+56 B B 52
+P B C 3
+P B B 2.5
+12 P3
+I8 B C
+IP B B 15 
+P B B 4 OK
+13 P5
+D B C
+I5 B B
+I9 B B
+P B B 7 OK
+14 P4
+D C B
+IW B B
+P B B 4 OK
+15 P3
+I7 B B
+P B C 8
+P C C 2 OK
+16 P4
+D A B
+52 B B 61
+P B B 4 OK
+17 P5
+D B A
+I6 B C
+56 B B
+P B B 8 OK
+18 P4
+D B C B
+I7 B B
+56 C C 51
+56 C C 15 
+56 C C 10
+P B B 12 OK

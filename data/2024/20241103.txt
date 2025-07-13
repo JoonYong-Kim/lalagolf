@@ -1,0 +1,84 @@
+2024-11-03 13:31 포웰안성 홍성걸 김태우 김수현
+1 P4
+D C B
+IP B B
+P C C 16
+P B B 6 OK
+2 P4
+U3 B C OB
+IP B B
+P B B 7 OK
+3 P5
+D B B
+I5 B C B
+56 C B 30
+P C C 20
+P B B 7 OK
+4 P4
+W3 B C
+I8 B B
+P B B 20 OK
+5 P4
+D C C H
+IP C B
+P B B 20
+P B B 3
+6 P3
+I8 C C
+56 B B 12
+P B B 3
+7 P4
+D B B
+I8 B B
+P B A 25 OK
+8 P3
+52 C B
+P C C 13
+P B B 3 OK
+9 P5
+D A B
+I6 C C H
+56 B B 50
+P B B 9 OK
+10 P4
+D B B
+IP B B 70
+P B B 20 OK
+11 P5
+D B B
+UW B C H
+IP C B
+P B B 20
+P B B 3
+12 P4
+D B C
+I5 B B
+52 B B 40
+P C C 13
+P B B 2.5
+13 P4
+D B B
+IA C C
+52 C B 20
+P B B 10 OK
+14 P3
+I7 B C 120
+56 B C 12
+P B B 9 OK
+15 P5
+D C C H
+W3 A B
+56 B B 10
+P B B 7 OK
+16 P4
+D A B
+IP A A 68
+P B B 1.5
+I7 P3
+I6 B C
+56 C B 10
+P B B 4.5 OK
+18 P4
+D B B
+52 C B 60
+P B B 20 OK

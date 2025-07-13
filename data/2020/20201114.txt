@@ -1,0 +1,99 @@
+2020.11.14 12:18
+버드우드
+골당 섭카님 칼튼님 오호랑캐님
+1 P5
+D B C H
+U3 B B
+I9 B B
+P A A 10
+2 P4
+D B B
+I8 A C
+56 A A 25
+3 P4
+D B C H
+56 B C
+IP B B 10
+P B C 2 OK
+4 P3
+I5 B C
+IP B C 15
+P C B 7 OK
+5 P4
+D B B
+I7 C B
+P A B 7 OK
+6 P4
+D C C
+I5 C C
+I5 B C B
+56 B C
+56 B C
+56 C C
+56 C C 
+P C C 15
+P C C 2 OK
+7 P3
+I6 B B
+P B C 8
+P B B 4
+8 P5
+D A B
+I5 C C H
+U3 B B H
+56 B B
+P B B 7 OK
+9 P4
+D B B
+52 B B
+P B B 8 OK
+10 P4
+D C C
+I5 A B
+56 C C
+52 B C
+P A B 5 OK
+11 P4
+D C B
+I7 B C B
+56 C C B
+56 C C B
+56 C C
+P B B 8
+P B B 3 OK
+12 P5
+D C B
+U3 C C
+U3 B B
+IP B B
+P B B 3.5 OK
+13 P4
+D A B
+I8 C C B
+56 B B
+P C C 22
+P B C 3 OK
+14 P3
+I8 C C H
+56 B C
+P B B 6 OK
+15 P4
+D C B
+U3 B B
+I7 B B
+52 B B
+P C B 12
+P C C 1.5 OK
+16 P4
+D C B
+IP B B
+P C B 12
+P C C 3 OK
+17 P3
+I8 C C
+IP B B
+P B C 3 OK
+18 P4
+D A B
+IP A A
+P B A 2

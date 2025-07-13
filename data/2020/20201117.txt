@@ -1,0 +1,93 @@
+2020.11.17 13:18
+아난티
+조인 수현 관계자 관계자
+1 P5
+D B B
+U3 C C
+IP C C
+IP C C 30
+IP B B 11
+P B A 4.5
+2 P3
+I6 B C
+IP C B 20
+P A B 9
+3 P4
+D B C
+I9 B C
+IP C C 12
+P B A 10 OK
+4 P4
+D B C B
+I8 A C
+IP B B 16
+P A B 6 OK
+5 P4
+D C C
+U3 C C
+U3 C B
+56 C C 69
+56 C C 17
+52 C B 11
+P C C 2
+P B B 5 OK
+6 P3
+I5 C B
+P A B 10 OK
+7 P4
+U3 B C H
+I7 C C H
+56 B B 25
+P B B 7 OK
+8 P5
+D C C H
+U3 B C B
+I7 B B
+52 B B 55
+P B B 8 OK
+9 P4
+D B B
+I8 B C
+IP C B
+P B B 5 OK
+10 P4
+D B C H
+IP C C
+IP C C 20
+P C C 13
+P B B 3 OK
+11 P4
+D B B
+I7 B B
+P B B 9
+P B B 1.5
+12 P3
+I5 B B
+P C C 7
+P B B 5 OK
+13 P4
+D B B
+IP B A
+P B B 3 OK
+14 P3
+I6 B B
+P B B 5 OK
+15 P4
+D B B
+I8 B B
+P A A 12 OK
+16 P5
+D C C H
+U3 B B
+56 B B
+P B B 6 OK
+17 P4
+D B C H
+I7 B C
+56 B B
+P B B 4 OK
+18 P4
+D B B
+52 B B
+P C B 7
+P B B 2 OK

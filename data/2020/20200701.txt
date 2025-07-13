@@ -1,0 +1,97 @@
+2020.07.01 07:19
+포천힐스
+조인 삼지님
+1 P5
+D B C
+I5 B B
+I6 C C
+56 C C
+56 B B
+P C B 7
+P C C 3 OK
+2 P4
+D C C OB
+I9 C C
+56 B B
+P B B 3 OK
+3 P5
+D C C
+I7 B A
+I5 C C
+56 B B
+P B B 12
+P C C 4 OK
+4 P3
+I7 B A
+P C C 13
+P C C 4 OK
+5 P4
+D C C
+I6 B A
+56 C B
+P B A 7 OK
+6 P3
+I6 C B
+56 B B 25
+P B B 4 OK
+7 P4
+D C C H
+56 B B
+P B B 6 OK
+8 P4
+D C C H
+52 C C
+56 B B
+P C C 8
+P B B 1.5
+9 P4
+D B B
+I5 C B
+56 C C
+56 A A OK
+10 P5
+D B C
+U3 B B
+U3 B B
+52 C C
+P B B 15 OK
+11 P3
+I7 C B
+56 C C
+P B B 5 OK
+12 P4
+D B A
+I4 B B
+P B A 30 OK
+13 P5
+D C C H
+U3 B B
+56 B B
+P B B 20
+P C C 2 OK
+14 P3
+I5 C B
+56 B B
+P B B 7 OK
+15 P4
+D B A
+IP B B
+P B B 20
+P C C 2 OK
+16 P3
+I6 C C
+56 B B
+P B B 10 OK
+17 P4
+D C C
+I7 C C
+I5 B B
+56 B B
+P B B 5 OK
+18 P5
+D B A
+U3 C C
+I9 B B
+56 B B
+P C B 10
+P C C 1.5 OK

@@ -1,0 +1,95 @@
+2021.04.14 7:15
+사우스스프링스
+삼지님 중형님 준호님
+1 P4
+W3 C B
+I7 C C B
+56 B C B 50
+56 B C B 30
+56 B C 20
+P B B 6 OK
+2 P4
+D C B
+I4 C C B
+56 B C 
+P B B 13
+P C C 2 OK
+3 P5
+D B B
+I5 C B
+56 A A 30
+P C C 1.5 OK
+4 P4
+D B B
+52 B C B
+56 C C B
+56 B B
+P B B 6 OK
+5 P3
+I6 C C
+IP B B
+P A A 6
+6 P5
+D B B
+W3 C C
+U4 B B
+I9 B B 80
+P C B 8 OK
+7 P4
+D B B
+I4 C C B
+56 B B
+P B B 13
+P B B 1.5
+8 P3
+W3 B C
+56 A A 30
+P B B 1
+9 P4
+D B B
+I8 C C
+IP B A 15
+P C C 1.5 OK
+10 P4
+D C C
+I7 B B
+56 B B
+P B C 7 OK
+11 P5
+D B B
+U4 B B
+I7 B B
+P B B 10 OK
+12 P4
+D A C
+I8 B A
+P C B 9 OK
+13 P4
+D A C B
+I9 B B
+P C C 30
+P B B 10 OK
+14 P3
+I6 C C B
+56 B B
+P A B 3 OK
+15 P4
+D B B
+I7 B B
+P B B 17
+P B B 5 OK
+16 P5
+D B B
+I5 B B
+I9 B A 70
+P B B 1.5
+17 P3
+I6 B B
+IP B B 18
+P C C 3 OK
+18 P4
+D B C B
+I6 C B
+IP C B
+P B B 25
+P B B 2

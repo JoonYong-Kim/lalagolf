@@ -1,0 +1,89 @@
+2020.06.07 12:36
+아리지
+안양
+1 P5
+D A C H
+U3 B B
+56 B A 20
+P A A 4
+2 P4
+D B B
+52 C C 85
+56 B B 25
+P B B 4 OK
+3 P3
+I8 B B
+P B B 6 OK
+4 P4
+D C C H
+I6 B C
+56 C C 15
+P B B 7 OK
+5 P4
+D B C
+IP B C B
+56 C C
+56 C C 30
+P B B 11 OK
+6 P3
+I5 C C B
+56 C C B
+56 C B
+P B B 10 OK
+7 P4
+D A B
+IP B B
+P B B 18 OK
+8 P4
+D B A
+I9 B C
+P B B 7 OK
+9 P5
+D B B
+U3 B B
+IP B B
+P B B 8 OK
+10 P4
+D B B
+I8 B B
+P B B 10 OK
+11 P3
+I9 C C H
+56 A A 10 OK
+12 P4
+D B C
+I7 C C B
+56 C C B
+56 C C
+56 C B
+P B B 10 OK
+13 P5
+D B C
+I8 C C H
+I5 C C H
+56 B B
+P B B 4 OK
+14 P4
+D B B
+52 B B 85
+P C C 15
+P A A 4
+15 P3
+I8 B B
+P C C 10
+P A A 3
+16 P5
+D B B
+U3 B B
+I9 A A
+P A A 3
+17 P4
+D B B
+56 C C 50
+56 C C 10
+P A A 7
+18 P4
+D B B
+I9 C C
+52 B B
+P B B 7 OK

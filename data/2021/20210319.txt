@@ -1,0 +1,98 @@
+2021.03.19 08:03
+메이플비치
+박수현 최박사님 송대근박사님
+1 P4
+D C C H
+I5 C B
+IP C C
+P A A 15 OK
+2 P5
+D B B
+W3 B C
+IP C C H 87
+IP B B 15
+P B C 4
+P B B 1.5
+3 P4
+D B B
+I8 C C B
+58 C C B
+58 C B
+58 C C
+P C C
+P C C OK
+4 P4
+D B B
+52 C C 80
+52 C B 40
+P B C 14
+P B B 2
+5 P3
+I7 B C
+IP B B 15
+P B B 5 OK
+6 P5
+W3 B B
+U4 B B
+I9 A B
+P B B 6 OK
+7 P4
+D C B
+I6 C C
+52 C C B
+56 B B
+P B B 10 OK
+8 P3
+I6 C C B
+56 C C
+P C C 15
+P B B 4 OK
+9 P4
+D C B
+U4 B B
+IP C C 48
+P B B 20
+P B B 2
+10 P4
+D B B
+I7 B B
+P C B 15
+P B C 1.5 OK
+11 P5
+D B C H
+W3 B B
+U4 C B
+IP C B
+P B C 4 OK
+12 P4
+D C C
+I8 B C
+56 B C 25
+56 C C
+P B C 4 OK
+13 P3
+I6 B B
+P B A 20 OK
+14 P4
+D C C H
+U4 B B
+I6 B B
+P C C 25
+P B B 8 OK
+15 P3
+I6 B B
+P B B 15 OK
+16 P4
+W3 A B
+I8 C C
+IP B B 20
+P B B 5 OK
+17 P4
+D B B
+I7 B B
+P B B 13 OK
+18 P4
+D B B
+U4 B B
+IP C C
+P B B 7 OK

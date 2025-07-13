@@ -1,0 +1,91 @@
+2020.06.21 13:47
+히든밸리
+골프당
+1 P5
+D B B
+U3 B A
+52 B B
+P B B 7
+P B B 2
+2 P4
+D B C B
+I7 C B
+56 B B 25
+P C B 8
+P C C 1.5 OK
+3 P4
+D A C B
+I8 A A
+P A A 1
+4 P3
+I8 C C B
+56 B B
+P B B 9 Ok
+5 P4
+D C C OB
+56 C C
+P A A 20 OK
+6 P3
+I6 B B
+P B B 10
+P B B 2
+7 P5
+D B A
+U3 C C
+I6 B B
+56 A B 17
+P C C 1.5 OK
+8 P4
+D B B
+I5 C B
+56 B B 30
+P B B 7 OK
+9 P4
+U3 B A
+I4 C B
+56 A B OK
+10 P4
+D C C
+U3 B C
+56 B B
+P C C 3 OK
+11 P4
+D C C
+I9 C C
+56 C C
+56 B B
+P B B 10 OK
+12 P5
+D B B
+I5 A C H
+I5 B B
+P B B 10 OK
+13 P4
+D B B
+I9 C C
+56 A A 17 OK
+14 P3
+IP A A
+P B B OK
+15 P5
+D B B
+U3 C B
+I8 C C
+56 C C 70
+56 B B 10
+P B B 4
+16 P3
+I7 A C
+56 B B
+P C C 3 OK
+17 P4
+D C C
+I9 C C H
+56 C C 60
+56 B B
+P A A 5
+18 P4
+D B B
+I7 C C
+56 B B
+P B B 5 OK

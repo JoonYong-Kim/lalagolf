@@ -1,0 +1,93 @@
+2020.08.25 06:34
+라싸골프클럽
+골프당 텔레님 포푸님 파라오님
+1 P4
+D C B
+U3 B B
+P B B 17
+P B B 1.5
+2 P3
+I8 B C
+56 B C
+P B B 20
+P B C 3.5 OK
+3 P4
+D C B
+I7 B C H
+56 B B
+P B B 4 OK
+4 P4
+D B B
+I5 B B
+I9 C C
+56 B B
+P B B 4 OK
+5 P3
+I8 B C
+56 B B
+P A C 7.5 OK
+6 P4
+I5 A B
+I7 A B
+P B B 10
+P B B 1
+7 P4
+U3 C C H
+I8 B C
+56 B B
+P C B 4 OK
+8 P5
+D C B
+I5 C C
+I5 B B
+IP A B
+P C C 10
+P B B 4.5 OK
+9 P4
+D C B
+I6 C C
+56 B B
+P B C 4 OK
+10 P4
+D C C
+I9 B C
+56 B B
+P C B 3 OK
+11 P4
+D B B
+56 C C
+56 A A OK
+12 P3
+I9 C B
+P C C 20
+P B B 5 OK
+13 P5
+D C C OB
+I7 C B
+I9 B B
+P B C 29
+P C C 4 OK
+14 P3
+I5 B B
+P B B 15 OK
+15 P5
+D C C
+U3 A B
+I8 C C
+56 C C
+56 C C
+P A B 10 OK
+16 P4
+D A B
+IP A A
+P C C 4 OK
+17 P3
+I3 C C
+56 B B
+P C C 1.5 OK
+18 P5
+D A B
+U3 C C H
+I5 C C
+52 A B
+P B B 6 OK

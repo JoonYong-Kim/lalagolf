@@ -1,0 +1,97 @@
+2020.07.30 07:06
+샌드파인
+조인 박수현
+1 P4
+D B B
+I5 C C
+IP C C B
+56 A B
+P B B 7 OK
+2 P4
+D B B
+I6 B B
+P B B 24
+P B B 3 OK
+3 P3
+I7 B B
+P B C 20
+P B B 4
+4 P5
+D B C H
+U3 C C
+I5 B B
+56 C B
+P C C 20
+P C B 10 OK
+5 P4
+D B B
+IP C C
+56 B B
+P B B 9 OK
+6 P3
+I7 B B
+P C C 20
+P B B 4 OK
+7 P5
+D B B
+I5 C C
+I5 B B
+52 B B 60
+P B B 4 OK
+8 P4
+D C C H
+I5 C C B
+56 A C B
+56 B B 30
+P B B 10 OK
+9 P4
+D C B
+I8 C C
+56 A A OK
+10 P5
+D B B
+I5 C B
+I9 B C
+P B B 7
+P B B 2 OK
+11 P4
+D B C B
+I8 B C B
+56 C B
+P C C 7
+P B B 4 OK
+12 P4
+D C C H
+I5 C C H
+56 B B 25
+P B B 4 OK
+13 P3
+I8 C C B
+56 A B
+P B B 2 OK
+14 P4
+D B B
+I7 C C
+56 C C
+56 C C 25
+P C C 20
+P B B 5 OK
+15 P4
+D B B
+I7 C B
+P B B 20 OK
+16 P4
+D B C H
+I8 C C
+56 B B 20
+P B B 4 OK
+17 P3
+I9 C C H
+56 B B 25
+P B B 7 OK
+18 P5
+D B B
+U3 B C H
+52 C C 60
+56 C C 15
+P B B 7 OK

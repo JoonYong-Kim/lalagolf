@@ -1,0 +1,92 @@
+2024-04-24 7:41 옥스필드 ??
+1 P4
+D C C
+I7 C C
+56 B B 32
+P B B 8 OK
+2 P5
+D B B
+I5 C C
+I6 C C
+56 B B 20
+P B B 4 OK
+3 P3
+I7 B B
+P B A 20 OK
+4 P4
+D C C H
+IP B B 90
+P B A 7
+5 P4
+D B B
+I7 C C
+IP B B 20
+P B C 3 OK
+6 P5
+D B B
+I5 C C
+I7 C B
+P C C 20
+P B B 4
+7 P4
+D C C H
+I7 C B
+P B C 20
+P B B 2.5
+8 P3
+I6 A A
+P B B 1.5
+9 P4
+D C C H
+I4 C C
+IP C B
+P C C 30
+56 B B 8 OK
+10 P4
+D B B
+IA B B
+P C C 14
+P C C 4
+P C C 2 OK
+11 P4
+D C C
+U4 C C
+IP B B 15
+P B C 3 OK
+12 P3
+I7 B B
+P B B 6
+P B B 2
+13 P5
+D B C
+I6 B B
+U4 C C
+52 B C B 50
+52 C C 30 
+52 B B 20
+P B B 7 OK
+14 P4
+D B B
+52 B B
+P B B 10
+P B B 2
+15 P4
+D C C OB
+I7 B B
+P B B 12
+P B B 1.5
+16 P3
+I7 B C
+56 B B 20 OK
+17 P4
+D C C H
+IA B C
+56 C B 10
+P B B 15
+P B B 3
+18 P5
+D C C
+I7 B B
+I5 B C
+P B B 15
+P B B 7 OK

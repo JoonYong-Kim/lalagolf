@@ -1,0 +1,90 @@
+2024-06-05 07:51 알펜시아 박수현,김수현,송대근
+1 p4
+d c b
+ip c b
+p c c 7
+p b b 3
+2 p3
+i7 c a
+p c c 2 ok
+3 p4
+d c b
+52 c c
+56 b b 15
+p b b 4.5 ok
+4 p4
+d b c b
+i7 a c
+56 b b 15
+p c c 2 ok
+5 p5
+d c c b
+i7 b b 
+i8 b c b
+56 b c 20
+56 b c 15
+56 b c 16
+p c c 8 ok
+6 p3
+i7 b b
+P b a 5 ok
+7 p5
+d b c
+uw b b
+i7 c b
+p b a 12 ok
+8 p5
+d b b
+i5 b b 
+52 b b
+p b b 13
+p b c 2 ok
+9 p4
+d b c h
+i9 a c
+56 b b 15
+p c c 20
+p b b 3 ok
+10 p4
+d c b
+ip a c
+52 b b 10 ok
+11 p3
+i8 c a
+p a b 8 ok
+12 p5
+uw b c h
+i8 c c
+uw c c b
+ia c c
+56 b b 50
+p b b 4 ok
+13 p4
+d c c ob
+52 b b 60
+p b b 12 ok
+14 p3
+i7 b b 
+p c c 17
+p b b 4
+15 p4
+d b c b
+52 b c b 40
+56 b b 20
+p b b 4
+16 p5
+d c c b
+i6 b b
+i5 c c b
+i8 b c
+52 b b 40
+52 b b 16
+p b b 4 ok
+17 p3
+i8 b b
+p b b 5.5 ok
+18 p5
+d c c ob
+uw b b
+56 b b 50
+p b b 7 ok

@@ -1,0 +1,96 @@
+2020.09.18 18:15
+파인스톤
+친구 수현 성걸 길수
+1 P4
+D B B
+U3 B C
+56 C C B
+56 B B
+P B B 15 OK
+2 P3
+I6 B B
+P C C 15
+P B B 4 OK
+3 P4
+D C C
+I5 B B
+56 B B
+P B C 3 OK
+4 P4
+D C B
+U3 C B
+I8 A C
+56 B B
+P B C 3 OK
+5 P4
+D B B
+IP B C
+P B B 35
+P B B 3
+6 P4
+D B B
+I5 A B
+P B B 20
+P B C 3 OK
+7 P3
+I7 B B
+P C C 15
+P B C 4 OK
+8 P5
+D C B
+U3 C C B
+I6 C B
+56 A B
+P C C 5 OK
+9 P4
+D C C
+I6 B A
+P B B 20
+P B B 2
+10 P4
+D C C OB
+I6 C C
+56 C C
+P B B 15
+P B C 2 OK
+11 P4
+D C B
+I9 C C
+56 B B
+P C C 5
+P B B 2
+12 P3
+I6 B B
+P B B 15 OK
+13 P5
+D B B
+I5 C B
+I9 C C
+56 B B
+P B B 5 OK
+14 P4
+D C C H
+I7 C C
+56 B B 22
+P B B 7 OK
+15 P4
+D B B
+I9 B B
+P B B 20
+P B C 2 OK
+16 P4
+U3 B B
+I4 B B
+P B B 30
+P B B 4 OK
+17 P3
+I7 C C
+56 B B
+P B B 10
+P B B 1
+18 P5
+D A B
+I5 A B
+52 B B
+P B B 30
+P B B 6

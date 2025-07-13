@@ -1,0 +1,94 @@
+2021.05.24 17:47
+골드CC
+홍성걸 김수현 나길수
+1 P4
+D C C
+I6 B B
+56 B C 44
+P C C 13
+P B C 5 OK
+2 P4
+W3 A B
+52 B C 60
+IP C C 8
+P B B 7 OK
+3 P5
+D B B
+W3 B B
+56 B B 30
+P B B 4.5 OK
+4 P4
+D B B
+IP B B 75
+P B C 14
+P C C 2 OK
+5 P4
+D C C H
+I8 A C
+IP B C 23
+P C B 6 OK
+6 P3
+I7 B C
+56 C C 14
+P B B 12 OK
+7 P4
+D B B
+IP C C B
+56 C C B 20
+56 B A 20
+P B A 4
+8 P5
+D B B
+I5 C B
+I9 C C
+56 B B
+P B B 5 OK
+9 P3
+I6 C C
+56 B B
+P B B
+10 P5
+D B B
+U4 B B
+I5 C B
+P A B 30
+P B B 1.5
+11 P4
+D B B
+I9 C C B
+56 C B 45
+56 A B 40
+P A B 5 OK
+12 P4
+D B B
+I8 C C
+56 B B 35
+P B C 4 OK
+13 P4
+W3 A B
+I5 B C
+56 B B 33
+P B B 9 OK
+14 P3
+I7 C C
+IP B B 20
+P B B 4 OK
+15 P5
+D B C
+I7 B C H
+W3 B B
+56 B B 35
+P B B 7 OK
+16 P3
+I5 B B
+P B B 12 OK
+17 P4
+D B B
+56 C C 45
+56 C B 10
+P B B 4 OK
+18 P4
+W3 B B
+I7 B B
+56 A B 75
+P B B 6 OK

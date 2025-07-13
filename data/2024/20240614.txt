@@ -1,0 +1,95 @@
+2024-06-14 13:57 롯데스카이힐부여 정대현 서해근 우이사
+1 P4
+D C B
+I6 C C
+56 C B 18
+P B B 4 OK
+2 P4
+D C B
+I7 B A
+P B B 4
+3 P4
+D B B
+52 B A
+P B B 1.5
+4 P4
+D C B
+I7 C C
+56 B B 18
+P B B 5 OK
+5 P3
+I8 c C
+56 C B 15
+P B B 10
+P C C 1.5 OK
+6 P5
+D C C H
+UW A B
+I9 A A 90 OK
+7 P4
+D B B
+56 B C
+56 C C 16
+56 B B 16
+P B B 3
+8 P3
+I9 B B
+P B B 10 OK
+9 P5
+D C B
+I5 B C H
+I5 B C
+56 C C
+56 C B
+52 B B 37
+P B B 4.5 OK
+10 P4
+D B B
+52 B B 60
+P C C 10
+P B C 6
+P B B 1.5
+11 P4
+D B B
+I9 C C
+IP B B 10
+P B B 11 OK
+12 P3
+I6 C C H
+56 B B 40
+P C C 3.5
+P B B 1.5
+13 P5
+D A B
+W3 B B
+56 C B 20
+P C C 10
+P B B 2
+14 P4
+I5 C C
+I8 C C
+I8 A B
+P C C 6
+P C C 2 OK
+15 P3
+I8 B B
+P C C 20
+P B A 6
+16 P5
+D B B
+I5 C B
+UW B C 13
+56 B B 16
+P C C 5
+P B B 5 OK
+17 P4
+D C C OB
+I5 B C B
+56 C C 16
+P C C 10
+P B B 4 OK
+18 P4
+ D A C OB
+IP B B
+P C C 13
+P B B 3 OK

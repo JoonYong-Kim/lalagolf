@@ -1,0 +1,97 @@
+2024-04-10 13:58 신라 박수현 정대현 김수현
+1 P5
+D B B
+UW B B
+52 B C 66
+P C C 7
+P B B 2.5 Ok
+2 P4
+UW C B
+I6 C C
+56 C B 20
+P B B 4.5 OK
+3 P4
+D B C H
+I5 C C
+52 C C 25
+P C C 15
+P B B 4.5 OK
+4 P4
+D C C
+I8 B C
+56 B B 30
+P B B 4 OK
+5 P3
+I6 C C
+P B C 25
+P B B 7 OK
+6 P4
+D B B
+I5 C B
+P C C 25
+P B B 4.5 OK
+7 P4
+D B C
+I8 C C
+52 C C 40
+56 B B 20
+P B B 3 OK
+8 P3
+I5 C C
+56 B B 20
+P B C 3 OK
+9 P5
+D B B
+UW C C
+I8 B B
+52 B B
+P C B 14
+P C C 10 OK
+10 P4
+D C B
+I7 B B
+P B B 20
+P C C 2 OK
+11 P5
+D B B
+UW A B
+IP A B 70
+P B B 4.5 OK
+12 P4
+D C C
+I5 B C B
+56 B B 20
+P B B 3 OK
+13 P4
+D A B
+I5 C C
+56 B A
+P B B 4 OK
+14 P4
+I6 C C
+56 B B 30
+P B A 2.5
+15 P4
+D B B
+IP B B 70
+P C C 17
+P B B 4.5 OK
+16 P5
+D C B
+I7 B B
+UW B B
+52 C C 6 OB
+56 B B 30
+P B B 10
+P B C 2.5 OK
+17 P3
+I4 C C
+56 B B 30
+P C C 4.5 OK
+18 P4
+D B B
+I7 B C
+56 C C 30
+56 B B 25
+P C C 5
+P C C 2 OK

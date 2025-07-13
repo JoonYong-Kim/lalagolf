@@ -1,0 +1,89 @@
+2020.08.18 13:22
+화순엘리체
+조인 김장호
+1 P5
+D C C
+U3 B B
+U3 B C OB
+56 B B 16
+P B B 6 OK
+2 P4
+D C C OB
+I7 C B
+56 B B 20
+P B B 4 OK
+3 P4
+D C C OB
+IP B B
+P C B 8 OK
+4 P4
+D B B
+I8 B C
+56 C B
+P B B 10 OK
+5 P3
+I8 C C
+56 B B
+P C B 7
+P C C 1.5 OK
+6 P4
+U3 B B
+52 A C
+56 C B
+P C B 7 OK
+7 P5
+D C B
+U3 B B
+IP C C
+56 C B
+P B B 6 OK
+8 P4
+D A B
+I8 B C
+56 B B
+P B B 4 OK
+9 P3
+I3 B C OB
+56 B B
+P B B 8 OK
+10 P4
+D A B
+I8 A B
+P A A 6
+11 P4
+D B B
+IP B B
+P B B 7 OK
+12 P3
+I5 A B
+P B B 10 OK
+13 P5
+D C C OB
+I6 A B
+I7 C B
+P A B 20
+P B B 1.5
+14 P4
+D B B
+I6 C C
+56 B B
+P B C 9
+P A A 4
+15 P3
+U3 B C
+56 B A
+P C C 1.5 OK
+16 P4
+D A B
+IP A B
+P B B 7 OK
+17 P4
+D C B
+I7 A C
+56 C B
+P B B 6 OK
+18 P5
+D C B
+I5 A B
+56 B B
+P B B 6 OK

@@ -1,0 +1,101 @@
+2020.11.03 08:30
+레이캐슬
+안양방 마구때려님 삼지님 중형님
+1 P4
+D B B
+52 C C B
+56 B C B
+56 B B
+52 C C 8
+P A B 4.5 OK
+2 P5
+D B C B
+I5 A B
+I5 A C B
+56 A A
+P B C 2
+3 P3
+I5 C B
+IP B B
+P C B 5 OK
+4 P4
+D C B
+I7 C C
+I7 B B
+P C C 20
+P C B 6 OK
+5 P5
+D A B
+U3 C C
+I7 C C H
+I8 B C H
+I8 B B 30
+P B B 4 OK
+6 P4
+D B B
+I7 C C
+IP A A 30
+P C B 3 OK
+7 P4
+D C B
+I8 B C B
+56 B B
+P B C 12
+P B B 4 OK
+8 P3
+I7 C C B
+56 B B
+P B C 20
+P B B 6 OK
+9 P4
+D C B
+I6 B C
+56 B B
+P B B 7
+P B B 2
+10 P4
+D B B
+I8 B B
+P B B 5 OK
+11 P4
+D C C OB
+I5 C B
+56 C C
+P B B 15 OK
+12 P5
+D B B
+I8 B B
+I9 B B
+P B B 9 OK
+13 P4
+D B C B
+I6 B B
+56 B B 22
+P B A 6
+14 P3
+I7 C C
+52 C C
+56 C B
+P B B 6 OK
+15 P5
+D C C OB
+I5 B B
+52 C C
+IP B B
+P B C 2 OK
+16 P4
+D C B
+I6 C C H
+IP B C 70
+IP B A 20
+P B B 1.5
+17 P3
+I5 B C
+P C C 30
+P B B 12
+P B C 3 OK
+18 P4
+D C B
+I8 C C
+56 B C
+P A A 10
