@@ -69,38 +69,18 @@ def round_detail(round_id):
         processed_shots.append(processed_shot)
 
     # Group shots by hole for easier GIR calculation
-    holes_with_shots = {}
+    holes_info = [[], []]
     for hole_info in holes_from_db:
-        holes_with_shots[hole_info['holenum']] = {
-            'hole_info': hole_info,
-            'shots': []
-        }
+        hole_info['GIR'] = True if hole_info['par'] >= hole_info['score'] - hole_info['putt'] + 2 else False
+        hole_info['GIR1'] = True if hole_info['par'] >= hole_info['score'] - hole_info['putt'] + 1 else False
+        if hole_info['holenum'] < 10:
+            holes_info[0].append(hole_info)
+        else:
+            holes_info[1].append(hole_info)
+
     for shot in processed_shots:
         if shot['holenum'] in holes_with_shots:
             holes_with_shots[shot['holenum']]['shots'].append(shot)
-
-    # Calculate GIR for each hole and prepare for 9-hole display
-    front_nine_holes = []
-    back_nine_holes = []
-    for holenum in sorted(holes_with_shots.keys()):
-        hole_data = holes_with_shots[holenum]['hole_info']
-        hole_shots = holes_with_shots[holenum]['shots']
-        
-        gir_status = False
-        strokes_to_green = 0
-        for shot_idx, shot in enumerate(hole_shots):
-            strokes_to_green += shot['score'] # Assuming shot['score'] is 1 for normal shots, >1 for penalties
-            if shot['on'] == 'G': # Ball landed on the green
-                if strokes_to_green <= hole_data['par'] - 2:
-                    gir_status = True
-                break # Found the shot that landed on the green, no need to check further shots for GIR
-        
-        hole_data['gir'] = gir_status # Add GIR status to hole data
-        
-        if holenum <= 9:
-            front_nine_holes.append(hole_data)
-        else:
-            back_nine_holes.append(hole_data)
 
     # Prepare data for club analysis chart
     club_counts = {}
@@ -122,8 +102,7 @@ def round_detail(round_id):
 
     return render_template('round_detail.html', 
                            round_info=round_info, 
-                           front_nine_holes=front_nine_holes, 
-                           back_nine_holes=back_nine_holes, 
+                           holes_info=holes_info,
                            shots=processed_shots, # Still pass processed_shots for the detailed shots table
                            club_labels=club_labels, 
                            club_data=club_data, 

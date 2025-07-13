@@ -373,9 +373,9 @@ def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
 
 def calculate_scores_and_stats(round_data: Dict) -> Dict:
     stats = {
-        'front_nine': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'holes': []},
-        'back_nine': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'holes': []},
-        'overall': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0}
+        'front_nine': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'GIR': 0, 'GIR1': 0, 'holes': []},
+        'back_nine': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'GIR': 0, 'GIR1': 0, 'holes': []},
+        'overall': {'total_shots': 0, 'total_par': 0, 'GIR': 0, 'GIR1': 0, 'score_relative_to_par': 0}
     }
 
     for i, hole in enumerate(round_data['holes']):
@@ -389,7 +389,9 @@ def calculate_scores_and_stats(round_data: Dict) -> Dict:
             'hole_num': hole['hole_num'],
             'par': par,
             'shots_taken': shots_taken,
-            'score_diff': score_diff
+            'score_diff': score_diff,
+            'GIR': True if shots_taken - hole['putt'] + 2 <= par else False,
+            'GIR1': True if shots_taken - hole['putt'] + 3 <= par else False
         }
 
         if i < 9: # Front nine
@@ -400,11 +402,19 @@ def calculate_scores_and_stats(round_data: Dict) -> Dict:
         current_nine['total_shots'] += shots_taken
         current_nine['total_par'] += par
         current_nine['score_relative_to_par'] += score_diff
+        if hole_stats['GIR']:
+            current_nine['GIR'] += 1
+        if hole_stats['GIR1']:
+            current_nine['GIR1'] += 1
         current_nine['holes'].append(hole_stats)
 
         stats['overall']['total_shots'] += shots_taken
         stats['overall']['total_par'] += par
         stats['overall']['score_relative_to_par'] += score_diff
+        if hole_stats['GIR']:
+            stats['overall']['GIR'] += 1
+        if hole_stats['GIR1']:
+            stats['overall']['GIR1'] += 1
     
     return stats
 

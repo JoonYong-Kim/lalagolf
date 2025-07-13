@@ -120,28 +120,37 @@
                 <tbody>
                     <tr>
                         <td>Par</td>
-                        {% for hole in front_nine_holes %}
+                        {% for hole in holes_info[0]%}
                         <td>{{ hole.par }}</td>
                         {% endfor %}
-                        <td>{{ front_nine_holes | sum(attribute='par') }}</td>
+                        <td>{{ holes_info[0] | sum(attribute='par') }}</td>
                     </tr>
                     <tr>
                         <td>Score</td>
-                        {% for hole in front_nine_holes %}
+                        {% for hole in holes_info[0]%}
                         <td>{{ hole.score }}</td>
                         {% endfor %}
-                        <td>{{ front_nine_holes | sum(attribute='score') }}</td>
+                        <td>{{ holes_info[0] | sum(attribute='score') }}</td>
                     </tr>
                     <tr>
                         <td>GIR</td>
-                        {% for hole in front_nine_holes %}
-                        <td>{{ '&#10003;' if hole.gir else '&#10007;' }}</td>
+                        {% for hole in holes_info[0] %}
+                        <td>{{ hole.GIR }}</td>
                         {% endfor %}
-                        <td>-</td>
+                        <td>{{ holes_info[0] | sum(attribute='GIR') }}</td>
+                    </tr>
+                    <tr>
+                        <td>GIR1</td>
+                        {% for hole in holes_info[0] %}
+                        <td>{{ hole.GIR1 }}</td>
+                        {% endfor %}
+                        <td>{{ holes_info[0] | sum(attribute='GIR1') }}</td>
                     </tr>
                 </tbody>
             </table>
         </div>
+    </div>
+    <div class="row">
         <div class="col-md-6">
             <h5>Back Nine</h5>
             <table class="table table-bordered table-sm">
@@ -157,24 +166,31 @@
                 <tbody>
                     <tr>
                         <td>Par</td>
-                        {% for hole in back_nine_holes %}
+                        {% for hole in holes_info[1] %}
                         <td>{{ hole.par }}</td>
                         {% endfor %}
-                        <td>{{ back_nine_holes | sum(attribute='par') }}</td>
+                        <td>{{ holes_info[1] | sum(attribute='par') }}</td>
                     </tr>
                     <tr>
                         <td>Score</td>
-                        {% for hole in back_nine_holes %}
+                        {% for hole in holes_info[1] %}
                         <td>{{ hole.score }}</td>
                         {% endfor %}
-                        <td>{{ back_nine_holes | sum(attribute='score') }}</td>
+                        <td>{{ holes_info[1] | sum(attribute='score') }}</td>
                     </tr>
                     <tr>
                         <td>GIR</td>
-                        {% for hole in back_nine_holes %}
-                        <td>{{ '&#10003;' if hole.gir else '&#10007;' }}</td>
+                        {% for hole in holes_info[1] %}
+                        <td>{{ hole.GIR }}</td>
                         {% endfor %}
-                        <td>-</td>
+                        <td>{{ holes_info[1] | sum(attribute='GIR') }}</td>
+                    </tr>
+                    <tr>
+                        <td>GIR1</td>
+                        {% for hole in holes_info[1] %}
+                        <td>{{ hole.GIR1 }}</td>
+                        {% endfor %}
+                        <td>{{ holes_info[1] | sum(attribute='GIR1') }}</td>
                     </tr>
                 </tbody>
             </table>
