@@ -215,6 +215,7 @@ def _post_process_shots(round_data: Dict):
                 putt += 1
             if shot['concede'] is True:
                 putt += 1
+        hole['putt'] = putt
 
 def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
     data = {
@@ -385,7 +386,9 @@ def calculate_scores_and_stats(round_data: Dict) -> Dict:
             'hole_num': hole['hole_num'],
             'par': par,
             'shots_taken': shots_taken,
-            'score_diff': score_diff
+            'score_diff': score_diff,
+            'GIR': True if par >= shots_taken - hole['putt'] + 2 else False,
+            'GIR1': True if par >= shots_taken - hole['putt'] + 1 else False
         }
 
         if i < 9: # Front nine
