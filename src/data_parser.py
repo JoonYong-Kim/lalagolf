@@ -35,7 +35,7 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
             if line_num == 0:
                 parts = original_line.split(' ', 3)
                 if len(parts) >= 3 and re.match(r'\d{8}', parts[0]) and re.match(r'\d{2}:\d{2}', parts[1]):
-                    round_data['tee_off_time'] = f"{parts[0]} {parts[1]}"
+                    round_data['tee_off_time'] = f"{parts[0][:4]}-{parts[0][4:6]}-{parts[0][6:]} {parts[1]}"
                     round_data['golf_course'] = parts[2]
                     if len(parts) >= 4:
                         round_data['co_players'] = parts[3]
