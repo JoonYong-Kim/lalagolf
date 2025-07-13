@@ -128,9 +128,9 @@
                     <tr>
                         <td>Score</td>
                         {% for hole in holes_info[0]%}
-                        <td>{{ hole.score }}</td>
+                        <td>{{ hole.diff}}</td>
                         {% endfor %}
-                        <td>{{ holes_info[0] | sum(attribute='score') }}</td>
+                        <td>{{ holes_info[0] | sum(attribute='diff') }}</td>
                     </tr>
                     <tr>
                         <td>Putt</td>
@@ -181,9 +181,9 @@
                     <tr>
                         <td>Score</td>
                         {% for hole in holes_info[1] %}
-                        <td>{{ hole.score }}</td>
+                        <td>{{ hole.diff}}</td>
                         {% endfor %}
-                        <td>{{ holes_info[1] | sum(attribute='score') }}</td>
+                        <td>{{ holes_info[1] | sum(attribute='diff') }}</td>
                     </tr>
                     <tr>
                         <td>Putt</td>
