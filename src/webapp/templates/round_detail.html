@@ -146,12 +146,12 @@
                 <td>{{ shot.holenum }}</td>
                 <td>{{ shot.club }}</td>
                 <td>{{ shot.feel }}</td>
-                <td>{{ shot.result }}</td>
+		<td>{{ shot.result }}, {{ 'A' if shot.error / shot.distance < 0.05 else 'B' if shot.error /shot.distance < 0.1 else 'C' }}</td>
                 <td>{{ shot.distance }}</td>
                 <td>{{ shot.penalty if shot.penalty else '-' }}</td>
                 <td>{{ 'Yes' if shot.concede else 'No' }}</td>
                 <td>{{ shot.retplace if shot.retplace else '-' }}</td>
-                <td>{{ shot.error / shot.distance * 100 if shot.error is not none else '-' }}</td>
+                <td>{{ shot.error if shot.error is not none else '-' }}</td>
             </tr>
         {% endfor %}
         </tbody>
