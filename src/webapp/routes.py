@@ -53,8 +53,8 @@ def round_list():
     cursor.execute("SELECT DISTINCT YEAR(playdate) AS year FROM rounds ORDER BY year DESC")
     unique_years = [row['year'] for row in cursor.fetchall()]
 
-    cursor.close()
-    conn.close()
+    # cursor.close() # Moved these lines
+    # conn.close()   # Moved these lines
 
     return render_template('rounds.html', 
                            rounds=rounds, 
