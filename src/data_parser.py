@@ -46,9 +46,23 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
                 header_processing_done = True
             else:
                 # Process multi-line header
-                if round_data['tee_off_time'] is None and (re.search(r'\d{8}', original_line) or re.search(r'\d{2}:\d{2}', original_line)):
-                    round_data['tee_off_time'] = original_line
-                elif round_data['golf_course'] is None and ('CC' in processed_line or 'G.C' in processed_line or 'GC' in processed_line or 'GOLF' in processed_line):
+                if round_data['tee_off_time'] is None and (re.search(r'\d{8}', original_line) or re.search(r'\d{2}:\d{2}', original_line) or re.search(r'\d{4}\.\d{2}\.\d{2}', original_line)):
+                    processed_time = original_line
+                    
+                    # YYYY.MM.DD HH:MM -> YYYY-MM-DD HH:MM
+                    match_dot = re.match(r'(\d{4})\.(\d{2})\.(\d{2})(.*)', processed_time)
+                    if match_dot:
+                        processed_time = f"{match_dot.group(1)}-{match_dot.group(2)}-{match_dot.group(3)}{match_dot.group(4)}"
+
+                    # YYYYMMDD HH:MM -> YYYY-MM-DD HH:MM
+                    match_8digit = re.match(r'(\d{8})(.*)', processed_time)
+                    if match_8digit:
+                        date_part = match_8digit.group(1)
+                        rest_of_string = match_8digit.group(2).strip()
+                        processed_time = f"{date_part[:4]}-{date_part[4:6]}-{date_part[6:]} {rest_of_string}".strip()
+
+                    round_data['tee_off_time'] = processed_time
+                elif round_data['golf_course'] is None:
                     round_data['golf_course'] = original_line
                 elif round_data['co_players'] is None:
                     round_data['co_players'] = original_line
@@ -134,8 +148,8 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
                             shot_data['on'] = 'bunker' # Bunker shot
                         else:
                             # If it's none of the above, it's an unparsed part
-                            round_data['unparsed_lines'].append(original_line)
-                            break # Stop processing this line
+                            # This part will be handled by the outer else block
+                            pass
 
             # Set default distance if not explicitly provided and club is valid
             if shot_data['distance'] is None and shot_data['club'] in VALID_CLUBS:

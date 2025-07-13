@@ -10,7 +10,7 @@ def sample_data_path():
         os.makedirs(data_dir)
     file_path = os.path.join(data_dir, 'test_round.txt')
     with open(file_path, 'w') as f:
-        f.write("2024-07-13 08:00\n") # Tee-off time
+        f.write("2024.07.13 08:00\n") # Tee-off time
         f.write("Lala Golf Club\n") # Golf Course
         f.write("John, Jane, Mike\n") # Co-players
         f.write("1P4\n")
@@ -23,7 +23,7 @@ def sample_data_path():
     return file_path
 
 def test_parse_file(sample_data_path):
-    parsed_data = parse_file(sample_data_path)
+    parsed_data, _ = parse_file(sample_data_path)
 
     assert parsed_data['file_name'] == sample_data_path
     assert parsed_data['tee_off_time'] == "2024-07-13 08:00"
@@ -42,7 +42,7 @@ def test_parse_file(sample_data_path):
     assert shot1_1['club'] == 'D'
     assert shot1_1['feel'] == 'B'
     assert shot1_1['result'] == 'C'
-    assert shot1_1['distance'] is None
+    assert shot1_1['distance'] == 220
     assert shot1_1['penalty'] is None
     assert shot1_1['concede'] is False
 
@@ -72,7 +72,7 @@ def test_parse_file(sample_data_path):
     assert shot2_1['club'] == 'I7'
     assert shot2_1['feel'] == 'A'
     assert shot2_1['result'] == 'A'
-    assert shot2_1['distance'] is None
+    assert shot2_1['distance'] == 135
     assert shot2_1['penalty'] is None
     assert shot2_1['concede'] is False
 
@@ -91,7 +91,7 @@ def robust_sample_data_path():
         os.makedirs(data_dir)
     file_path = os.path.join(data_dir, 'test_round_robust.txt')
     with open(file_path, 'w') as f:
-        f.write("2024-07-13 09:00\n") # Tee-off time
+        f.write("2024.07.13 09:00\n") # Tee-off time
         f.write("Robust Golf Course\n") # Golf Course
         f.write("Alice, Bob\n") # Co-players
         f.write("1p4\n")
@@ -104,7 +104,7 @@ def robust_sample_data_path():
     return file_path
 
 def test_parse_file_robustness(robust_sample_data_path):
-    parsed_data = parse_file(robust_sample_data_path)
+    parsed_data, _ = parse_file(robust_sample_data_path)
 
     assert parsed_data['file_name'] == robust_sample_data_path
     assert parsed_data['tee_off_time'] == "2024-07-13 09:00"
@@ -156,7 +156,7 @@ def sample_data_with_unparsed_lines_path():
         os.makedirs(data_dir)
     file_path = os.path.join(data_dir, 'test_unparsed.txt')
     with open(file_path, 'w') as f:
-        f.write("2024-07-13 10:00\n") # Tee-off time
+        f.write("2024.07.13 10:00\n") # Tee-off time
         f.write("Unparsed Test Course\n") # Golf Course
         f.write("Charlie, David\n") # Co-players
         f.write("1P4\n")
@@ -169,7 +169,7 @@ def sample_data_with_unparsed_lines_path():
     return file_path
 
 def test_parse_file_unparsed_lines(sample_data_with_unparsed_lines_path):
-    parsed_data = parse_file(sample_data_with_unparsed_lines_path)
+    parsed_data, _ = parse_file(sample_data_with_unparsed_lines_path)
 
     assert parsed_data['file_name'] == sample_data_with_unparsed_lines_path
     assert parsed_data['tee_off_time'] == "2024-07-13 10:00"
