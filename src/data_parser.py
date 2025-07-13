@@ -20,6 +20,7 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
         'unparsed_lines': []
     }
     current_hole = None
+    header_processing_done = False
 
     for line_num, line in enumerate(lines):
         original_line = line.strip()
@@ -28,17 +29,33 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
         if not processed_line:
             continue
 
-        if line_num == 0:
-            parts = original_line.split(' ', 3) # Split into date, time, golf_course, and co_players
-            if len(parts) >= 2:
-                round_data['tee_off_time'] = f"{parts[0]} {parts[1]}"
-            if len(parts) >= 3:
-                round_data['golf_course'] = parts[2]
-            if len(parts) >= 4:
-                round_data['co_players'] = parts[3]
-            continue
-
         hole_match = re.match(r'(\d+)\s*P(\d+)', processed_line)
+
+        if not header_processing_done:
+            if line_num == 0:
+                parts = original_line.split(' ', 3)
+                if len(parts) >= 3 and re.match(r'\d{8}', parts[0]) and re.match(r'\d{2}:\d{2}', parts[1]):
+                    round_data['tee_off_time'] = f"{parts[0]} {parts[1]}"
+                    round_data['golf_course'] = parts[2]
+                    if len(parts) >= 4:
+                        round_data['co_players'] = parts[3]
+                    header_processing_done = True
+                    continue
+            
+            if hole_match:
+                header_processing_done = True
+            else:
+                # Process multi-line header
+                if round_data['tee_off_time'] is None and (re.search(r'\d{8}', original_line) or re.search(r'\d{2}:\d{2}', original_line)):
+                    round_data['tee_off_time'] = original_line
+                elif round_data['golf_course'] is None and ('CC' in processed_line or 'G.C' in processed_line or 'GC' in processed_line or 'GOLF' in processed_line):
+                    round_data['golf_course'] = original_line
+                elif round_data['co_players'] is None:
+                    round_data['co_players'] = original_line
+                else:
+                    round_data['co_players'] += f", {original_line}"
+                continue
+
         if hole_match:
             if current_hole:
                 round_data['holes'].append(current_hole)
@@ -83,10 +100,30 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
                         else:
                             shot_data['distance'] = distance_val
                     except ValueError:
-                        # Not a distance, check for penalty/concede/bunker
-                        if part == 'OK':
+                        # Not a distance, check for penalty/concede/bunker or combined distance and code
+                        combined_match = re.match(r'(\d+)(OK|H|UN|OB)', part)
+                        if combined_match:
+                            distance = int(combined_match.group(1))
+                            code = combined_match.group(2)
+                            shot_data['distance'] = distance
+                            if code == 'OK':
+                                shot_data['score'] += 1
+                                shot_data['concede'] = True
+                            elif code == 'H' or code == 'UN':
+                                shot_data['score'] += 1
+                                shot_data['penalty'] = code
+                            elif code == 'OB':
+                                shot_data['score'] += 2
+                                shot_data['penalty'] = code
+                        elif part == 'OK':
                             shot_data['score'] += 1 # Concede adds 1 stroke
                             shot_data['concede'] = True
+                        elif part == 'H' or part == 'UN':
+                            shot_data['score'] += 1 # Penalty H/UN adds 1 stroke
+                            shot_data['penalty'] = part
+                        elif part == 'OB':
+                            shot_data['score'] += 2 # Penalty OB adds 2 strokes
+                            shot_data['penalty'] = part
                         elif part == 'H' or part == 'UN': 
                             shot_data['score'] += 1 # Penalty H/UN adds 1 stroke
                             shot_data['penalty'] = part
