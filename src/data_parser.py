@@ -178,16 +178,6 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
                 current_hole['shots'].append(shot_data)
 
     if current_hole:
-        # Calculate putt for each shot in the current_hole
-        putt_count = 0
-        for i, shot in enumerate(current_hole['shots']):
-            # Calculate putt count
-            if shot['club'] == 'P':
-                putt_count += 1
-            if shot['concede'] is True:
-                putt_count += 1
-        
-        current_hole['putt'] = putt_count # Add putt count to hole data
         round_data['holes'].append(current_hole)
 
     _post_process_shots(round_data)
@@ -195,6 +185,7 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
 
 def _post_process_shots(round_data: Dict):
     for hole in round_data['holes']:
+        putt = 0
         for i, shot in enumerate(hole['shots']):
             # Determine 'on' status based on previous shot's retplace or default
             if i == 0:
@@ -219,6 +210,11 @@ def _post_process_shots(round_data: Dict):
                     shot['error'] = hole['shots'][i+1]['distance']
                 else:
                     shot['error'] = None
+
+            if shot['club'] == 'P':
+                putt += 1
+            if shot['concede'] is True:
+                putt += 1
 
 def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
     data = {
