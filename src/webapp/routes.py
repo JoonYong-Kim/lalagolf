@@ -30,20 +30,14 @@ def round_list():
     query = "SELECT * FROM rounds WHERE score IS NOT NULL"
     params = []
 
-    if selected_year == 'current':
+    if selected_year != 'all':
         query += " AND YEAR(playdate) = %s"
-        params.append(current_year)
-    elif selected_year == 'previous':
-        query += " AND YEAR(playdate) = %s"
-        params.append(current_year - 1)
+        params.append(selected_year)
     
     query += " ORDER BY playdate ASC"
 
     cursor.execute(query, params)
     rounds = cursor.fetchall()
-
-    cursor.close()
-    conn.close()
 
     # Prepare data for the chart
     labels = [r['playdate'].strftime('%Y-%m-%d') for r in rounds]
@@ -53,8 +47,8 @@ def round_list():
     cursor.execute("SELECT DISTINCT YEAR(playdate) AS year FROM rounds ORDER BY year DESC")
     unique_years = [row['year'] for row in cursor.fetchall()]
 
-    # cursor.close() # Moved these lines
-    # conn.close()   # Moved these lines
+    cursor.close() 
+    conn.close()  
 
     return render_template('rounds.html', 
                            rounds=rounds, 
