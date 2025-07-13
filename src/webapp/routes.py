@@ -49,6 +49,18 @@ def round_detail(round_id):
     cursor.execute("SELECT * FROM shots WHERE roundid = %s ORDER BY id", (round_id,))
     shots = cursor.fetchall()
 
+    # Map 'feelgrade' from DB to 'feel' for data_parser compatibility
+    for shot in shots:
+        if 'feelgrade' in shot:
+            shot['feel'] = shot['feelgrade']
+            del shot['feelgrade']
+        if 'retgrade' in shot:
+            shot['result'] = shot['retgrade']
+            del shot['retgrade']
+        if 'shotplace' in shot:
+            shot['on'] = shot['shotplace']
+            del shot['shotplace']
+
     # Prepare data for club analysis chart
     club_counts = {}
     for shot in shots:
