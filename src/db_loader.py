@@ -26,7 +26,7 @@ def save_round_data(db_config: Dict[str, str], parsed_data: Dict, scores_and_sta
 
     # Insert into rounds table
     add_round = ("""
-        INSERT INTO rounds (player, club, coplayers, playdate, score)
+        INSERT INTO rounds (player, gcname, coplayers, playdate, score)
         VALUES (%s, %s, %s, %s, %s)
     """)
     round_values = (
