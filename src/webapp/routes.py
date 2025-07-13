@@ -63,8 +63,7 @@ def round_detail(round_id):
 
         if shot['error']:
             tmp = shot['error'] / shot['distance']
-            ret = 'A' if tmp < 0.05 else 'B' if tmp < 0.1 else 'C'
-            shot['result'] = shot['result'] + "," + ret
+            shot['eresult'] = 'A' if tmp < 0.05 else 'B' if tmp < 0.1 else 'C'
 
     # Prepare data for club analysis chart
     club_counts = {}

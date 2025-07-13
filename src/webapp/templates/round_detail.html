@@ -146,7 +146,7 @@
                 <td>{{ shot.holenum }}</td>
                 <td>{{ shot.club }}</td>
                 <td>{{ shot.feel }}</td>
-		<td>{{ shot.result }}</td>
+		<td>{{ shot.result }}{{ ',' + shot.eresult if shot.eresult else ''}}</td>
                 <td>{{ shot.distance }}</td>
                 <td>{{ shot.penalty if shot.penalty else '-' }}</td>
                 <td>{{ 'Yes' if shot.concede else 'No' }}</td>
