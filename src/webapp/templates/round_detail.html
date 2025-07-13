@@ -18,6 +18,9 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h1>Round on {{ round_info.playdate.strftime('%Y-%m-%d') }}</h1>
+            <p><strong>Golf Course:</strong> {{ round_info.gcname }}</p>
+            <p><strong>Tee-off Time:</strong> {{ round_info.playdate.strftime('%Y-%m-%d %H:%M') }}</p>
+            <p><strong>Co-players:</strong> {{ round_info.coplayers }}</p>
             <div>
                 {% if session.logged_in %}
                     <span class="mr-3">Logged in as: {{ session.username }}</span>
@@ -142,8 +145,8 @@
             <tr>
                 <td>{{ shot.holenum }}</td>
                 <td>{{ shot.club }}</td>
-                <td>{{ shot.feelgrade }}</td>
-                <td>{{ shot.retgrade }}</td>
+                <td>{{ shot.feel }}</td>
+                <td>{{ shot.result }}</td>
                 <td>{{ shot.distance }}</td>
                 <td>{{ shot.penalty if shot.penalty else '-' }}</td>
                 <td>{{ 'Yes' if shot.concede else 'No' }}</td>

@@ -96,11 +96,13 @@ def _parse_shot(original_line:str) -> Dict:
     elif code == 'H' or code == 'UN':
         shot_data['score'] += 1
         shot_data['penalty'] = code
+        shot_data['retplace'] = 'F'     # hazard tee or replace
     elif code == 'OB':
         shot_data['score'] += 2
         shot_data['penalty'] = code
+        shot_data['retplace'] = 'F'     # ob tee
     elif code == 'B':
-        shot_data['retplace'] = 'B'
+        shot_data['retplace'] = 'B'     # bunker
 
     return shot_data
 
@@ -181,6 +183,8 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
         for i, shot in enumerate(current_hole['shots']):
             # Calculate putt count
             if shot['club'] == 'P':
+                putt_count += 1
+            if shot['concede'] is True:
                 putt_count += 1
         
         current_hole['putt'] = putt_count # Add putt count to hole data
