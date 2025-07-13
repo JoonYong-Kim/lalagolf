@@ -234,9 +234,9 @@ def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
         "DUN":0, # Driver shots resulting in Unplayable penalty
 
         # Feel-Result combination statistics (counts of specific feel-result pairs):
-        "BT" : 0,  # Bad Touch shots (e.g., BA, CB, CA combinations of Feel and Result)
-        "WS" : 0,  # Weak Shot shots (e.g., BC, AB, AC combinations of Feel and Result)
-        "SA" : 0,  # Solid Shot shots (e.g., AA, BB, CC combinations of Feel and Result)
+        "BT" : 0,  # Lucky Shot (e.g., CB, CA combinations of Feel and Result)
+        "WS" : 0,  # Bad Management (e.g., BC, AC combinations of Feel and Result)
+        "SA" : 0,  # Normal shots (e.g., AA, AB, BA, BB, CC combinations of Feel and Result)
 
         # Putter and Concede (OK) counts:
         "P" : [0,0,0], # Putter feel counts [A, B, C]
@@ -322,11 +322,11 @@ def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
         if shot['feel'] and shot['result']:
             combo = f"{shot['feel']}{shot['result']}"
             data[combo] += 1
-            if combo in ("AA", "BB", "CC"):
+            if combo in ("AA", "AB", "BA", "BB", "CC"):
                 data["SA"] += 1
-            elif combo in ("BA", "CB", "CA"):
+            elif combo in ("CB", "CA"):
                 data["BT"] += 1
-            elif combo in ("BC", "AB", "AC"):
+            elif combo in ("BC", "AC"):
                 data["WS"] += 1
 
         # Bunker stats
