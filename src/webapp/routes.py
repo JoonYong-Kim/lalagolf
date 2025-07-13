@@ -71,16 +71,13 @@ def round_detail(round_id):
     # Group shots by hole for easier GIR calculation
     holes_info = [[], []]
     for hole_info in holes_from_db:
+        hole_info['score'] = hole_info['score'] - hole_info['par']
         hole_info['GIR'] = True if hole_info['par'] >= hole_info['score'] - hole_info['putt'] + 2 else False
         hole_info['GIR1'] = True if hole_info['par'] >= hole_info['score'] - hole_info['putt'] + 1 else False
         if hole_info['holenum'] < 10:
             holes_info[0].append(hole_info)
         else:
             holes_info[1].append(hole_info)
-
-    for shot in processed_shots:
-        if shot['holenum'] in holes_with_shots:
-            holes_with_shots[shot['holenum']]['shots'].append(shot)
 
     # Prepare data for club analysis chart
     club_counts = {}

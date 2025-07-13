@@ -133,6 +133,13 @@
                         <td>{{ holes_info[0] | sum(attribute='score') }}</td>
                     </tr>
                     <tr>
+                        <td>Putt</td>
+                        {% for hole in holes_info[0]%}
+                        <td>{{ hole.putt}}</td>
+                        {% endfor %}
+                        <td>{{ holes_info[0] | sum(attribute='putt') }}</td>
+                    </tr>
+                    <tr>
                         <td>GIR</td>
                         {% for hole in holes_info[0] %}
                         <td>{{ hole.GIR }}</td>
@@ -177,6 +184,13 @@
                         <td>{{ hole.score }}</td>
                         {% endfor %}
                         <td>{{ holes_info[1] | sum(attribute='score') }}</td>
+                    </tr>
+                    <tr>
+                        <td>Putt</td>
+                        {% for hole in holes_info[1] %}
+                        <td>{{ hole.putt}}</td>
+                        {% endfor %}
+                        <td>{{ holes_info[1] | sum(attribute='putt') }}</td>
                     </tr>
                     <tr>
                         <td>GIR</td>
