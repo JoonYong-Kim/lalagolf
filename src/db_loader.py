@@ -99,3 +99,25 @@ def save_round_data(db_config: Dict[str, str], parsed_data: Dict, scores_and_sta
     conn.commit()
     cursor.close()
     conn.close()
+
+def delete_round_data(db_config: Dict[str, str], round_id: int):
+    conn = get_db_connection(db_config)
+    cursor = conn.cursor()
+
+    try:
+        # Delete from shots table
+        cursor.execute("DELETE FROM shots WHERE roundid = %s", (round_id,))
+        # Delete from holes table
+        cursor.execute("DELETE FROM holes WHERE roundid = %s", (round_id,))
+        # Delete from nines table
+        cursor.execute("DELETE FROM nines WHERE roundid = %s", (round_id,))
+        # Delete from rounds table
+        cursor.execute("DELETE FROM rounds WHERE id = %s", (round_id,))
+        
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cursor.close()
+        conn.close()

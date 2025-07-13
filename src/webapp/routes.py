@@ -1,7 +1,7 @@
 
 from flask import render_template, current_app, jsonify, request, session, redirect, url_for, flash
 from src.webapp import app
-from src.db_loader import get_db_connection, save_round_data
+from src.db_loader import get_db_connection, save_round_data, delete_round_data
 from src.data_parser import parse_file, analyze_shots_and_stats # Import analyze_shots_and_stats
 import os
 from datetime import datetime
@@ -33,6 +33,17 @@ def round_list():
     data = [r['score'] for r in rounds]
 
     return render_template('rounds.html', rounds=rounds, labels=labels, data=data)
+
+@app.route('/delete_round/<int:round_id>', methods=['POST'])
+@login_required
+def delete_round(round_id):
+    db_config = current_app.config['DB_CONFIG']
+    try:
+        delete_round_data(db_config, round_id)
+        flash('Round deleted successfully!', 'success')
+    except Exception as e:
+        flash(f'Error deleting round: {e}', 'danger')
+    return redirect(url_for('round_list'))
 
 @app.route('/round/<int:round_id>')
 def round_detail(round_id):
