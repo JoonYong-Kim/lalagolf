@@ -389,9 +389,7 @@ def calculate_scores_and_stats(round_data: Dict) -> Dict:
             'hole_num': hole['hole_num'],
             'par': par,
             'shots_taken': shots_taken,
-            'score_diff': score_diff,
-            'GIR': True if shots_taken - hole['putt'] + 2 <= par else False,
-            'GIR1': True if shots_taken - hole['putt'] + 3 <= par else False
+            'score_diff': score_diff
         }
 
         if i < 9: # Front nine
