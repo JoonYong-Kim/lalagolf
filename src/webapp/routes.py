@@ -6,6 +6,7 @@ from src.data_parser import parse_file, analyze_shots_and_stats # Import analyze
 import os
 from datetime import datetime
 from functools import wraps
+import json
 
 # Decorator to check if user is logged in
 def login_required(f):
@@ -182,6 +183,11 @@ def review_round():
     if request.method == 'POST':
         if request.form.get('action') == 'save':
             try:
+                # Get potentially modified data from form
+                raw_data_content = request.form['raw_data_content']
+                parsed_data = json.loads(request.form['parsed_data'])
+                scores_and_stats = json.loads(request.form['scores_and_stats'])
+
                 # Save raw data to file based on tee-off time
                 tee_off_time_str = parsed_data['tee_off_time']
                 # Assuming tee_off_time_str is in 'YYYY-MM-DD HH:MM' format
@@ -205,12 +211,14 @@ def review_round():
                 session.pop('raw_data_content', None)
                 
                 return redirect(url_for('round_list')) # Redirect to list after saving
+            except json.JSONDecodeError as e:
+                return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats, raw_data_content=raw_data_content, error=f"JSON parsing error: {e}. Please check your JSON format.")
             except Exception as e:
-                return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats, error=f"Save error: {e}")
+                return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats, raw_data_content=raw_data_content, error=f"Save error: {e}")
         elif request.form.get('action') == 'cancel':
             session.pop('parsed_data', None)
             session.pop('scores_and_stats', None)
             session.pop('raw_data_content', None)
             return redirect(url_for('upload_round'))
 
-    return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats)
+    return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats, raw_data_content=raw_data_content)
