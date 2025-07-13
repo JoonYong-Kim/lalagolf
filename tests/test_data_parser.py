@@ -45,6 +45,8 @@ def test_parse_file(sample_data_path):
     assert shot1_1['distance'] == 220
     assert shot1_1['penalty'] is None
     assert shot1_1['concede'] is False
+    assert shot1_1['on'] == 'T'
+    assert shot1_1['retplace'] == 'R'
 
     shot1_2 = hole1['shots'][1]
     assert shot1_2['club'] == 'I5'
@@ -53,6 +55,8 @@ def test_parse_file(sample_data_path):
     assert shot1_2['distance'] == 150
     assert shot1_2['penalty'] == 'H'
     assert shot1_2['concede'] is False
+    assert shot1_2['on'] == 'R'
+    assert shot1_2['retplace'] == 'R'
 
     shot1_3 = hole1['shots'][2]
     assert shot1_3['club'] == 'P'
@@ -61,6 +65,8 @@ def test_parse_file(sample_data_path):
     assert shot1_3['distance'] == 10
     assert shot1_3['penalty'] is None
     assert shot1_3['concede'] is True
+    assert shot1_3['on'] == 'R'
+    assert shot1_3['retplace'] == 'H'
 
     # Test Hole 2
     hole2 = parsed_data['holes'][1]
@@ -75,6 +81,8 @@ def test_parse_file(sample_data_path):
     assert shot2_1['distance'] == 135
     assert shot2_1['penalty'] is None
     assert shot2_1['concede'] is False
+    assert shot2_1['on'] == 'T'
+    assert shot2_1['retplace'] == 'G'
 
     shot2_2 = hole2['shots'][1]
     assert shot2_2['club'] == 'P'
@@ -83,6 +91,8 @@ def test_parse_file(sample_data_path):
     assert shot2_2['distance'] == 5
     assert shot2_2['penalty'] is None
     assert shot2_2['concede'] is False
+    assert shot2_2['on'] == 'G'
+    assert shot2_2['retplace'] == 'H'
 
 @pytest.fixture
 def robust_sample_data_path():

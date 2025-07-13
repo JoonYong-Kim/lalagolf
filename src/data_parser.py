@@ -7,6 +7,103 @@ from typing import List, Dict, Union
 VALID_CLUBS = ["D", "W3", "W5", "UW", "U3", "U4", "I3", "I4", "I5", "I6", "I7", "I8", "I9", "IP", "IA", "48", "52", "56", "P"]
 DEFAULT_DISTANCES = [220, 200, 180, 190, 180, 170, 175, 165, 155, 145, 135, 125, 115, 105, 95, 95, 85, 75, 7]
 
+def _parse_tee_off_time(original_line: str) -> Union[str, None]:
+    """Parses a line to extract tee-off time in 'YYYY-MM-DD HH:MM' format."""
+    processed_time = original_line
+
+    # YYYY.MM.DD HH:MM -> YYYY-MM-DD HH:MM
+    match_dot = re.match(r'(\d{4})\.(\d{2})\.(\d{2})(.*)', processed_time)
+    if match_dot:
+        processed_time = f"{match_dot.group(1)}-{match_dot.group(2)}-{match_dot.group(3)}{match_dot.group(4)}"
+
+    # YYYYMMDD HH:MM -> YYYY-MM-DD HH:MM
+    match_8digit = re.match(r'(\d{8})(.*)', processed_time)
+    if match_8digit:
+        date_part = match_8digit.group(1)
+        rest_of_string = match_8digit.group(2).strip()
+        processed_time = f"{date_part[:4]}-{date_part[4:6]}-{date_part[6:]} {rest_of_string}".strip()
+
+    if re.search(r'\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}', processed_time):
+        return processed_time
+    return None
+
+def _find_club(line:str) -> str:
+    for i in range(1, 3):
+        prefix = line[:i]
+        if prefix in VALID_CLUBS:
+            return prefix
+    raise ValueError
+
+def _find_grade(line:str) -> str:
+    prefix = line[0]
+    if prefix in ['A', 'B', 'C']:
+        return prefix
+    raise ValueError
+
+def _find_distance(line:str) -> str:
+    match = re.search(r'\d+', line)
+    if match:
+        return match.group()
+    else:
+        return ""
+
+def _find_etc(line:str) -> str:
+    return line
+
+def _parse_shot_components(shot_line:str) -> List[str]:
+    """Parse a line to shot components."""
+    try:
+        components = []
+
+        for func in [_find_club, _find_grade, _find_grade, _find_distance, _find_etc]:
+            shot_line = shot_line.lstrip()
+            tmp = func(shot_line)
+            components.append(tmp)
+            shot_line = shot_line[len(tmp):]
+
+        return components
+    except:
+        return None
+
+def _parse_shot(original_line:str) -> Dict:
+    processed_line = original_line.upper()
+    shot_components = _parse_shot_components(processed_line)
+    if shot_components is None:
+        return None
+
+    club_index = VALID_CLUBS.index(shot_components[0])
+    
+    shot_data = {
+        'club': shot_components[0],
+        'feel': shot_components[1],
+        'result': shot_components[2],
+        'distance': float(shot_components[3]) if shot_components[3] != "" else DEFAULT_DISTANCES[club_index],
+        'score': 1, # Default score is 1
+        'on': 'F',
+        'concede': False, 
+        'penalty': None, 
+        'retplace': 'F',
+        'original_line': original_line # Store original line for 'on' override
+    }
+
+    if shot_components[2] == 'C':
+        shot_data['retplace'] = 'R'
+    
+    code = shot_components[4]
+    if code == 'OK':
+        shot_data['score'] += 1
+        shot_data['concede'] = True
+    elif code == 'H' or code == 'UN':
+        shot_data['score'] += 1
+        shot_data['penalty'] = code
+    elif code == 'OB':
+        shot_data['score'] += 2
+        shot_data['penalty'] = code
+    elif code == 'B':
+        shot_data['retplace'] = 'B'
+
+    return shot_data
+
 def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
     with open(file_path, 'r') as f:
         lines = f.readlines()
@@ -35,33 +132,23 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
             if line_num == 0:
                 parts = original_line.split(' ', 3)
                 if len(parts) >= 3 and re.match(r'\d{8}', parts[0]) and re.match(r'\d{2}:\d{2}', parts[1]):
-                    round_data['tee_off_time'] = f"{parts[0][:4]}-{parts[0][4:6]}-{parts[0][6:]} {parts[1]}"
-                    round_data['golf_course'] = parts[2]
-                    if len(parts) >= 4:
-                        round_data['co_players'] = parts[3]
-                    header_processing_done = True
-                    continue
+                    parsed_time = _parse_tee_off_time(f"{parts[0]} {parts[1]}")
+                    if parsed_time:
+                        round_data['tee_off_time'] = parsed_time
+                        round_data['golf_course'] = parts[2]
+                        if len(parts) >= 4:
+                            round_data['co_players'] = parts[3]
+                        header_processing_done = True
+                        continue
             
             if hole_match:
                 header_processing_done = True
             else:
                 # Process multi-line header
-                if round_data['tee_off_time'] is None and (re.search(r'\d{8}', original_line) or re.search(r'\d{2}:\d{2}', original_line) or re.search(r'\d{4}\.\d{2}\.\d{2}', original_line)):
-                    processed_time = original_line
-                    
-                    # YYYY.MM.DD HH:MM -> YYYY-MM-DD HH:MM
-                    match_dot = re.match(r'(\d{4})\.(\d{2})\.(\d{2})(.*)', processed_time)
-                    if match_dot:
-                        processed_time = f"{match_dot.group(1)}-{match_dot.group(2)}-{match_dot.group(3)}{match_dot.group(4)}"
-
-                    # YYYYMMDD HH:MM -> YYYY-MM-DD HH:MM
-                    match_8digit = re.match(r'(\d{8})(.*)', processed_time)
-                    if match_8digit:
-                        date_part = match_8digit.group(1)
-                        rest_of_string = match_8digit.group(2).strip()
-                        processed_time = f"{date_part[:4]}-{date_part[4:6]}-{date_part[6:]} {rest_of_string}".strip()
-
-                    round_data['tee_off_time'] = processed_time
+                if round_data['tee_off_time'] is None:
+                    parsed_time = _parse_tee_off_time(original_line)
+                    if parsed_time:
+                        round_data['tee_off_time'] = parsed_time
                 elif round_data['golf_course'] is None:
                     round_data['golf_course'] = original_line
                 elif round_data['co_players'] is None:
@@ -73,127 +160,61 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
         if hole_match:
             if current_hole:
                 round_data['holes'].append(current_hole)
+
             current_hole = {
                 'hole_num': int(hole_match.group(1)),
                 'par': int(hole_match.group(2)),
                 'shots': []
             }
+
         elif current_hole:
-            shot_components = processed_line.split()
-            
-            shot_data = {
-                'club': None,
-                'feel': None,
-                'result': None,
-                'distance': None,
-                'score': 1, # Default score is 1
-                'on': 'fairway', # Default 'on' status
-                'concede': False, 
-                'penalty': None, 
-            }
-            
-            # Track if club, feel, result have been assigned
-            c_f_r_assigned = 0 # 0: none, 1: club, 2: club+feel, 3: club+feel+result
-
-            for part in shot_components:
-                if part in VALID_CLUBS and shot_data['club'] is None:
-                    shot_data['club'] = part
-                    c_f_r_assigned = 1
-                elif c_f_r_assigned == 1 and (part == 'A' or part == 'B' or part == 'C') and shot_data['feel'] is None:
-                    shot_data['feel'] = part
-                    c_f_r_assigned = 2
-                elif c_f_r_assigned == 2 and (part == 'A' or part == 'B' or part == 'C') and shot_data['result'] is None:
-                    shot_data['result'] = part
-                    c_f_r_assigned = 3
-                else:
-                    try:
-                        # Try to convert to float for distance
-                        distance_val = float(part)
-                        if distance_val == int(distance_val):
-                            shot_data['distance'] = int(distance_val)
-                        else:
-                            shot_data['distance'] = distance_val
-                    except ValueError:
-                        # Not a distance, check for penalty/concede/bunker or combined distance and code
-                        combined_match = re.match(r'(\d+)(OK|H|UN|OB)', part)
-                        if combined_match:
-                            distance = int(combined_match.group(1))
-                            code = combined_match.group(2)
-                            shot_data['distance'] = distance
-                            if code == 'OK':
-                                shot_data['score'] += 1
-                                shot_data['concede'] = True
-                            elif code == 'H' or code == 'UN':
-                                shot_data['score'] += 1
-                                shot_data['penalty'] = code
-                            elif code == 'OB':
-                                shot_data['score'] += 2
-                                shot_data['penalty'] = code
-                        elif part == 'OK':
-                            shot_data['score'] += 1 # Concede adds 1 stroke
-                            shot_data['concede'] = True
-                        elif part == 'H' or part == 'UN':
-                            shot_data['score'] += 1 # Penalty H/UN adds 1 stroke
-                            shot_data['penalty'] = part
-                        elif part == 'OB':
-                            shot_data['score'] += 2 # Penalty OB adds 2 strokes
-                            shot_data['penalty'] = part
-                        elif part == 'H' or part == 'UN': 
-                            shot_data['score'] += 1 # Penalty H/UN adds 1 stroke
-                            shot_data['penalty'] = part
-                        elif part == 'OB':
-                            shot_data['score'] += 2 # Penalty OB adds 2 strokes
-                            shot_data['penalty'] = part
-                        elif part == 'B':
-                            shot_data['on'] = 'bunker' # Bunker shot
-                        else:
-                            # If it's none of the above, it's an unparsed part
-                            # This part will be handled by the outer else block
-                            pass
-
-            # Set default distance if not explicitly provided and club is valid
-            if shot_data['distance'] is None and shot_data['club'] in VALID_CLUBS:
-                try:
-                    club_index = VALID_CLUBS.index(shot_data['club'])
-                    shot_data['distance'] = DEFAULT_DISTANCES[club_index]
-                except ValueError:
-                    pass # Club not found or index out of bounds
-
-            # Add shot to current_hole only if a club or distance or penalty/concede was identified
-            if shot_data['club'] or shot_data['distance'] is not None or shot_data['penalty'] is not None or shot_data['concede']:
-                current_hole['shots'].append(shot_data)
-            else:
+            #shot_components = processed_line.split()
+            shot_data = _parse_shot(original_line)
+            if shot_data is None:
                 round_data['unparsed_lines'].append(original_line)
+            else:
+                current_hole['shots'].append(shot_data)
 
     if current_hole:
-        # Calculate putt, retplace, and error for each shot in the current_hole
+        # Calculate putt for each shot in the current_hole
         putt_count = 0
         for i, shot in enumerate(current_hole['shots']):
             # Calculate putt count
             if shot['club'] == 'P':
                 putt_count += 1
-
-            # Calculate retplace
-            if i < len(current_hole['shots']) - 1: # Not the last shot of the hole
-                next_shot = current_hole['shots'][i+1]
-                shot['retplace'] = next_shot['on']
-            else: # Last shot of the hole
-                shot['retplace'] = 'hole cup'
-
-            # Calculate error
-            if i < len(current_hole['shots']) - 1: # Not the last shot of the hole
-                next_shot = current_hole['shots'][i+1]
-                if next_shot['distance'] is not None and next_shot['distance'] < 100:
-                    shot['error'] = next_shot['distance']
-                else:
-                    shot['error'] = None
-            else:
-                shot['error'] = None # Last shot has no next shot distance
         
         current_hole['putt'] = putt_count # Add putt count to hole data
         round_data['holes'].append(current_hole)
 
+    _post_process_shots(round_data)
     return round_data, calculate_scores_and_stats(round_data)
+
+def _post_process_shots(round_data: Dict):
+    for hole in round_data['holes']:
+        for i, shot in enumerate(hole['shots']):
+            # Determine 'on' status based on previous shot's retplace or default
+            if i == 0:
+                # First shot of the hole, default to 'T' (Tee)
+                shot['on'] = 'T'
+            else:
+                # Subsequent shots, 'on' is previous shot's 'retplace'
+                shot['on'] = hole['shots'][i-1]['retplace']
+
+                if shot['club'] == 'P' and shot['on'] == 'F':
+                    shot['on'] = 'G'  # Putter shots end in the hole cup
+                    hole['shots'][i-1]['retplace'] = 'G'
+
+            if i == len(hole['shots']) - 1:     # last shot
+                shot['retplace'] = 'H'
+                if shot['concede'] is True:
+                    shot['error'] = 0.5
+                else:
+                    shot['error'] = 0
+            else:
+                if shot['distance'] is not None and shot['distance'] < 160:
+                    shot['error'] = hole['shots'][i+1]['distance']
+                else:
+                    shot['error'] = None
 
 def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
     data = {
@@ -308,7 +329,7 @@ def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
                 data["WS"] += 1
 
         # Bunker stats
-        if shot['on'] == 'bunker':
+        if shot['on'] == 'B':
             bdata['B'] += 1
 
     total_shots = float(len(all_shots))
