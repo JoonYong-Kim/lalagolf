@@ -138,6 +138,7 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
         'holes': [],
         'unparsed_lines': []
     }
+    current_hole = None # Initialize current_hole here
     header_lines = []
     header_processing_done = False
     for line_num, line in enumerate(lines):
