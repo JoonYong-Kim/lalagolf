@@ -22,7 +22,6 @@ def get_db_connection():
     return connection_pool.get_connection()
 
 def save_round_data(parsed_data: Dict, scores_and_stats: Dict):
-    init_connection_pool(current_app.config['DB_CONFIG'])
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -115,7 +114,6 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict):
     conn.close()
 
 def delete_round_data(round_id: int):
-    init_connection_pool(current_app.config['DB_CONFIG'])
     conn = get_db_connection()
     cursor = conn.cursor()
 
