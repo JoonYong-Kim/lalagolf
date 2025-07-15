@@ -4,8 +4,8 @@ import argparse
 import json
 from typing import List, Dict, Union
 
-VALID_CLUBS = ["D", "W3", "W5", "UW", "U3", "U4", "I3", "I4", "I5", "I6", "I7", "I8", "I9", "IP", "IA", "48", "52", "56", "P"]
-DEFAULT_DISTANCES = [220, 200, 180, 190, 180, 170, 175, 165, 155, 145, 135, 125, 115, 105, 95, 95, 85, 75, 7]
+VALID_CLUBS = ["D", "W3", "W5", "UW", "U3", "U4", "I3", "I4", "I5", "I6", "I7", "I8", "I9", "IP", "IA", "48", "52", "56", "58", "P"]
+DEFAULT_DISTANCES = [220, 200, 180, 190, 180, 170, 175, 165, 155, 145, 135, 125, 115, 105, 95, 95, 85, 75, 70, 7]
 
 def _parse_tee_off_time(original_line: str) -> Union[str, None]:
     """Parses a line to extract tee-off time in 'YYYY-MM-DD HH:MM' format."""
