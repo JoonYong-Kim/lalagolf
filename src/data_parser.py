@@ -9,22 +9,42 @@ DEFAULT_DISTANCES = [220, 200, 180, 190, 180, 170, 175, 165, 155, 145, 135, 125,
 
 def _parse_tee_off_time(original_line: str) -> Union[str, None]:
     """Parses a line to extract tee-off time in 'YYYY-MM-DD HH:MM' format."""
-    processed_time = original_line
+    processed_time = original_line.strip()
 
-    # YYYY.MM.DD HH:MM -> YYYY-MM-DD HH:MM
-    match_dot = re.match(r'(\d{4})\.(\d{2})\.(\d{2})(.*)', processed_time)
-    if match_dot:
-        processed_time = f"{match_dot.group(1)}-{match_dot.group(2)}-{match_dot.group(3)}{match_dot.group(4)}"
+    # Try YYYY.MM.DD HH:MM
+    match_dot_time = re.match(r'(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}:\d{2})', processed_time)
+    if match_dot_time:
+        return f"{match_dot_time.group(1)}-{match_dot_time.group(2)}-{match_dot_time.group(3)} {match_dot_time.group(4)}"
 
-    # YYYYMMDD HH:MM -> YYYY-MM-DD HH:MM
-    match_8digit = re.match(r'(\d{8})(.*)', processed_time)
-    if match_8digit:
-        date_part = match_8digit.group(1)
-        rest_of_string = match_8digit.group(2).strip()
-        processed_time = f"{date_part[:4]}-{date_part[4:6]}-{date_part[6:]} {rest_of_string}".strip()
+    # Try YYYYMMDD HH:MM
+    match_8digit_time = re.match(r'(\d{8})\s+(\d{2}:\d{2})', processed_time)
+    if match_8digit_time:
+        date_part = match_8digit_time.group(1)
+        time_part = match_8digit_time.group(2)
+        return f"{date_part[:4]}-{date_part[4:6]}-{date_part[6:]} {time_part}"
 
-    if re.search(r'\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}', processed_time):
+    # Try YYYY-MM-DD HH:MM (already in target format)
+    match_hyphen_time = re.match(r'(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})', processed_time)
+    if match_hyphen_time:
         return processed_time
+
+    # If only date is provided, append default time
+    # Try YYYY.MM.DD
+    match_dot_date_only = re.match(r'(\d{4})\.(\d{2})\.(\d{2})', processed_time)
+    if match_dot_date_only:
+        return f"{match_dot_date_only.group(1)}-{match_dot_date_only.group(2)}-{match_dot_date_only.group(3)} 00:00"
+
+    # Try YYYYMMDD
+    match_8digit_date_only = re.match(r'(\d{8})', processed_time)
+    if match_8digit_date_only:
+        date_part = match_8digit_date_only.group(1)
+        return f"{date_part[:4]}-{date_part[4:6]}-{date_part[6:]} 00:00"
+
+    # Try YYYY-MM-DD
+    match_hyphen_date_only = re.match(r'(\d{4}-\d{2}-\d{2})', processed_time)
+    if match_hyphen_date_only:
+        return f"{match_hyphen_date_only.group(1)} 00:00"
+
     return None
 
 def _find_club(line:str) -> str:
@@ -118,9 +138,7 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
         'holes': [],
         'unparsed_lines': []
     }
-    current_hole = None
-    header_processing_done = False
-
+    header_lines = []
     for line_num, line in enumerate(lines):
         original_line = line.strip()
         processed_line = original_line.upper()
@@ -131,32 +149,54 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
         hole_match = re.match(r'(\d+)\s*P(\d+)', processed_line)
 
         if not header_processing_done:
-            if line_num == 0:
-                parts = original_line.split(' ', 3)
-                if len(parts) >= 3 and re.match(r'\d{8}', parts[0]) and re.match(r'\d{2}:\d{2}', parts[1]):
-                    parsed_time = _parse_tee_off_time(f"{parts[0]} {parts[1]}")
+            header_lines.append(original_line)
+            # Try to parse header information from accumulated header_lines
+            # This makes the header parsing more robust to multi-line headers
+            temp_tee_off_time = None
+            temp_golf_course = None
+            temp_co_players = None
+
+            # Attempt to parse tee_off_time, golf_course, co_players from header_lines
+            # This logic needs to be more flexible to handle various header formats
+            # For now, let's assume tee_off_time is always the first valid line that matches the pattern
+            # and golf_course/co_players follow.
+            for h_line in header_lines:
+                if temp_tee_off_time is None:
+                    parsed_time = _parse_tee_off_time(h_line)
                     if parsed_time:
-                        round_data['tee_off_time'] = parsed_time
-                        round_data['golf_course'] = parts[2]
-                        if len(parts) >= 4:
-                            round_data['co_players'] = parts[3]
-                        header_processing_done = True
+                        temp_tee_off_time = parsed_time
                         continue
-            
-            if hole_match:
+                
+                if temp_tee_off_time and temp_golf_course is None:
+                    # Assuming golf course is the next non-empty line after tee-off time
+                    if h_line != temp_tee_off_time and h_line.strip(): # Avoid using the time line itself
+                        temp_golf_course = h_line.strip()
+                        continue
+
+                if temp_tee_off_time and temp_golf_course and temp_co_players is None:
+                    # Assuming co_players is the next non-empty line after golf course
+                    if h_line != temp_tee_off_time and h_line != temp_golf_course and h_line.strip():
+                        temp_co_players = h_line.strip()
+                        continue
+
+            if temp_tee_off_time:
+                round_data['tee_off_time'] = temp_tee_off_time
+            if temp_golf_course:
+                round_data['golf_course'] = temp_golf_course
+            if temp_co_players:
+                round_data['co_players'] = temp_co_players
+
+            if hole_match or (round_data['tee_off_time'] and round_data['golf_course'] and round_data['co_players']):
                 header_processing_done = True
-            else:
-                # Process multi-line header
-                if round_data['tee_off_time'] is None:
-                    parsed_time = _parse_tee_off_time(original_line)
-                    if parsed_time:
-                        round_data['tee_off_time'] = parsed_time
-                elif round_data['golf_course'] is None:
-                    round_data['golf_course'] = original_line
-                elif round_data['co_players'] is None:
-                    round_data['co_players'] = original_line
-                else:
-                    round_data['co_players'] += f", {original_line}"
+                # If a hole match is found, process it immediately
+                if hole_match:
+                    if current_hole:
+                        round_data['holes'].append(current_hole)
+                    current_hole = {
+                        'hole_num': int(hole_match.group(1)),
+                        'par': int(hole_match.group(2)),
+                        'shots': []
+                    }
                 continue
 
         if hole_match:
@@ -170,7 +210,6 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
             }
 
         elif current_hole:
-            #shot_components = processed_line.split()
             shot_data = _parse_shot(original_line)
             if shot_data is None:
                 round_data['unparsed_lines'].append(original_line)
