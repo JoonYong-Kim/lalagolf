@@ -52,10 +52,10 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict):
     round_id = cursor.lastrowid
 
     # Insert into nines table
-    for nine_type in ['front_nine', 'back_nine']:
+    for nine_type in ['front_nine', 'back_nine', 'extra_nine']:
         if nine_type in scores_and_stats and scores_and_stats[nine_type]['holes']:
             nine_data = scores_and_stats[nine_type]
-            ord_num = 1 if nine_type == 'front_nine' else 2
+            ord_num = 1 if nine_type == 'front_nine' else (2 if nine_type == 'back_nine' else 3)
             add_nine = ("""
                 INSERT INTO nines (roundid, ordnum, course, par, score, gir)
                 VALUES (%s, %s, %s, %s, %s, %s)

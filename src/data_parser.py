@@ -372,12 +372,12 @@ def calculate_scores_and_stats(round_data: Dict) -> Dict:
     stats = {
         'front_nine': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'holes': [], 'gir': 0},
         'back_nine': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'holes': [], 'gir': 0},
+        'extra_nine': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'holes': [], 'gir': 0},
         'overall': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'gir': 0}
     }
 
     gir_count = 0
     for i, hole in enumerate(round_data['holes']):
-        # Use the accumulated score from parsing, not len(hole['shots'])
         shots_taken = sum(shot['score'] for shot in hole['shots'])
         
         par = hole['par']
@@ -398,8 +398,10 @@ def calculate_scores_and_stats(round_data: Dict) -> Dict:
 
         if i < 9: # Front nine
             current_nine = stats['front_nine']
-        else: # Back nine
+        elif i < 18: # Back nine
             current_nine = stats['back_nine']
+        else: # Extra nine
+            current_nine = stats['extra_nine']
         
         current_nine['total_shots'] += shots_taken
         current_nine['total_par'] += par
@@ -424,6 +426,11 @@ def calculate_scores_and_stats(round_data: Dict) -> Dict:
     if num_back_nine_holes > 0:
         back_nine_gir_count = sum(1 for h in stats['back_nine']['holes'] if h['GIR'])
         stats['back_nine']['gir'] = (back_nine_gir_count / num_back_nine_holes) * 100
+
+    num_extra_nine_holes = len(stats['extra_nine']['holes'])
+    if num_extra_nine_holes > 0:
+        extra_nine_gir_count = sum(1 for h in stats['extra_nine']['holes'] if h['GIR'])
+        stats['extra_nine']['gir'] = (extra_nine_gir_count / num_extra_nine_holes) * 100
 
     return stats
 

@@ -107,7 +107,7 @@ def round_detail(round_id):
         'gir': results[0]['gir']
     }
 
-    holes_info = [[], []]
+    holes_info = [[], [], []]
     shots_by_hole = {}
     for row in results:
         if row['holenum'] not in shots_by_hole:
@@ -123,8 +123,10 @@ def round_detail(round_id):
             }
             if row['holenum'] < 10:
                 holes_info[0].append(hole_data)
-            else:
+            elif row['holenum'] < 19:
                 holes_info[1].append(hole_data)
+            else:
+                holes_info[2].append(hole_data)
         
         shot_data = {
             'club': row['club'],

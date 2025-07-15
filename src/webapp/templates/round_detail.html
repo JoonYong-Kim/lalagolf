@@ -168,6 +168,61 @@
                 </table>
             </div>
         </div>
+        {% if holes_info[2] %}
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Extra Nine</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Hole</th>
+                            {% for i in range(19, 28) %}
+                            <th>{{ i }}</th>
+                            {% endfor %}
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Par</td>
+                            {% for hole in holes_info[2] %}
+                            <td>{{ hole.par }}</td>
+                            {% endfor %}
+                            <td>{{ holes_info[2] | sum(attribute='par') }}</td>
+                        </tr>
+                        <tr>
+                            <td>Score</td>
+                            {% for hole in holes_info[2] %}
+                            <td>{{ hole.diff}}</td>
+                            {% endfor %}
+                            <td>{{ holes_info[2] | sum(attribute='diff') }}</td>
+                        </tr>
+                        <tr>
+                            <td>Putt</td>
+                            {% for hole in holes_info[2] %}
+                            <td>{{ hole.putt}}</td>
+                            {% endfor %}
+                            <td>{{ holes_info[2] | sum(attribute='putt') }}</td>
+                        </tr>
+                        <tr>
+                            <td>GIR</td>
+                            {% for hole in holes_info[2] %}
+                            <td>{{ "%.0f" % (hole.GIR * 100) }}%</td>
+                            {% endfor %}
+                            <td>{{ (holes_info[2] | selectattr('GIR') | list | count / (holes_info[2] | length if holes_info[2] | length > 0 else 1)) * 100 | round(0) }}%</td>
+                        </tr>
+                        <tr>
+                            <td>GIR1</td>
+                            {% for hole in holes_info[2] %}
+                            <td>{{ "%.0f" % (hole.GIR1 * 100) }}%</td>
+                            {% endfor %}
+                            <td>{{ (holes_info[2] | selectattr('GIR1') | list | count / (holes_info[2] | length if holes_info[2] | length > 0 else 1)) * 100 | round(0) }}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
     </div>
 
     <div id="shotStatistics" class="tab-content">
