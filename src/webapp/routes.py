@@ -1,7 +1,7 @@
 
 from flask import render_template, current_app, jsonify, request, session, redirect, url_for, flash
 from src.webapp import app
-from src.db_loader import get_db_connection, save_round_data, delete_round_data
+from src.db_loader import get_db_connection, save_round_data, delete_round_data, init_connection_pool
 from src.data_parser import parse_file, analyze_shots_and_stats # Import analyze_shots_and_stats
 import os
 from datetime import datetime
@@ -17,11 +17,16 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+@app.before_request
+def before_request():
+    if 'DB_CONFIG' in current_app.config:
+        init_connection_pool(current_app.config['DB_CONFIG'])
+
 @app.route('/')
 @app.route('/rounds')
 def round_list():
     db_config = current_app.config['DB_CONFIG']
-    conn = get_db_connection(db_config)
+    conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     current_year = datetime.now().year
@@ -63,7 +68,7 @@ def round_list():
 def delete_round(round_id):
     db_config = current_app.config['DB_CONFIG']
     try:
-        delete_round_data(db_config, round_id)
+        delete_round_data(round_id)
         flash('Round deleted successfully!', 'success')
     except Exception as e:
         flash(f'Error deleting round: {e}', 'danger')
@@ -72,7 +77,7 @@ def delete_round(round_id):
 @app.route('/round/<int:round_id>')
 def round_detail(round_id):
     db_config = current_app.config['DB_CONFIG']
-    conn = get_db_connection(db_config)
+    conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     query = """
@@ -253,7 +258,7 @@ def review_round():
 
                 # Save parsed data to database
                 db_config = current_app.config['DB_CONFIG']
-                save_round_data(db_config, parsed_data, scores_and_stats)
+                save_round_data(parsed_data, scores_and_stats)
                 
                 session.pop('parsed_data', None)
                 session.pop('scores_and_stats', None)
