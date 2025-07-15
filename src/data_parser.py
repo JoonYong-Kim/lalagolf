@@ -139,6 +139,7 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
         'unparsed_lines': []
     }
     header_lines = []
+    header_processing_done = False
     for line_num, line in enumerate(lines):
         original_line = line.strip()
         processed_line = original_line.upper()
