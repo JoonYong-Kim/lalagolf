@@ -207,7 +207,7 @@ def upload_round():
 
         if raw_data:
             # Save raw data to a temporary file for parse_file
-            temp_file_path = "/tmp/uploaded_golf_data.txt"
+            temp_file_path = "tmp/uploaded_golf_data.txt"
             with open(temp_file_path, 'w') as f:
                 f.write(raw_data)
             
