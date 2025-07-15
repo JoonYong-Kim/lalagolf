@@ -1,48 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Golf Round Data</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        body { padding-top: 20px; }
-        .container { max-width: 800px; }
-        textarea { min-height: 200px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2 class="mb-4">Upload Golf Round Data</h2>
-        {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
-        <form action="{{ url_for('upload_round') }}" method="post" enctype="multipart/form-data">
-            <div class="form-group">
-                <label for="file">Upload Text File:</label>
-                <input type="file" class="form-control-file" id="file" name="file" accept=".txt">
-            </div>
-            <div class="form-group">
-                <label for="raw_text">Or Paste Raw Data Here:</label>
-                <textarea class="form-control" id="raw_text" name="raw_text" rows="10"></textarea>
-            </div>
-            <button type="submit" class="btn btn-primary">Parse Data</button>
-        </form>
+{% extends 'base.html' %}
 
-        <script>
-            document.getElementById('file').addEventListener('change', function(event) {
-                var file = event.target.files[0];
-                if (file) {
-                    var reader = new FileReader();
-                    reader.onload = function(e) {
-                        document.getElementById('raw_text').value = e.target.result;
-                    };
-                    reader.readAsText(file);
-                }
-            });
-        </script>
-        <hr>
-        <p><a href="{{ url_for('round_list') }}">Back to Round List</a></p>
-    </div>
-</body>
-</html>
+{% block title %}Upload Golf Round Data{% endblock %}
+
+{% block content %}
+    <h2>Upload Golf Round Data</h2>
+    {% if error %}
+        <div class="flash-message danger">{{ error }}</div>
+    {% endif %}
+    <form action="{{ url_for('upload_round') }}" method="post" enctype="multipart/form-data">
+        <div class="form-group">
+            <label for="file">Upload Text File:</label>
+            <input type="file" class="form-control-file" id="file" name="file" accept=".txt">
+        </div>
+        <div class="form-group">
+            <label for="raw_text">Or Paste Raw Data Here:</label>
+            <textarea class="form-control" id="raw_text" name="raw_text" rows="10"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Parse Data</button>
+    </form>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.getElementById('file').addEventListener('change', function(event) {
+            var file = event.target.files[0];
+            if (file) {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('raw_text').value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        });
+    </script>
+{% endblock %}

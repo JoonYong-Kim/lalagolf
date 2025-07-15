@@ -1,17 +1,29 @@
 
 import mysql.connector
+from mysql.connector import pooling
 from typing import Dict, List
 
-def get_db_connection(config: Dict[str, str]):
-    return mysql.connector.connect(
-        host=config['host'],
-        user=config['user'],
-        password=config['password'],
-        database=config['database']
-    )
+# Global connection pool
+connection_pool = None
+
+def init_connection_pool(config: Dict[str, str]):
+    global connection_pool
+    if connection_pool is None:
+        connection_pool = mysql.connector.pooling.MySQLConnectionPool(
+            pool_name="lalagolf_pool",
+            pool_size=5,
+            **config
+        )
+
+def get_db_connection():
+    global connection_pool
+    if connection_pool is None:
+        raise Exception("Connection pool is not initialized. Call init_connection_pool first.")
+    return connection_pool.get_connection()
 
 def save_round_data(db_config: Dict[str, str], parsed_data: Dict, scores_and_stats: Dict):
-    conn = get_db_connection(db_config)
+    init_connection_pool(db_config)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     # Determine player and co_players
@@ -26,15 +38,16 @@ def save_round_data(db_config: Dict[str, str], parsed_data: Dict, scores_and_sta
 
     # Insert into rounds table
     add_round = ("""
-        INSERT INTO rounds (player, gcname, coplayers, playdate, score)
-        VALUES (%s, %s, %s, %s, %s)
+        INSERT INTO rounds (player, gcname, coplayers, playdate, score, gir)
+        VALUES (%s, %s, %s, %s, %s, %s)
     """)
     round_values = (
         default_player,
         parsed_data['golf_course'], # Assuming 'club' in rounds table is gcname
         co_players_to_save,
         parsed_data['tee_off_time'],
-        scores_and_stats['overall']['total_shots']
+        scores_and_stats['overall']['total_shots'],
+        scores_and_stats['overall']['gir']
     )
     cursor.execute(add_round, round_values)
     round_id = cursor.lastrowid
@@ -45,15 +58,16 @@ def save_round_data(db_config: Dict[str, str], parsed_data: Dict, scores_and_sta
             nine_data = scores_and_stats[nine_type]
             ord_num = 1 if nine_type == 'front_nine' else 2
             add_nine = ("""
-                INSERT INTO nines (roundid, ordnum, course, par, score)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO nines (roundid, ordnum, course, par, score, gir)
+                VALUES (%s, %s, %s, %s, %s, %s)
             """)
             nine_values = (
                 round_id,
                 ord_num,
                 parsed_data['golf_course'], # Using overall golf_course for nines
                 nine_data['total_par'],
-                nine_data['total_shots']
+                nine_data['total_shots'],
+                nine_data['gir']
             )
             cursor.execute(add_nine, nine_values)
 
@@ -101,7 +115,8 @@ def save_round_data(db_config: Dict[str, str], parsed_data: Dict, scores_and_sta
     conn.close()
 
 def delete_round_data(db_config: Dict[str, str], round_id: int):
-    conn = get_db_connection(db_config)
+    init_connection_pool(db_config)
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     try:

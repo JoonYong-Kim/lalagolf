@@ -45,6 +45,7 @@ CREATE TABLE `nines` (
   `course` varchar(50) DEFAULT NULL,
   `par` int(11) DEFAULT NULL,
   `score` int(11) DEFAULT NULL,
+  `gir` float DEFAULT NULL,
   PRIMARY KEY (`roundid`,`ordnum`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -63,9 +64,16 @@ CREATE TABLE `rounds` (
   `coplayers` varchar(100) DEFAULT NULL,
   `playdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `score` float DEFAULT NULL,
+  `gir` float DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Indexes for table `rounds`
+--
+
+CREATE INDEX idx_playdate ON rounds(playdate);
 
 --
 -- Table structure for table `shots`
@@ -91,6 +99,12 @@ CREATE TABLE `shots` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2576 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Indexes for table `shots`
+--
+
+CREATE INDEX idx_roundid ON shots(roundid);
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

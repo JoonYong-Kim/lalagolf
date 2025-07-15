@@ -370,11 +370,12 @@ def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
 
 def calculate_scores_and_stats(round_data: Dict) -> Dict:
     stats = {
-        'front_nine': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'holes': []},
-        'back_nine': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'holes': []},
-        'overall': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0}
+        'front_nine': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'holes': [], 'gir': 0},
+        'back_nine': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'holes': [], 'gir': 0},
+        'overall': {'total_shots': 0, 'total_par': 0, 'score_relative_to_par': 0, 'gir': 0}
     }
 
+    gir_count = 0
     for i, hole in enumerate(round_data['holes']):
         # Use the accumulated score from parsing, not len(hole['shots'])
         shots_taken = sum(shot['score'] for shot in hole['shots'])
@@ -382,12 +383,16 @@ def calculate_scores_and_stats(round_data: Dict) -> Dict:
         par = hole['par']
         score_diff = shots_taken - par
 
+        is_gir = True if par >= shots_taken - hole['putt'] + 2 else False
+        if is_gir:
+            gir_count += 1
+
         hole_stats = {
             'hole_num': hole['hole_num'],
             'par': par,
             'shots_taken': shots_taken,
             'score_diff': score_diff,
-            'GIR': True if par >= shots_taken - hole['putt'] + 2 else False,
+            'GIR': is_gir,
             'GIR1': True if par >= shots_taken - hole['putt'] + 1 else False
         }
 
@@ -404,7 +409,22 @@ def calculate_scores_and_stats(round_data: Dict) -> Dict:
         stats['overall']['total_shots'] += shots_taken
         stats['overall']['total_par'] += par
         stats['overall']['score_relative_to_par'] += score_diff
-    
+
+    # Calculate GIR percentages
+    num_holes = len(round_data['holes'])
+    if num_holes > 0:
+        stats['overall']['gir'] = (gir_count / num_holes) * 100
+
+    num_front_nine_holes = len(stats['front_nine']['holes'])
+    if num_front_nine_holes > 0:
+        front_nine_gir_count = sum(1 for h in stats['front_nine']['holes'] if h['GIR'])
+        stats['front_nine']['gir'] = (front_nine_gir_count / num_front_nine_holes) * 100
+
+    num_back_nine_holes = len(stats['back_nine']['holes'])
+    if num_back_nine_holes > 0:
+        back_nine_gir_count = sum(1 for h in stats['back_nine']['holes'] if h['GIR'])
+        stats['back_nine']['gir'] = (back_nine_gir_count / num_back_nine_holes) * 100
+
     return stats
 
 if __name__ == "__main__":

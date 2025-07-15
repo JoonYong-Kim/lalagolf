@@ -1,45 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Review Parsed Data</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        body { padding-top: 20px; }
-        .container { max-width: 900px; }
-        pre { background-color: #f8f9fa; padding: 15px; border-radius: 5px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2 class="mb-4">Review Parsed Golf Round Data</h2>
-        {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
+{% extends 'base.html' %}
 
-        <form action="{{ url_for('review_round') }}" method="post" class="mt-4">
-            <h4 class="mt-4">Raw Data Content:</h4>
-            <div class="form-group">
-                <textarea class="form-control" id="raw_data_content" name="raw_data_content" rows="10">{{ raw_data_content }}</textarea>
-            </div>
+{% block title %}Review Parsed Data{% endblock %}
 
-            <h4 class="mt-4">Parsed Round Data (JSON):</h4>
-            <div class="form-group">
-                <textarea class="form-control" id="parsed_data" name="parsed_data" rows="15">{{ parsed_data | tojson(indent=4) }}</textarea>
-            </div>
+{% block content %}
+    <h2>Review Parsed Golf Round Data</h2>
+    {% if error %}
+        <div class="flash-message danger">{{ error }}</div>
+    {% endif %}
 
-            <h4 class="mt-4">Scores and Statistics (JSON):</h4>
-            <div class="form-group">
-                <textarea class="form-control" id="scores_and_stats" name="scores_and_stats" rows="15">{{ scores_and_stats | tojson(indent=4) }}</textarea>
-            </div>
+    <form action="{{ url_for('review_round') }}" method="post" class="mt-4">
+        <h4 class="mt-4">Raw Data Content:</h4>
+        <div class="form-group">
+            <textarea class="form-control" id="raw_data_content" name="raw_data_content" rows="10">{{ raw_data_content }}</textarea>
+        </div>
 
-            <button type="submit" name="action" value="save" class="btn btn-success">Save to Database</button>
-            <button type="submit" name="action" value="cancel" class="btn btn-danger">Cancel</button>
-        </form>
+        <h4 class="mt-4">Parsed Round Data (JSON):</h4>
+        <div class="form-group">
+            <textarea class="form-control" id="parsed_data" name="parsed_data" rows="15">{{ parsed_data | tojson(indent=4) }}</textarea>
+        </div>
 
-        <hr>
-        <p><a href="{{ url_for('round_list') }}">Back to Round List</a></p>
-    </div>
-</body>
-</html>
+        <h4 class="mt-4">Scores and Statistics (JSON):</h4>
+        <div class="form-group">
+            <textarea class="form-control" id="scores_and_stats" name="scores_and_stats" rows="15">{{ scores_and_stats | tojson(indent=4) }}</textarea>
+        </div>
+
+        <button type="submit" name="action" value="save" class="btn btn-success">Save to Database</button>
+        <button type="submit" name="action" value="cancel" class="btn btn-danger">Cancel</button>
+    </form>
+{% endblock %}

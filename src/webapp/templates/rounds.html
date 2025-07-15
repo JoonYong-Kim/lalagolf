@@ -1,69 +1,48 @@
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Golf Rounds</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{% extends 'base.html' %}
+
+{% block title %}Golf Rounds{% endblock %}
+
+{% block head %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        body { padding-top: 20px; }
-        .container { max-width: 960px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Golf Rounds</h1>
-            <div class="form-group mb-0">
-                <label for="yearFilter" class="sr-only">Filter by Year</label>
-                <select class="form-control" id="yearFilter" onchange="filterRounds(this.value)">
-                    <option value="all" {% if selected_year == 'all' %}selected{% endif %}>전체보기</option>
-                    {% for year in unique_years %}
-                        <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}년</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div>
-                {% if session.logged_in %}
-                    <span class="mr-3">Logged in as: {{ session.username }}</span>
-                    <a href="{{ url_for('upload_round') }}" class="btn btn-primary mr-2">Upload New Round</a>
-                    <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary">Logout</a>
-                {% else %}
-                    <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
-                {% endif %}
-            </div>
-        </div>
+{% endblock %}
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category }}">{{ message }}</div>
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Golf Rounds</h2>
+        <div class="form-group mb-0">
+            <label for="yearFilter" class="sr-only">Filter by Year</label>
+            <select class="form-control" id="yearFilter" onchange="filterRounds(this.value)">
+                <option value="all" {% if selected_year == 'all' %}selected{% endif %}>전체보기</option>
+                {% for year in unique_years %}
+                    <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}년</option>
                 {% endfor %}
-            {% endif %}
-        {% endwith %}
-
-        <div style="width: 100%; margin: auto;">
-            <canvas id="scoreChart"></canvas>
+            </select>
         </div>
-
-        <h2 class="mt-4">Round List</h2>
-        <ul class="list-group">
-            {% for round in rounds %}
-                <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <a href="{{ url_for('round_detail', round_id=round.id) }}">
-                        {{ round.playdate.strftime('%Y-%m-%d') }} - Score: {{ round.score }}
-                    </a>
-                    {% if session.logged_in %}
-                        <form action="{{ url_for('delete_round', round_id=round.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this round?');">
-                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                        </form>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
     </div>
 
+    <div class="chart-container">
+        <canvas id="scoreChart"></canvas>
+    </div>
+
+    <h2 class="mt-4">Round List</h2>
+    <ul class="list-group">
+        {% for round in rounds %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+                <a href="{{ url_for('round_detail', round_id=round.id) }}">
+                    {{ round.playdate.strftime('%Y-%m-%d') }} - Score: {{ round.score }}
+                </a>
+                {% if session.logged_in %}
+                    <form action="{{ url_for('delete_round', round_id=round.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this round?');">
+                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                    </form>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
+
+{% block scripts %}
     <script>
         const ctx = document.getElementById('scoreChart').getContext('2d');
         new Chart(ctx, {
@@ -91,5 +70,4 @@
             window.location.href = "{{ url_for('round_list') }}?year=" + year;
         }
     </script>
-</body>
-</html>
+{% endblock %}

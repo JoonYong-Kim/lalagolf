@@ -75,44 +75,70 @@ def round_detail(round_id):
     conn = get_db_connection(db_config)
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM rounds WHERE id = %s", (round_id,))
-    round_info = cursor.fetchone()
+    query = """
+        SELECT 
+            r.*, 
+            h.holenum, h.par, h.score as hole_score, h.putt,
+            s.club, s.feelgrade, s.retgrade, s.concede, s.score as shot_score, s.penalty, s.retplace, s.shotplace, s.distance, s.error
+        FROM rounds r
+        LEFT JOIN holes h ON r.id = h.roundid
+        LEFT JOIN shots s ON r.id = s.roundid AND h.holenum = s.holenum
+        WHERE r.id = %s
+        ORDER BY h.holenum, s.id
+    """
+    cursor.execute(query, (round_id,))
+    results = cursor.fetchall()
 
-    cursor.execute("SELECT * FROM holes WHERE roundid = %s ORDER BY holenum", (round_id,))
-    holes_from_db = cursor.fetchall()
+    if not results:
+        return "Round not found", 404
 
-    cursor.execute("SELECT * FROM shots WHERE roundid = %s ORDER BY id", (round_id,))
-    shots_from_db = cursor.fetchall()
+    round_info = {
+        'id': results[0]['id'],
+        'gcname': results[0]['gcname'],
+        'player': results[0]['player'],
+        'coplayers': results[0]['coplayers'],
+        'playdate': results[0]['playdate'],
+        'score': results[0]['score'],
+        'gir': results[0]['gir']
+    }
 
-    # Map 'feelgrade' from DB to 'feel' for data_parser compatibility
-    # And prepare shots for GIR calculation
-    processed_shots = []
-    for shot in shots_from_db:
-        processed_shot = shot.copy() # Create a copy to avoid modifying original dict from cursor
-        if 'feelgrade' in processed_shot:
-            processed_shot['feel'] = processed_shot['feelgrade']
-            del processed_shot['feelgrade']
-        if 'retgrade' in processed_shot:
-            processed_shot['result'] = processed_shot['retgrade']
-            del processed_shot['retgrade']
-        if 'shotplace' in processed_shot:
-            processed_shot['on'] = processed_shot['shotplace']
-            del processed_shot['shotplace']
-        if processed_shot['error']:
-            tmp = processed_shot['error'] / processed_shot['distance']
-            processed_shot['eresult'] = 'A' if tmp < 0.05 else 'B' if tmp < 0.1 else 'C'
-        processed_shots.append(processed_shot)
-
-    # Group shots by hole for easier GIR calculation
     holes_info = [[], []]
-    for hole_info in holes_from_db:
-        hole_info['GIR'] = True if hole_info['par'] >= hole_info['score'] - hole_info['putt'] + 2 else False
-        hole_info['GIR1'] = True if hole_info['par'] >= hole_info['score'] - hole_info['putt'] + 1 else False
-        hole_info['diff'] = hole_info['score'] - hole_info['par']
-        if hole_info['holenum'] < 10:
-            holes_info[0].append(hole_info)
-        else:
-            holes_info[1].append(hole_info)
+    shots_by_hole = {}
+    for row in results:
+        if row['holenum'] not in shots_by_hole:
+            shots_by_hole[row['holenum']] = []
+            hole_data = {
+                'holenum': row['holenum'],
+                'par': row['par'],
+                'score': row['hole_score'],
+                'putt': row['putt'],
+                'GIR': True if row['par'] >= row['hole_score'] - row['putt'] + 2 else False,
+                'GIR1': True if row['par'] >= row['hole_score'] - row['putt'] + 1 else False,
+                'diff': row['hole_score'] - row['par']
+            }
+            if row['holenum'] < 10:
+                holes_info[0].append(hole_data)
+            else:
+                holes_info[1].append(hole_data)
+        
+        shot_data = {
+            'club': row['club'],
+            'feel': row['feelgrade'],
+            'result': row['retgrade'],
+            'concede': row['concede'],
+            'score': row['shot_score'],
+            'penalty': row['penalty'],
+            'retplace': row['retplace'],
+            'on': row['shotplace'],
+            'distance': row['distance'],
+            'error': row['error']
+        }
+        if shot_data['error'] and shot_data['distance']:
+            tmp = shot_data['error'] / shot_data['distance']
+            shot_data['eresult'] = 'A' if tmp < 0.05 else 'B' if tmp < 0.1 else 'C'
+        shots_by_hole[row['holenum']].append(shot_data)
+
+    processed_shots = [shot for hole_shots in shots_by_hole.values() for shot in hole_shots]
 
     # Prepare data for club analysis chart
     club_counts = {}

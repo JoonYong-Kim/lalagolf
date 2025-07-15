@@ -1,38 +1,176 @@
+{% extends 'base.html' %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Round Details</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+{% block title %}Round Details{% endblock %}
+
+{% block head %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { padding-top: 20px; }
-        .container { max-width: 960px; }
-        table { width: 100%; margin-top: 20px; }
-        th, td { padding: 8px; border: 1px solid #dee2e6; }
-        th { background-color: #f8f9fa; }
+        /* Tab styles */
+        .tab-buttons {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+        }
+        .tab-button {
+            background-color: #f1f1f1;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            font-size: 17px;
+            border-radius: 5px 5px 0 0;
+            margin-right: 5px;
+        }
+        .tab-button:hover {
+            background-color: #ddd;
+        }
+        .tab-button.active {
+            background-color: var(--color-primary);
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+        }
+        .tab-content.active {
+            display: block;
+        }
     </style>
-</head>
-<body>
-    <div class="container">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h1>Round on {{ round_info.playdate.strftime('%Y-%m-%d') }}</h1>
-            <div>
-                {% if session.logged_in %}
-                    <span class="mr-3">Logged in as: {{ session.username }}</span>
-                    <a href="{{ url_for('logout') }}" class="btn btn-outline-secondary">Logout</a>
-                {% else %}
-                    <a href="{{ url_for('login') }}" class="btn btn-primary">Login</a>
-                {% endif %}
-            </div>
-        </div>
+{% endblock %}
 
+{% block content %}
+    <h1>Round on {{ round_info.playdate.strftime('%Y-%m-%d') }}</h1>
+
+    <div class="tab-buttons">
+        <button class="tab-button active" onclick="openTab(event, 'roundOverview')">라운드 개요</button>
+        <button class="tab-button" onclick="openTab(event, 'holeDetails')">홀별 상세</button>
+        <button class="tab-button" onclick="openTab(event, 'shotStatistics')">샷 통계</button>
+        <button class="tab-button" onclick="openTab(event, 'clubStatistics')">클럽 통계</button>
+    </div>
+
+    <div id="roundOverview" class="tab-content active">
         <p><strong>Golf Course:</strong> {{ round_info.gcname }}</p>
         <p><strong>Tee-off Time:</strong> {{ round_info.playdate.strftime('%Y-%m-%d %H:%M') }}</p>
         <p><strong>Co-players:</strong> {{ round_info.coplayers }}</p>
-	<p><strong>Score:</strong> {{ round_info.score }}</p>
+        <p><strong>Score:</strong> {{ round_info.score }}</p>
+        <p><strong>GIR:</strong> {{ "%.2f" % round_info.gir }}%</p>
+    </div>
 
+    <div id="holeDetails" class="tab-content">
+        <h2>Holes</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Front Nine</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Hole</th>
+                            {% for i in range(1, 10) %}
+                            <th>{{ i }}</th>
+                            {% endfor %}
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Par</td>
+                            {% for hole in holes_info[0]%}
+                            <td>{{ hole.par }}</td>
+                            {% endfor %}
+                            <td>{{ holes_info[0] | sum(attribute='par') }}</td>
+                        </tr>
+                        <tr>
+                            <td>Score</td>
+                            {% for hole in holes_info[0]%}
+                            <td>{{ hole.diff}}</td>
+                            {% endfor %}
+                            <td>{{ holes_info[0] | sum(attribute='diff') }}</td>
+                        </tr>
+                        <tr>
+                            <td>Putt</td>
+                            {% for hole in holes_info[0]%}
+                            <td>{{ hole.putt}}</td>
+                            {% endfor %}
+                            <td>{{ holes_info[0] | sum(attribute='putt') }}</td>
+                        </tr>
+                        <tr>
+                            <td>GIR</td>
+                            {% for hole in holes_info[0] %}
+                            <td>{{ "%.0f" % (hole.GIR * 100) }}%</td>
+                            {% endfor %}
+                            <td>{{ (holes_info[0] | selectattr('GIR') | list | count / (holes_info[0] | length if holes_info[0] | length > 0 else 1)) * 100 | round(0) }}%</td>
+                        </tr>
+                        <tr>
+                            <td>GIR1</td>
+                            {% for hole in holes_info[0] %}
+                            <td>{{ "%.0f" % (hole.GIR1 * 100) }}%</td>
+                            {% endfor %}
+                            <td>{{ (holes_info[0] | selectattr('GIR1') | list | count / (holes_info[0] | length if holes_info[0] | length > 0 else 1)) * 100 | round(0) }}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Back Nine</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr>
+                            <th>Hole</th>
+                            {% for i in range(10, 19) %}
+                            <th>{{ i }}</th>
+                            {% endfor %}
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Par</td>
+                            {% for hole in holes_info[1] %}
+                            <td>{{ hole.par }}</td>
+                            {% endfor %}
+                            <td>{{ holes_info[1] | sum(attribute='par') }}</td>
+                        </tr>
+                        <tr>
+                            <td>Score</td>
+                            {% for hole in holes_info[1] %}
+                            <td>{{ hole.diff}}</td>
+                            {% endfor %}
+                            <td>{{ holes_info[1] | sum(attribute='diff') }}</td>
+                        </tr>
+                        <tr>
+                            <td>Putt</td>
+                            {% for hole in holes_info[1] %}
+                            <td>{{ hole.putt}}</td>
+                            {% endfor %}
+                            <td>{{ holes_info[1] | sum(attribute='putt') }}</td>
+                        </tr>
+                        <tr>
+                            <td>GIR</td>
+                            {% for hole in holes_info[1] %}
+                            <td>{{ "%.0f" % (hole.GIR * 100) }}%</td>
+                            {% endfor %}
+                            <td>{{ (holes_info[1] | selectattr('GIR') | list | count / (holes_info[1] | length if holes_info[1] | length > 0 else 1)) * 100 | round(0) }}%</td>
+                        </tr>
+                        <tr>
+                            <td>GIR1</td>
+                            {% for hole in holes_info[1] %}
+                            <td>{{ "%.0f" % (hole.GIR1 * 100) }}%</td>
+                            {% endfor %}
+                            <td>{{ (holes_info[1] | selectattr('GIR1') | list | count / (holes_info[1] | length if holes_info[1] | length > 0 else 1)) * 100 | round(0) }}%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="shotStatistics" class="tab-content">
         <h3 class="mt-4">Detailed Shot Statistics</h3>
         <div class="row">
             <div class="col-md-6">
@@ -49,6 +187,9 @@
                         <tr><td>Wedge Conceded (WOK)</td><td>{{ detailed_shot_stats.raw_stats.WOK }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.WOK * 100) }}%</td></tr>
                     </tbody>
                 </table>
+                <div class="chart-container">
+                    <canvas id="penaltyChart"></canvas>
+                </div>
             </div>
             <div class="col-md-6">
                 <h5>Feel-Result Combinations</h5>
@@ -62,6 +203,9 @@
                         <tr><td>Lucky Shots</td><td>{{ detailed_shot_stats.raw_stats.WS }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.WS * 100) }}%</td></tr>
                     </tbody>
                 </table>
+                <div class="chart-container">
+                    <canvas id="feelResultChart"></canvas>
+                </div>
                 <h5>Bunker Stats</h5>
                 <table class="table table-bordered table-sm">
                     <thead>
@@ -75,6 +219,40 @@
             </div>
         </div>
 
+        <h2>Shots</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Hole</th>
+                    <th>Club</th>
+                    <th>Feel</th>
+                    <th>Result</th>
+                    <th>Distance</th>
+                    <th>Penalty</th>
+                    <th>Concede</th>
+                    <th>Retplace</th>
+                    <th>Error</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for shot in shots %}
+                <tr>
+                    <td>{{ shot.holenum }}</td>
+                    <td>{{ shot.club }}</td>
+                    <td>{{ shot.feel }}</td>
+                    <td>{{ shot.result }}{{ ',' + shot.eresult if shot.eresult else ''}}</td>
+                    <td>{{ shot.distance }}</td>
+                    <td>{{ shot.penalty if shot.penalty else '-' }}</td>
+                    <td>{{ 'Yes' if shot.concede else 'No' }}</td>
+                    <td>{{ shot.retplace if shot.retplace else '-' }}</td>
+                    <td>{{ shot.error if shot.error is not none else '-' }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div id="clubStatistics" class="tab-content">
         <h5 class="mt-4">Club Feel Statistics (A/B/C Percentages)</h5>
         <table class="table table-bordered table-sm">
             <thead>
@@ -99,153 +277,35 @@
             </tbody>
         </table>
 
-    <div style="width: 50%; margin: auto;">
-        <canvas id="clubChart"></canvas>
-    </div>
-
-    <h2>Holes</h2>
-    <div class="row">
-        <div class="col-md-6">
-            <h5>Front Nine</h5>
-            <table class="table table-bordered table-sm">
-                <thead>
-                    <tr>
-                        <th>Hole</th>
-                        {% for i in range(1, 10) %}
-                        <th>{{ i }}</th>
-                        {% endfor %}
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Par</td>
-                        {% for hole in holes_info[0]%}
-                        <td>{{ hole.par }}</td>
-                        {% endfor %}
-                        <td>{{ holes_info[0] | sum(attribute='par') }}</td>
-                    </tr>
-                    <tr>
-                        <td>Score</td>
-                        {% for hole in holes_info[0]%}
-                        <td>{{ hole.diff}}</td>
-                        {% endfor %}
-                        <td>{{ holes_info[0] | sum(attribute='diff') }}</td>
-                    </tr>
-                    <tr>
-                        <td>Putt</td>
-                        {% for hole in holes_info[0]%}
-                        <td>{{ hole.putt}}</td>
-                        {% endfor %}
-                        <td>{{ holes_info[0] | sum(attribute='putt') }}</td>
-                    </tr>
-                    <tr>
-                        <td>GIR</td>
-                        {% for hole in holes_info[0] %}
-                        <td>{{ hole.GIR }}</td>
-                        {% endfor %}
-                        <td>{{ holes_info[0] | sum(attribute='GIR') }}</td>
-                    </tr>
-                    <tr>
-                        <td>GIR1</td>
-                        {% for hole in holes_info[0] %}
-                        <td>{{ hole.GIR1 }}</td>
-                        {% endfor %}
-                        <td>{{ holes_info[0] | sum(attribute='GIR1') }}</td>
-                    </tr>
-                </tbody>
-            </table>
+        <div class="chart-container">
+            <canvas id="clubChart"></canvas>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-6">
-            <h5>Back Nine</h5>
-            <table class="table table-bordered table-sm">
-                <thead>
-                    <tr>
-                        <th>Hole</th>
-                        {% for i in range(10, 19) %}
-                        <th>{{ i }}</th>
-                        {% endfor %}
-                        <th>Total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Par</td>
-                        {% for hole in holes_info[1] %}
-                        <td>{{ hole.par }}</td>
-                        {% endfor %}
-                        <td>{{ holes_info[1] | sum(attribute='par') }}</td>
-                    </tr>
-                    <tr>
-                        <td>Score</td>
-                        {% for hole in holes_info[1] %}
-                        <td>{{ hole.diff}}</td>
-                        {% endfor %}
-                        <td>{{ holes_info[1] | sum(attribute='diff') }}</td>
-                    </tr>
-                    <tr>
-                        <td>Putt</td>
-                        {% for hole in holes_info[1] %}
-                        <td>{{ hole.putt}}</td>
-                        {% endfor %}
-                        <td>{{ holes_info[1] | sum(attribute='putt') }}</td>
-                    </tr>
-                    <tr>
-                        <td>GIR</td>
-                        {% for hole in holes_info[1] %}
-                        <td>{{ hole.GIR }}</td>
-                        {% endfor %}
-                        <td>{{ holes_info[1] | sum(attribute='GIR') }}</td>
-                    </tr>
-                    <tr>
-                        <td>GIR1</td>
-                        {% for hole in holes_info[1] %}
-                        <td>{{ hole.GIR1 }}</td>
-                        {% endfor %}
-                        <td>{{ holes_info[1] | sum(attribute='GIR1') }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
+{% endblock %}
 
-    <h2>Shots</h2>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Hole</th>
-                <th>Club</th>
-                <th>Feel</th>
-                <th>Result</th>
-                <th>Distance</th>
-                <th>Penalty</th>
-                <th>Concede</th>
-                <th>Retplace</th>
-                <th>Error</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for shot in shots %}
-            <tr>
-                <td>{{ shot.holenum }}</td>
-                <td>{{ shot.club }}</td>
-                <td>{{ shot.feel }}</td>
-		<td>{{ shot.result }}{{ ',' + shot.eresult if shot.eresult else ''}}</td>
-                <td>{{ shot.distance }}</td>
-                <td>{{ shot.penalty if shot.penalty else '-' }}</td>
-                <td>{{ 'Yes' if shot.concede else 'No' }}</td>
-                <td>{{ shot.retplace if shot.retplace else '-' }}</td>
-                <td>{{ shot.error if shot.error is not none else '-' }}</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-
+{% block scripts %}
     <script>
-        const ctx = document.getElementById('clubChart').getContext('2d');
-        new Chart(ctx, {
+        function openTab(evt, tabName) {
+            var i, tabcontent, tabbuttons;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tabbuttons = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tabbuttons.length; i++) {
+                tabbuttons[i].className = tabbuttons[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // Activate the first tab by default on page load
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelector('.tab-button').click();
+        });
+
+        const clubCtx = document.getElementById('clubChart').getContext('2d');
+        new Chart(clubCtx, {
             type: 'pie',
             data: {
                 labels: {{ club_labels | tojson }},
@@ -272,6 +332,81 @@
                 }]
             }
         });
+
+        // Penalty Chart
+        const penaltyCtx = document.getElementById('penaltyChart').getContext('2d');
+        new Chart(penaltyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Hazard (H)', 'Out of Bounds (OB)', 'Unplayable (UN)', 'Conceded (OK)', 'Wedge Conceded (WOK)'],
+                datasets: [{
+                    label: 'Penalty & Concede Counts',
+                    data: [
+                        {{ detailed_shot_stats.raw_stats.H | tojson }},
+                        {{ detailed_shot_stats.raw_stats.OB | tojson }},
+                        {{ detailed_shot_stats.raw_stats.UN | tojson }},
+                        {{ detailed_shot_stats.raw_stats.OK | tojson }},
+                        {{ detailed_shot_stats.raw_stats.WOK | tojson }}
+                    ],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)',
+                        'rgba(255, 206, 86, 0.5)',
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(153, 102, 255, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(153, 102, 255, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Feel-Result Chart
+        const feelResultCtx = document.getElementById('feelResultChart').getContext('2d');
+        new Chart(feelResultCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Normal Shots', 'Bad Management', 'Lucky Shots'],
+                datasets: [{
+                    label: 'Feel-Result Combinations',
+                    data: [
+                        {{ detailed_shot_stats.raw_stats.SA | tojson }},
+                        {{ detailed_shot_stats.raw_stats.BT | tojson }},
+                        {{ detailed_shot_stats.raw_stats.WS | tojson }}
+                    ],
+                    backgroundColor: [
+                        'rgba(75, 192, 192, 0.5)',
+                        'rgba(255, 99, 132, 0.5)',
+                        'rgba(54, 162, 235, 0.5)'
+                    ],
+                    borderColor: [
+                        'rgba(75, 192, 192, 1)',
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(54, 162, 235, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
     </script>
-</body>
-</html>
+{% endblock %}
