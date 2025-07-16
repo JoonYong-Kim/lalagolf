@@ -57,7 +57,7 @@
         <p><strong>Tee-off Time:</strong> {{ round_info.playdate.strftime('%Y-%m-%d %H:%M') }}</p>
         <p><strong>Co-players:</strong> {{ round_info.coplayers }}</p>
         <p><strong>Score:</strong> {{ round_info.score }}</p>
-        <p><strong>GIR:</strong> {{ "%.2f" % round_info.gir }}%</p>
+        <p><strong>GIR:</strong> {{ "%.1f" % round_info.gir }}%</p>
     </div>
 
     <div id="holeDetails" class="tab-content">
@@ -102,14 +102,14 @@
                             {% for hole in holes_info[0] %}
                             <td>{{ 'O' if hole.GIR else 'X' }}</td>
                             {% endfor %}
-                            <td>{{ (holes_info[0] | selectattr('GIR') | list | count / (holes_info[0] | length if holes_info[0] | length > 0 else 1)) * 100 | round(1) }}%</td>
+                            <td>{{ "%.1f" % ((holes_info[0] | selectattr('GIR') | list | count / (holes_info[0] | length if holes_info[0] | length > 0 else 1)) * 100) }}%</td>
                         </tr>
                         <tr>
                             <td>GIR1</td>
                             {% for hole in holes_info[0] %}
                             <td>{{ 'O' if hole.GIR1 else 'X' }}</td>
                             {% endfor %}
-                            <td>{{ (holes_info[0] | selectattr('GIR1') | list | count / (holes_info[0] | length if holes_info[0] | length > 0 else 1)) * 100 | round(1) }}%</td>
+                            <td>{{ "%.1f" % ((holes_info[0] | selectattr('GIR1') | list | count / (holes_info[0] | length if holes_info[0] | length > 0 else 1)) * 100) }}%</td>
                         </tr>
                     </tbody>
                 </table>
@@ -155,14 +155,14 @@
                             {% for hole in holes_info[1] %}
                             <td>{{ 'O' if hole.GIR else 'X' }}</td>
                             {% endfor %}
-                            <td>{{ (holes_info[1] | selectattr('GIR') | list | count / (holes_info[1] | length if holes_info[1] | length > 0 else 1)) * 100 | round(1) }}%</td>
+                            <td>{{ "%.1f" % ((holes_info[1] | selectattr('GIR') | list | count / (holes_info[1] | length if holes_info[1] | length > 0 else 1)) * 100) }}%</td>
                         </tr>
                         <tr>
                             <td>GIR1</td>
                             {% for hole in holes_info[1] %}
                             <td>{{ 'O' if hole.GIR1 else 'X' }}</td>
                             {% endfor %}
-                            <td>{{ (holes_info[1] | selectattr('GIR1') | list | count / (holes_info[1] | length if holes_info[1] | length > 0 else 1)) * 100 | round(1) }}%</td>
+                            <td>{{ "%.1f" % ((holes_info[1] | selectattr('GIR1') | list | count / (holes_info[1] | length if holes_info[1] | length > 0 else 1)) * 100) }}%</td>
                         </tr>
                     </tbody>
                 </table>
@@ -207,71 +207,16 @@
                         <tr>
                             <td>GIR</td>
                             {% for hole in holes_info[2] %}
-                            <td>{{ "%.0f" % (hole.GIR * 100) }}%</td>
+                            <td>{{ "%.1f" % (hole.GIR * 100) }}%</td>
                             {% endfor %}
-                            <td>{{ (holes_info[2] | selectattr('GIR') | list | count / (holes_info[2] | length if holes_info[2] | length > 0 else 1)) * 100 | round(0) }}%</td>
+                            <td>{{ "%.1f" % ((holes_info[2] | selectattr('GIR') | list | count / (holes_info[2] | length if holes_info[2] | length > 0 else 1)) * 100) }}%</td>
                         </tr>
                         <tr>
                             <td>GIR1</td>
                             {% for hole in holes_info[2] %}
-                            <td>{{ "%.0f" % (hole.GIR1 * 100) }}%</td>
+                            <td>{{ "%.1f" % (hole.GIR1 * 100) }}%</td>
                             {% endfor %}
-                            <td>{{ (holes_info[2] | selectattr('GIR1') | list | count / (holes_info[2] | length if holes_info[2] | length > 0 else 1)) * 100 | round(0) }}%</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        {% endif %}
-        {% if holes_info[2] %}
-        <div class="row">
-            <div class="col-md-6">
-                <h5>Extra Nine</h5>
-                <table class="table table-bordered table-sm">
-                    <thead>
-                        <tr>
-                            <th>Hole</th>
-                            {% for i in range(19, 28) %}
-                            <th>{{ i }}</th>
-                            {% endfor %}
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Par</td>
-                            {% for hole in holes_info[2] %}
-                            <td>{{ hole.par }}</td>
-                            {% endfor %}
-                            <td>{{ holes_info[2] | sum(attribute='par') }}</td>
-                        </tr>
-                        <tr>
-                            <td>Score</td>
-                            {% for hole in holes_info[2] %}
-                            <td>{{ hole.diff}}</td>
-                            {% endfor %}
-                            <td>{{ holes_info[2] | sum(attribute='diff') }}</td>
-                        </tr>
-                        <tr>
-                            <td>Putt</td>
-                            {% for hole in holes_info[2] %}
-                            <td>{{ hole.putt}}</td>
-                            {% endfor %}
-                            <td>{{ holes_info[2] | sum(attribute='putt') }}</td>
-                        </tr>
-                        <tr>
-                            <td>GIR</td>
-                            {% for hole in holes_info[2] %}
-                            <td>{{ "%.0f" % (hole.GIR * 100) }}%</td>
-                            {% endfor %}
-                            <td>{{ (holes_info[2] | selectattr('GIR') | list | count / (holes_info[2] | length if holes_info[2] | length > 0 else 1)) * 100 | round(0) }}%</td>
-                        </tr>
-                        <tr>
-                            <td>GIR1</td>
-                            {% for hole in holes_info[2] %}
-                            <td>{{ "%.0f" % (hole.GIR1 * 100) }}%</td>
-                            {% endfor %}
-                            <td>{{ (holes_info[2] | selectattr('GIR1') | list | count / (holes_info[2] | length if holes_info[2] | length > 0 else 1)) * 100 | round(0) }}%</td>
+                            <td>{{ "%.1f" % ((holes_info[2] | selectattr('GIR1') | list | count / (holes_info[2] | length if holes_info[2] | length > 0 else 1)) * 100) }}%</td>
                         </tr>
                     </tbody>
                 </table>
@@ -290,11 +235,11 @@
                         <tr><th>Type</th><th>Count</th><th>Percentage</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>Hazard (H)</td><td>{{ detailed_shot_stats.raw_stats.H }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.H * 100) }}%</td></tr>
-                        <tr><td>Out of Bounds (OB)</td><td>{{ detailed_shot_stats.raw_stats.OB }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.OB * 100) }}%</td></tr>
-                        <tr><td>Unplayable (UN)</td><td>{{ detailed_shot_stats.raw_stats.UN }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.UN * 100) }}%</td></tr>
-                        <tr><td>Conceded (OK)</td><td>{{ detailed_shot_stats.raw_stats.OK }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.OK * 100) }}%</td></tr>
-                        <tr><td>Wedge Conceded (WOK)</td><td>{{ detailed_shot_stats.raw_stats.WOK }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.WOK * 100) }}%</td></tr>
+                        <tr><td>Hazard (H)</td><td>{{ detailed_shot_stats.raw_stats.H }}</td><td>{{ "%.1f" % (detailed_shot_stats.relative_stats.H * 100) }}%</td></tr>
+                        <tr><td>Out of Bounds (OB)</td><td>{{ detailed_shot_stats.raw_stats.OB }}</td><td>{{ "%.1f" % (detailed_shot_stats.relative_stats.OB * 100) }}%</td></tr>
+                        <tr><td>Unplayable (UN)</td><td>{{ detailed_shot_stats.raw_stats.UN }}</td><td>{{ "%.1f" % (detailed_shot_stats.relative_stats.UN * 100) }}%</td></tr>
+                        <tr><td>Conceded (OK)</td><td>{{ detailed_shot_stats.raw_stats.OK }}</td><td>{{ "%.1f" % (detailed_shot_stats.relative_stats.OK * 100) }}%</td></tr>
+                        <tr><td>Wedge Conceded (WOK)</td><td>{{ detailed_shot_stats.raw_stats.WOK }}</td><td>{{ "%.1f" % (detailed_shot_stats.relative_stats.WOK * 100) }}%</td></tr>
                     </tbody>
                 </table>
                 <div class="chart-container">
@@ -308,9 +253,9 @@
                         <tr><th>Combination</th><th>Count</th><th>Percentage</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>Normal Shots</td><td>{{ detailed_shot_stats.raw_stats.SA }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.SA * 100) }}%</td></tr>
-                        <tr><td>Bad Management</td><td>{{ detailed_shot_stats.raw_stats.BT }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.BT * 100) }}%</td></tr>
-                        <tr><td>Lucky Shots</td><td>{{ detailed_shot_stats.raw_stats.WS }}</td><td>{{ "%.2f" % (detailed_shot_stats.relative_stats.WS * 100) }}%</td></tr>
+                        <tr><td>Normal Shots</td><td>{{ detailed_shot_stats.raw_stats.SA }}</td><td>{{ "%.1f" % (detailed_shot_stats.relative_stats.SA * 100) }}%</td></tr>
+                        <tr><td>Bad Management</td><td>{{ detailed_shot_stats.raw_stats.BT }}</td><td>{{ "%.1f" % (detailed_shot_stats.relative_stats.BT * 100) }}%</td></tr>
+                        <tr><td>Lucky Shots</td><td>{{ detailed_shot_stats.raw_stats.WS }}</td><td>{{ "%.1f" % (detailed_shot_stats.relative_stats.WS * 100) }}%</td></tr>
                     </tbody>
                 </table>
                 <div class="chart-container">
@@ -322,8 +267,8 @@
                         <tr><th>Type</th><th>Percentage</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>Bunker Shots</td><td>{{ "%.2f" % (detailed_shot_stats.bunker_stats.B * 100) }}%</td></tr>
-                        <tr><td>Exited Sand Bunker (ESB)</td><td>{{ "%.2f" % (detailed_shot_stats.bunker_stats.ESB * 100) }}%</td></tr>
+                        <tr><td>Bunker Shots</td><td>{{ "%.1f" % (detailed_shot_stats.bunker_stats.B * 100) }}%</td></tr>
+                        <tr><td>Exited Sand Bunker (ESB)</td><td>{{ "%.1f" % (detailed_shot_stats.bunker_stats.ESB * 100) }}%</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -371,6 +316,7 @@
                     <th>A (%)</th>
                     <th>B (%)</th>
                     <th>C (%)</th>
+                    <th>Penalty (%)</th>
                     <th>Total Usage (%)</th>
                 </tr>
             </thead>
@@ -378,10 +324,11 @@
                 {% for club_type, stats in detailed_shot_stats.club_feel_stats.items() %}
                 <tr>
                     <td>{{ club_type }}</td>
-                    <td>{{ "%.2f" % (stats.A * 100) }}</td>
-                    <td>{{ "%.2f" % (stats.B * 100) }}</td>
-                    <td>{{ "%.2f" % (stats.C * 100) }}</td>
-                    <td>{{ "%.2f" % (stats.total_percentage * 100) }}</td>
+                    <td>{{ "%.1f" % (stats.A * 100) }}</td>
+                    <td>{{ "%.1f" % (stats.B * 100) }}</td>
+                    <td>{{ "%.1f" % (stats.C * 100) }}</td>
+                    <td>{{ "%.1f" % (stats.P * 100) }}</td>
+                    <td>{{ "%.1f" % (stats.total_percentage * 100) }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

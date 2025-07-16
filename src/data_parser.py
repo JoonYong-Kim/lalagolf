@@ -395,15 +395,17 @@ def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
     club_feel_stats = {}
     for club_type in ["D", "U", "LI", "MI", "SI", "W", "P"]:
         n = sum(data[club_type])
+        p = sum(data[f"{club_type}_{pen}"] for pen in ["H", "OB", "UN"])
         if n > 0:
             club_feel_stats[club_type] = {
                 "A": data[club_type][0] / n,
                 "B": data[club_type][1] / n,
                 "C": data[club_type][2] / n,
+                "P": p / n,
                 "total_percentage": n / total_shots if total_shots > 0 else 0
             }
         else:
-            club_feel_stats[club_type] = {"A": 0, "B": 0, "C": 0, "total_percentage": 0}
+            club_feel_stats[club_type] = {"A": 0, "B": 0, "C": 0, "P": 0, "total_percentage": 0}
 
     # Bunker success rate (ESB - Exited Sand Bunker)
     rbdata = {"B" : bdata["B"] / total_shots if total_shots > 0 else 0, "ESB" : 0}

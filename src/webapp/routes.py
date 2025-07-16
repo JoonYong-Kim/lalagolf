@@ -129,6 +129,7 @@ def round_detail(round_id):
                 holes_info[2].append(hole_data)
         
         shot_data = {
+            'holenum': row['holenum'],
             'club': row['club'],
             'feel': row['feelgrade'],
             'result': row['retgrade'],
