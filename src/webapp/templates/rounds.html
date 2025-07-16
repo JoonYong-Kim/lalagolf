@@ -3,9 +3,7 @@
 
 {% block title %}Golf Rounds{% endblock %}
 
-{% block head %}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-{% endblock %}
+{% block head %}{% endblock %}
 
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -38,103 +36,53 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="form-group mb-0">
-                <label for="dataToggle" class="sr-only">Toggle Data</label>
-                <div id="dataToggle">
-                    <input type="checkbox" id="toggleScore" checked onchange="toggleDataset(0)"> <label for="toggleScore">Score</label>
-                    <input type="checkbox" id="toggleGIR" checked onchange="toggleDataset(1)"> <label for="toggleGIR">GIR</label>
-                </div>
-            </div>
         </form>
     </div>
 
-    <div class="chart-container">
-        <canvas id="scoreChart"></canvas>
-    </div>
-
     <h2 class="mt-4">Round List</h2>
-    <ul class="list-group">
-        {% for round in rounds %}
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-                <a href="{{ url_for('round_detail', round_id=round.id) }}" class="text-decoration-none text-dark flex-grow-1 me-2">
-                    {{ round.playdate.strftime('%Y-%m-%d') }} - {{ round.gcname }} - Score: {{ round.score }}
-                </a>
-                {% if session.logged_in %}
-                    <form action="{{ url_for('delete_round', round_id=round.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this round?');" class="flex-shrink-0">
-                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
-                    </form>
-                {% endif %}
-            </li>
-        {% endfor %}
-    </ul>
-{% endblock %}
-
+    <div class="mb-3">
+        <input type="text" class="form-control" id="searchInput" placeholder="Search by golf course or companion..." value="{{ search_query if search_query is not none else '' }}">
+    </div>
+    <table class="table table-striped table-hover">
+        <thead>
+            <tr>
+                <th><a href="{{ url_for('list_rounds', year=selected_year, golf_course=selected_golf_course, companion=selected_companion, sort_by='playdate', sort_order='DESC' if sort_by == 'playdate' and sort_order == 'ASC' else 'ASC', search_query=search_query) }}">Playdate {% if sort_by == 'playdate' %}{% if sort_order == 'ASC' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                <th><a href="{{ url_for('list_rounds', year=selected_year, golf_course=selected_golf_course, companion=selected_companion, sort_by='gcname', sort_order='DESC' if sort_by == 'gcname' and sort_order == 'ASC' else 'ASC', search_query=search_query) }}">Golf Course {% if sort_by == 'gcname' %}{% if sort_order == 'ASC' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                <th><a href="{{ url_for('list_rounds', year=selected_year, golf_course=selected_golf_course, companion=selected_companion, sort_by='coplayers', sort_order='DESC' if sort_by == 'coplayers' and sort_order == 'ASC' else 'ASC', search_query=search_query) }}">Companions {% if sort_by == 'coplayers' %}{% if sort_order == 'ASC' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                <th><a href="{{ url_for('list_rounds', year=selected_year, golf_course=selected_golf_course, companion=selected_companion, sort_by='score', sort_order='DESC' if sort_by == 'score' and sort_order == 'ASC' else 'ASC', search_query=search_query) }}">Score {% if sort_by == 'score' %}{% if sort_order == 'ASC' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                <th><a href="{{ url_for('list_rounds', year=selected_year, golf_course=selected_golf_course, companion=selected_companion, sort_by='gir', sort_order='DESC' if sort_by == 'gir' and sort_order == 'ASC' else 'ASC', search_query=search_query) }}">GIR (%) {% if sort_by == 'gir' %}{% if sort_order == 'ASC' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for round in rounds %}
+            <tr>
+                <td><a href="{{ url_for('round_detail', round_id=round.id) }}">{{ round.playdate.strftime('%Y-%m-%d') }}</a></td>
+                <td>{{ round.gcname }}</td>
+                <td>{{ round.coplayers }}</td>
+                <td>{{ round.score }}</td>
+                <td>{{ "%.1f"|format(round.gir) }}</td>
+                <td>
+                    {% if session.logged_in %}
+                        <form action="{{ url_for('delete_round', round_id=round.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this round?');">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% block scripts %}
     <script>
-        const ctx = document.getElementById('scoreChart').getContext('2d');
-        console.log("Chart context (ctx):", ctx);
-        console.log("Labels data:", {{ labels | tojson }});
-        console.log("Score data:", {{ data | tojson }});
-        console.log("GIR data:", {{ rounds | map(attribute='gir') | list | tojson }});
-        let scoreChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: {{ labels | tojson }},
-                datasets: [
-                    {
-                        label: 'Score',
-                        data: {{ data | tojson }},
-                        borderColor: 'rgba(75, 192, 192, 1)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        borderWidth: 1,
-                        fill: false,
-                        yAxisID: 'y-score',
-                    },
-                    {
-                        label: 'GIR (%)',
-                        data: {{ rounds | map(attribute='gir') | list | tojson }},
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-                        borderWidth: 1,
-                        fill: false,
-                        yAxisID: 'y-gir',
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    'y-score': {
-                        type: 'linear',
-                        position: 'left',
-                        beginAtZero: false,
-                        title: {
-                            display: true,
-                            text: 'Score'
-                        }
-                    },
-                    'y-gir': {
-                        type: 'linear',
-                        position: 'right',
-                        beginAtZero: true,
-                        max: 100,
-                        title: {
-                            display: true,
-                            text: 'GIR (%)'
-                        },
-                        grid: {
-                            drawOnChartArea: false, // only draw grid lines for the first y axis
-                        },
-                    }
-                }
+        document.getElementById('searchInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                const searchValue = this.value;
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('search_query', searchValue);
+                window.location.href = currentUrl.toString();
             }
         });
-
-        function toggleDataset(index) {
-            const dataset = scoreChart.data.datasets[index];
-            dataset.hidden = !dataset.hidden;
-            scoreChart.update();
-        }
     </script>
+{% endblock %}
 {% endblock %}

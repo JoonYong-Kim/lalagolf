@@ -36,26 +36,11 @@ def list_rounds():
     selected_year = request.args.get('year', 'all')
     selected_golf_course = request.args.get('golf_course', 'all')
     selected_companion = request.args.get('companion', 'all')
+    sort_by = request.args.get('sort_by', 'playdate')
+    sort_order = request.args.get('sort_order', 'ASC')
+    search_query = request.args.get('search_query')
 
-    query = "SELECT *, gir FROM rounds WHERE score IS NOT NULL"
-    params = []
-
-    if selected_year != 'all':
-        query += " AND YEAR(playdate) = %s"
-        params.append(selected_year)
-    
-    if selected_golf_course != 'all':
-        query += " AND gcname = %s"
-        params.append(selected_golf_course)
-
-    if selected_companion != 'all':
-        query += " AND coplayers LIKE %s"
-        params.append(f'%{selected_companion}%')
-    
-    query += " ORDER BY playdate ASC"
-
-    cursor.execute(query, params)
-    rounds = cursor.fetchall()
+    rounds = get_filtered_rounds(year=selected_year, golf_course=selected_golf_course, companion=selected_companion, sort_by=sort_by, sort_order=sort_order, search_query=search_query)
 
     # Prepare data for the chart
     labels = [r['playdate'].strftime('%Y-%m-%d') for r in rounds]
@@ -82,15 +67,36 @@ def list_rounds():
 
     return render_template('rounds.html', 
                            rounds=rounds, 
-                           labels=labels, 
-                           data=data, 
                            current_year=current_year,
                            selected_year=selected_year,
                            unique_years=unique_years,
                            selected_golf_course=selected_golf_course,
                            unique_golf_courses=unique_golf_courses,
                            selected_companion=selected_companion,
-                           unique_companions=unique_companions)
+                           unique_companions=unique_companions,
+                           sort_by=sort_by,
+                           sort_order=sort_order,
+                           search_query=search_query)
+
+@app.route('/charts')
+def charts():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    query = "SELECT *, gir FROM rounds WHERE score IS NOT NULL ORDER BY playdate ASC"
+    cursor.execute(query)
+    rounds = cursor.fetchall()
+
+    labels = [r['playdate'].strftime('%Y-%m-%d') for r in rounds]
+    data = [r['score'] for r in rounds]
+
+    cursor.close() 
+    conn.close()  
+
+    return render_template('charts.html', 
+                           rounds=rounds, 
+                           labels=labels, 
+                           data=data)
 
 @app.route('/delete_round/<int:round_id>', methods=['POST'])
 @login_required
@@ -269,6 +275,7 @@ def upload_round():
                 session['parsed_data'] = parsed_data
                 session['scores_and_stats'] = scores_and_stats
                 session['raw_data_content'] = raw_data # Store raw content for saving to file later
+                session['unparsed_lines'] = parsed_data.get('unparsed_lines', [])
                 return redirect(url_for('review_round'))
             except Exception as e:
                 return render_template('upload_form.html', error=f"Parsing error: {e}")
@@ -283,6 +290,7 @@ def review_round():
     parsed_data = session.get('parsed_data')
     scores_and_stats = session.get('scores_and_stats')
     raw_data_content = session.get('raw_data_content')
+    unparsed_lines = session.get('unparsed_lines')
 
     if not parsed_data or not scores_and_stats or not raw_data_content:
         return redirect(url_for('upload_round')) # Redirect if no data in session
@@ -328,4 +336,4 @@ def review_round():
             session.pop('raw_data_content', None)
             return redirect(url_for('upload_round'))
 
-    return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats, raw_data_content=raw_data_content)
+    return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats, raw_data_content=raw_data_content, unparsed_lines=unparsed_lines)

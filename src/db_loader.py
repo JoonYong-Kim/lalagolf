@@ -21,7 +21,7 @@ def get_db_connection():
         raise Exception("Connection pool is not initialized. Call init_connection_pool first.")
     return connection_pool.get_connection()
 
-def get_filtered_rounds(year: str = 'all', golf_course: str = 'all', companion: str = 'all'):
+def get_filtered_rounds(year: str = 'all', golf_course: str = 'all', companion: str = 'all', sort_by: str = 'playdate', sort_order: str = 'ASC', search_query: str = None):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -39,8 +39,23 @@ def get_filtered_rounds(year: str = 'all', golf_course: str = 'all', companion: 
     if companion != 'all':
         query += " AND coplayers LIKE %s"
         params.append(f'%{companion}%')
+
+    if search_query:
+        search_term = f'%{search_query}%'
+        query += " AND (gcname LIKE %s OR coplayers LIKE %s)"
+        params.append(search_term)
+        params.append(search_term)
     
-    query += " ORDER BY playdate ASC"
+    # Validate sort_by to prevent SQL injection
+    valid_sort_columns = ['playdate', 'gcname', 'coplayers', 'score', 'gir']
+    if sort_by not in valid_sort_columns:
+        sort_by = 'playdate' # Default to playdate if invalid
+
+    # Validate sort_order
+    if sort_order.upper() not in ['ASC', 'DESC']:
+        sort_order = 'ASC' # Default to ASC if invalid
+
+    query += f" ORDER BY {sort_by} {sort_order}"
 
     cursor.execute(query, params)
     rounds = cursor.fetchall()

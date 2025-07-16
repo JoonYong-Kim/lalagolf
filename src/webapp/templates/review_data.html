@@ -9,6 +9,14 @@
     {% endif %}
 
     <form action="{{ url_for('review_round') }}" method="post" class="mt-4">
+        {% if unparsed_lines %}
+            <h4 class="mt-4 text-danger">Unparsed Lines Detected!</h4>
+            <p class="text-danger">The following lines could not be parsed. Please review and correct them in the Raw Data Content section above if necessary.</p>
+            <div class="form-group">
+                <textarea class="form-control" rows="5" readonly>{{ "\n".join(unparsed_lines) }}</textarea>
+            </div>
+        {% endif %}
+
         <h4 class="mt-4">Raw Data Content:</h4>
         <div class="form-group">
             <textarea class="form-control" id="raw_data_content" name="raw_data_content" rows="10">{{ raw_data_content }}</textarea>
