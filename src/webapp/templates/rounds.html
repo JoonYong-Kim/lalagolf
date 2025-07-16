@@ -52,6 +52,10 @@
 {% block scripts %}
     <script>
         const ctx = document.getElementById('scoreChart').getContext('2d');
+        console.log("Chart context (ctx):", ctx);
+        console.log("Labels data:", {{ labels | tojson }});
+        console.log("Score data:", {{ data | tojson }});
+        console.log("GIR data:", {{ rounds | map(attribute='gir') | list | tojson }});
         let scoreChart = new Chart(ctx, {
             type: 'line',
             data: {
