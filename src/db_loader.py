@@ -21,7 +21,7 @@ def get_db_connection():
         raise Exception("Connection pool is not initialized. Call init_connection_pool first.")
     return connection_pool.get_connection()
 
-def save_round_data(parsed_data: Dict, scores_and_stats: Dict):
+def save_round_data(parsed_data: Dict, scores_and_stats: Dict, raw_data: str = None):
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -43,21 +43,46 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict):
     else:
         score_to_save = total_shots
 
-    # Insert into rounds table
-    add_round = ("""
-        INSERT INTO rounds (player, gcname, coplayers, playdate, score, gir)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """)
-    round_values = (
-        default_player,
-        parsed_data['golf_course'], # Assuming 'club' in rounds table is gcname
-        co_players_to_save,
-        parsed_data['tee_off_time'],
-        score_to_save,
-        scores_and_stats['overall']['gir']
-    )
-    cursor.execute(add_round, round_values)
-    round_id = cursor.lastrowid
+    round_id = parsed_data.get('id') # Get round_id if it exists (for updates)
+
+    if round_id:
+        # If round_id exists, delete existing hole, nine, and shot data for this round
+        delete_round_data(round_id, cursor) # Pass cursor to use the same transaction
+
+        # Update rounds table
+        update_round_sql = ("""
+            UPDATE rounds
+            SET player = %s, gcname = %s, coplayers = %s, playdate = %s, score = %s, gir = %s, raw_data = %s
+            WHERE id = %s
+        """)
+        round_values = (
+            default_player,
+            parsed_data['golf_course'],
+            co_players_to_save,
+            parsed_data['tee_off_time'],
+            score_to_save,
+            scores_and_stats['overall']['gir'],
+            raw_data,
+            round_id
+        )
+        cursor.execute(update_round_sql, round_values)
+    else:
+        # Insert into rounds table for new rounds
+        add_round = ("""
+            INSERT INTO rounds (player, gcname, coplayers, playdate, score, gir, raw_data)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """)
+        round_values = (
+            default_player,
+            parsed_data['golf_course'],
+            co_players_to_save,
+            parsed_data['tee_off_time'],
+            score_to_save,
+            scores_and_stats['overall']['gir'],
+            raw_data
+        )
+        cursor.execute(add_round, round_values)
+        round_id = cursor.lastrowid
 
     # Insert into nines table
     for nine_type in ['front_nine', 'back_nine', 'extra_nine']:
@@ -121,9 +146,14 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict):
     cursor.close()
     conn.close()
 
-def delete_round_data(round_id: int):
-    conn = get_db_connection()
-    cursor = conn.cursor()
+def delete_round_data(round_id: int, cursor=None):
+    if cursor is None:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        _close_conn = True
+    else:
+        conn = cursor.connection
+        _close_conn = False
 
     try:
         # Delete from shots table
@@ -135,10 +165,13 @@ def delete_round_data(round_id: int):
         # Delete from rounds table
         cursor.execute("DELETE FROM rounds WHERE id = %s", (round_id,))
         
-        conn.commit()
+        if _close_conn:
+            conn.commit()
     except Exception as e:
-        conn.rollback()
+        if _close_conn:
+            conn.rollback()
         raise e
     finally:
-        cursor.close()
-        conn.close()
+        if _close_conn:
+            cursor.close()
+            conn.close()

@@ -104,7 +104,8 @@ def round_detail(round_id):
         'coplayers': results[0]['coplayers'],
         'playdate': results[0]['playdate'],
         'score': results[0]['score'],
-        'gir': results[0]['gir']
+        'gir': results[0]['gir'],
+        'raw_data': results[0]['raw_data']
     }
 
     holes_info = [[], [], []]
@@ -173,6 +174,26 @@ def round_detail(round_id):
                            club_labels=club_labels, 
                            club_data=club_data, 
                            detailed_shot_stats=detailed_shot_stats)
+
+@app.route('/update_round_raw_data/<int:round_id>', methods=['POST'])
+@login_required
+def update_round_raw_data(round_id):
+    raw_data_content = request.form['raw_data_content']
+    
+    # Save raw data to a temporary file for parse_file
+    temp_file_path = "tmp/uploaded_golf_data.txt"
+    with open(temp_file_path, 'w') as f:
+        f.write(raw_data_content)
+
+    try:
+        parsed_data, scores_and_stats = parse_file(temp_file_path)
+        parsed_data['id'] = round_id # Set the ID for update
+        save_round_data(parsed_data, scores_and_stats, raw_data_content)
+        flash('Raw data updated successfully!', 'success')
+    except Exception as e:
+        flash(f'Error updating raw data: {e}', 'danger')
+    
+    return redirect(url_for('round_detail', round_id=round_id))
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -261,7 +282,7 @@ def review_round():
 
                 # Save parsed data to database
                 db_config = current_app.config['DB_CONFIG']
-                save_round_data(parsed_data, scores_and_stats)
+                save_round_data(parsed_data, scores_and_stats, raw_data_content)
                 
                 session.pop('parsed_data', None)
                 session.pop('scores_and_stats', None)

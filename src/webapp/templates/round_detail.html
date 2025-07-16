@@ -50,6 +50,7 @@
         <button class="tab-button" onclick="openTab(event, 'holeDetails')">홀별 상세</button>
         <button class="tab-button" onclick="openTab(event, 'shotStatistics')">샷 통계</button>
         <button class="tab-button" onclick="openTab(event, 'clubStatistics')">클럽 통계</button>
+        <button class="tab-button" onclick="openTab(event, 'rawData')">Raw Data</button>
     </div>
 
     <div id="roundOverview" class="tab-content active">
@@ -337,6 +338,20 @@
         <div class="chart-container">
             <canvas id="clubChart"></canvas>
         </div>
+    </div>
+
+    <div id="rawData" class="tab-content">
+        {% if session.logged_in %}
+        <form action="{{ url_for('update_round_raw_data', round_id=round_info.id) }}" method="post">
+            <div class="form-group">
+                <label for="raw_data_content">Raw Data:</label>
+                <textarea class="form-control" id="raw_data_content" name="raw_data_content" rows="20">{{ round_info.raw_data }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary mt-3">Save Raw Data</button>
+        </form>
+        {% else %}
+        <p>Please log in to view and edit raw data.</p>
+        {% endif %}
     </div>
 {% endblock %}
 

@@ -65,6 +65,7 @@ CREATE TABLE `rounds` (
   `playdate` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `score` float DEFAULT NULL,
   `gir` float DEFAULT NULL,
+  `raw_data` LONGTEXT DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
