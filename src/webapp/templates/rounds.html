@@ -50,6 +50,7 @@
 {% endblock %}
 
 {% block scripts %}
+    {% block scripts %}
     <script>
         const ctx = document.getElementById('scoreChart').getContext('2d');
         console.log("Chart context (ctx):", ctx);
@@ -120,4 +121,5 @@
             dataset.hidden = !dataset.hidden;
             scoreChart.update();
         }
+    </script>
 {% endblock %}
