@@ -23,14 +23,19 @@ def before_request():
         init_connection_pool(current_app.config['DB_CONFIG'])
 
 @app.route('/')
+def home():
+    return render_template('index.html')
+
 @app.route('/rounds')
-def round_list():
+def list_rounds():
     db_config = current_app.config['DB_CONFIG']
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
 
     current_year = datetime.now().year
     selected_year = request.args.get('year', 'all')
+    selected_golf_course = request.args.get('golf_course', 'all')
+    selected_companion = request.args.get('companion', 'all')
 
     query = "SELECT *, gir FROM rounds WHERE score IS NOT NULL"
     params = []
@@ -38,6 +43,14 @@ def round_list():
     if selected_year != 'all':
         query += " AND YEAR(playdate) = %s"
         params.append(selected_year)
+    
+    if selected_golf_course != 'all':
+        query += " AND gcname = %s"
+        params.append(selected_golf_course)
+
+    if selected_companion != 'all':
+        query += " AND coplayers LIKE %s"
+        params.append(f'%{selected_companion}%')
     
     query += " ORDER BY playdate ASC"
 
@@ -52,6 +65,18 @@ def round_list():
     cursor.execute("SELECT DISTINCT YEAR(playdate) AS year FROM rounds ORDER BY year DESC")
     unique_years = [row['year'] for row in cursor.fetchall()]
 
+    # Get all unique golf courses from the database
+    cursor.execute("SELECT DISTINCT gcname FROM rounds ORDER BY gcname ASC")
+    unique_golf_courses = [row['gcname'] for row in cursor.fetchall()]
+
+    # Get all unique companions from the database (assuming comma-separated)
+    cursor.execute("SELECT DISTINCT coplayers FROM rounds")
+    all_coplayers = []
+    for row in cursor.fetchall():
+        if row['coplayers']:
+            all_coplayers.extend([c.strip() for c in row['coplayers'].split(',')])
+    unique_companions = sorted(list(set(all_coplayers)))
+
     cursor.close() 
     conn.close()  
 
@@ -61,7 +86,11 @@ def round_list():
                            data=data, 
                            current_year=current_year,
                            selected_year=selected_year,
-                           unique_years=unique_years)
+                           unique_years=unique_years,
+                           selected_golf_course=selected_golf_course,
+                           unique_golf_courses=unique_golf_courses,
+                           selected_companion=selected_companion,
+                           unique_companions=unique_companions)
 
 @app.route('/delete_round/<int:round_id>', methods=['POST'])
 @login_required
@@ -72,7 +101,7 @@ def delete_round(round_id):
         flash('Round deleted successfully!', 'success')
     except Exception as e:
         flash(f'Error deleting round: {e}', 'danger')
-    return redirect(url_for('round_list'))
+    return redirect(url_for('list_rounds'))
 
 @app.route('/round/<int:round_id>')
 def round_detail(round_id):
@@ -288,7 +317,7 @@ def review_round():
                 session.pop('scores_and_stats', None)
                 session.pop('raw_data_content', None)
                 
-                return redirect(url_for('round_list')) # Redirect to list after saving
+                return redirect(url_for('list_rounds')) # Redirect to list after saving
             except json.JSONDecodeError as e:
                 return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats, raw_data_content=raw_data_content, error=f"JSON parsing error: {e}. Please check your JSON format.")
             except Exception as e:

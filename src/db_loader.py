@@ -21,8 +21,67 @@ def get_db_connection():
         raise Exception("Connection pool is not initialized. Call init_connection_pool first.")
     return connection_pool.get_connection()
 
+def get_filtered_rounds(year: str = 'all', golf_course: str = 'all', companion: str = 'all'):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    query = "SELECT *, gir FROM rounds WHERE score IS NOT NULL"
+    params = []
+
+    if year != 'all':
+        query += " AND YEAR(playdate) = %s"
+        params.append(year)
+    
+    if golf_course != 'all':
+        query += " AND gcname = %s"
+        params.append(golf_course)
+
+    if companion != 'all':
+        query += " AND coplayers LIKE %s"
+        params.append(f'%{companion}%')
+    
+    query += " ORDER BY playdate ASC"
+
+    cursor.execute(query, params)
+    rounds = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return rounds
+
+def get_unique_years():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT DISTINCT YEAR(playdate) AS year FROM rounds ORDER BY year DESC")
+    unique_years = [row['year'] for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return unique_years
+
+def get_unique_golf_courses():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT DISTINCT gcname FROM rounds ORDER BY gcname ASC")
+    unique_golf_courses = [row['gcname'] for row in cursor.fetchall()]
+    cursor.close()
+    conn.close()
+    return unique_golf_courses
+
+def get_unique_companions():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT DISTINCT coplayers FROM rounds")
+    all_coplayers = []
+    for row in cursor.fetchall():
+        if row['coplayers']:
+            all_coplayers.extend([c.strip() for c in row['coplayers'].split(',')])
+    unique_companions = sorted(list(set(all_coplayers)))
+    cursor.close()
+    conn.close()
+    return unique_companions
+
 def save_round_data(parsed_data: Dict, scores_and_stats: Dict, raw_data: str = None):
-    print(f"[save_round_data] Called with round_id: {parsed_data.get('id')}, raw_data length: {len(raw_data) if raw_data else 0}")
+    
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -47,7 +106,7 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict, raw_data: str = N
     round_id = parsed_data.get('id') # Get round_id if it exists (for updates)
 
     if round_id:
-        print(f"[save_round_data] Updating existing round: {round_id}")
+        
         # If round_id exists, delete existing hole, nine, and shot data for this round
         delete_round_data(round_id, conn) # Pass conn to use the same transaction
 
@@ -67,11 +126,11 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict, raw_data: str = N
             raw_data,
             round_id
         )
-        print(f"[save_round_data] Executing UPDATE rounds with values: {round_values}")
+        
         cursor.execute(update_round_sql, round_values)
-        print(f"[save_round_data] Successfully updated rounds table for ID: {round_id}")
+        
     else:
-        print("[save_round_data] Inserting new round.")
+        
         # Insert into rounds table for new rounds
         add_round = ("""
             INSERT INTO rounds (player, gcname, coplayers, playdate, score, gir, raw_data)
@@ -86,13 +145,13 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict, raw_data: str = N
             scores_and_stats['overall']['gir'],
             raw_data
         )
-        print(f"[save_round_data] Executing INSERT rounds with values: {round_values}")
+        
         cursor.execute(add_round, round_values)
         round_id = cursor.lastrowid
-        print(f"[save_round_data] Successfully inserted new round with ID: {round_id}")
+        
 
     # Insert into nines table
-    print("[save_round_data] Inserting nines data.")
+    
     for nine_type in ['front_nine', 'back_nine', 'extra_nine']:
         if nine_type in scores_and_stats and scores_and_stats[nine_type]['holes']:
             nine_data = scores_and_stats[nine_type]
@@ -110,9 +169,9 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict, raw_data: str = N
                 nine_data['gir']
             )
             cursor.execute(add_nine, nine_values)
-    print("[save_round_data] Nines data insertion complete.")
+    
 
-    print("[save_round_data] Inserting holes and shots data.")
+    
     for hole in parsed_data['holes']:
         # Insert into holes table
         add_hole = ("""
@@ -152,15 +211,14 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict, raw_data: str = N
                 shot.get('error')
             )
             cursor.execute(add_shot, shot_values)
-    print("[save_round_data] Holes and shots data insertion complete.")
+    
 
     conn.commit()
-    print("[save_round_data] Transaction committed.")
+    
     cursor.close()
     conn.close()
 
 def delete_round_data(round_id: int, conn=None):
-    print(f"[delete_round_data] Called for round_id: {round_id}, conn provided: {conn is not None}")
     if conn is None:
         conn = get_db_connection()
         _close_conn = True
@@ -171,26 +229,20 @@ def delete_round_data(round_id: int, conn=None):
     try:
         # Delete from shots table
         cursor.execute("DELETE FROM shots WHERE roundid = %s", (round_id,))
-        print(f"[delete_round_data] Deleted {cursor.rowcount} shots for round_id: {round_id}")
         # Delete from holes table
         cursor.execute("DELETE FROM holes WHERE roundid = %s", (round_id,))
-        print(f"[delete_round_data] Deleted {cursor.rowcount} holes for round_id: {round_id}")
         # Delete from nines table
         cursor.execute("DELETE FROM nines WHERE roundid = %s", (round_id,))
-        print(f"[delete_round_data] Deleted {cursor.rowcount} nines for round_id: {round_id}")
         
         # Only delete from rounds table if this is a standalone delete operation
         if _close_conn:
             cursor.execute("DELETE FROM rounds WHERE id = %s", (round_id,))
-            print(f"[delete_round_data] Deleted {cursor.rowcount} round entry for round_id: {round_id}")
         
         if _close_conn:
             conn.commit()
-            print("[delete_round_data] Transaction committed.")
     except Exception as e:
         if _close_conn:
             conn.rollback()
-            print(f"[delete_round_data] Transaction rolled back due to error: {e}")
         raise e
     finally:
         cursor.close()

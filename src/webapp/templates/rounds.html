@@ -10,13 +10,31 @@
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Golf Rounds</h2>
-        <div class="d-flex align-items-center">
-            <div class="form-group mb-0 mr-3">
+        <form id="filterForm" class="d-flex align-items-center" method="GET" action="{{ url_for('list_rounds') }}">
+            <div class="form-group mb-0 me-2">
                 <label for="yearFilter" class="sr-only">Filter by Year</label>
-                <select class="form-control" id="yearFilter" onchange="filterRounds(this.value)">
-                    <option value="all" {% if selected_year == 'all' %}selected{% endif %}>전체보기</option>
+                <select class="form-control" id="yearFilter" name="year" onchange="document.getElementById('filterForm').submit();">
+                    <option value="all" {% if selected_year == 'all' %}selected{% endif %}>All Years</option>
                     {% for year in unique_years %}
-                        <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}년</option>
+                        <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group mb-0 me-2">
+                <label for="golfCourseFilter" class="sr-only">Filter by Golf Course</label>
+                <select class="form-control" id="golfCourseFilter" name="golf_course" onchange="document.getElementById('filterForm').submit();">
+                    <option value="all" {% if selected_golf_course == 'all' %}selected{% endif %}>All Courses</option>
+                    {% for course in unique_golf_courses %}
+                        <option value="{{ course }}" {% if selected_golf_course == course %}selected{% endif %}>{{ course }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group mb-0 me-2">
+                <label for="companionFilter" class="sr-only">Filter by Companion</label>
+                <select class="form-control" id="companionFilter" name="companion" onchange="document.getElementById('filterForm').submit();">
+                    <option value="all" {% if selected_companion == 'all' %}selected{% endif %}>All Companions</option>
+                    {% for companion in unique_companions %}
+                        <option value="{{ companion }}" {% if selected_companion == companion %}selected{% endif %}>{{ companion }}</option>
                     {% endfor %}
                 </select>
             </div>
@@ -27,7 +45,7 @@
                     <input type="checkbox" id="toggleGIR" checked onchange="toggleDataset(1)"> <label for="toggleGIR">GIR</label>
                 </div>
             </div>
-        </div>
+        </form>
     </div>
 
     <div class="chart-container">
@@ -112,10 +130,6 @@
                 }
             }
         });
-
-        function filterRounds(year) {
-            window.location.href = "{{ url_for('round_list') }}?year=" + year;
-        }
 
         function toggleDataset(index) {
             const dataset = scoreChart.data.datasets[index];
