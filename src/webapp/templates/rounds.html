@@ -10,20 +10,22 @@
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Golf Rounds</h2>
-        <div class="form-group mb-0">
-            <label for="yearFilter" class="sr-only">Filter by Year</label>
-            <select class="form-control" id="yearFilter" onchange="filterRounds(this.value)">
-                <option value="all" {% if selected_year == 'all' %}selected{% endif %}>전체보기</option>
-                {% for year in unique_years %}
-                    <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}년</option>
-                {% endfor %}
-            </select>
-        </div>
-        <div class="form-group mb-0">
-            <label for="dataToggle" class="sr-only">Toggle Data</label>
-            <div id="dataToggle">
-                <input type="checkbox" id="toggleScore" checked onchange="toggleDataset(0)"> <label for="toggleScore">Score</label>
-                <input type="checkbox" id="toggleGIR" checked onchange="toggleDataset(1)"> <label for="toggleGIR">GIR</label>
+        <div class="d-flex align-items-center">
+            <div class="form-group mb-0 mr-3">
+                <label for="yearFilter" class="sr-only">Filter by Year</label>
+                <select class="form-control" id="yearFilter" onchange="filterRounds(this.value)">
+                    <option value="all" {% if selected_year == 'all' %}selected{% endif %}>전체보기</option>
+                    {% for year in unique_years %}
+                        <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}년</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <label for="dataToggle" class="sr-only">Toggle Data</label>
+                <div id="dataToggle">
+                    <input type="checkbox" id="toggleScore" checked onchange="toggleDataset(0)"> <label for="toggleScore">Score</label>
+                    <input type="checkbox" id="toggleGIR" checked onchange="toggleDataset(1)"> <label for="toggleGIR">GIR</label>
+                </div>
             </div>
         </div>
     </div>
@@ -36,11 +38,11 @@
     <ul class="list-group">
         {% for round in rounds %}
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                <a href="{{ url_for('round_detail', round_id=round.id) }}">
-                    {{ round.playdate.strftime('%Y-%m-%d') }} - Score: {{ round.score }}
+                <a href="{{ url_for('round_detail', round_id=round.id) }}" class="text-decoration-none text-dark flex-grow-1 me-2">
+                    {{ round.playdate.strftime('%Y-%m-%d') }} - {{ round.gcname }} - Score: {{ round.score }}
                 </a>
                 {% if session.logged_in %}
-                    <form action="{{ url_for('delete_round', round_id=round.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this round?');">
+                    <form action="{{ url_for('delete_round', round_id=round.id) }}" method="post" onsubmit="return confirm('Are you sure you want to delete this round?');" class="flex-shrink-0">
                         <button type="submit" class="btn btn-danger btn-sm">Delete</button>
                     </form>
                 {% endif %}

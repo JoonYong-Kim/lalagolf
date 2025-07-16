@@ -55,10 +55,6 @@ def round_list():
     cursor.close() 
     conn.close()  
 
-    print(f"Labels: {labels}")
-    print(f"Data: {data}")
-    print(f"Rounds (first 5): {rounds[:5]}") # Print first 5 rounds to avoid excessive output
-
     return render_template('rounds.html', 
                            rounds=rounds, 
                            labels=labels, 
