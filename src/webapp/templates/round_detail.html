@@ -100,16 +100,16 @@
                         <tr>
                             <td>GIR</td>
                             {% for hole in holes_info[0] %}
-                            <td>{{ "%.0f" % (hole.GIR * 100) }}%</td>
+                            <td>{{ 'O' if hole.GIR else 'X' }}</td>
                             {% endfor %}
-                            <td>{{ (holes_info[0] | selectattr('GIR') | list | count / (holes_info[0] | length if holes_info[0] | length > 0 else 1)) * 100 | round(0) }}%</td>
+                            <td>{{ (holes_info[0] | selectattr('GIR') | list | count / (holes_info[0] | length if holes_info[0] | length > 0 else 1)) * 100 | round(1) }}%</td>
                         </tr>
                         <tr>
                             <td>GIR1</td>
                             {% for hole in holes_info[0] %}
-                            <td>{{ "%.0f" % (hole.GIR1 * 100) }}%</td>
+                            <td>{{ 'O' if hole.GIR1 else 'X' }}</td>
                             {% endfor %}
-                            <td>{{ (holes_info[0] | selectattr('GIR1') | list | count / (holes_info[0] | length if holes_info[0] | length > 0 else 1)) * 100 | round(0) }}%</td>
+                            <td>{{ (holes_info[0] | selectattr('GIR1') | list | count / (holes_info[0] | length if holes_info[0] | length > 0 else 1)) * 100 | round(1) }}%</td>
                         </tr>
                     </tbody>
                 </table>
@@ -153,16 +153,16 @@
                         <tr>
                             <td>GIR</td>
                             {% for hole in holes_info[1] %}
-                            <td>{{ "%.0f" % (hole.GIR * 100) }}%</td>
+                            <td>{{ 'O' if hole.GIR else 'X' }}</td>
                             {% endfor %}
-                            <td>{{ (holes_info[1] | selectattr('GIR') | list | count / (holes_info[1] | length if holes_info[1] | length > 0 else 1)) * 100 | round(0) }}%</td>
+                            <td>{{ (holes_info[1] | selectattr('GIR') | list | count / (holes_info[1] | length if holes_info[1] | length > 0 else 1)) * 100 | round(1) }}%</td>
                         </tr>
                         <tr>
                             <td>GIR1</td>
                             {% for hole in holes_info[1] %}
-                            <td>{{ "%.0f" % (hole.GIR1 * 100) }}%</td>
+                            <td>{{ 'O' if hole.GIR1 else 'X' }}</td>
                             {% endfor %}
-                            <td>{{ (holes_info[1] | selectattr('GIR1') | list | count / (holes_info[1] | length if holes_info[1] | length > 0 else 1)) * 100 | round(0) }}%</td>
+                            <td>{{ (holes_info[1] | selectattr('GIR1') | list | count / (holes_info[1] | length if holes_info[1] | length > 0 else 1)) * 100 | round(1) }}%</td>
                         </tr>
                     </tbody>
                 </table>

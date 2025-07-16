@@ -19,6 +19,13 @@
                 {% endfor %}
             </select>
         </div>
+        <div class="form-group mb-0">
+            <label for="dataToggle" class="sr-only">Toggle Data</label>
+            <div id="dataToggle">
+                <input type="checkbox" id="toggleScore" checked onchange="toggleDataset(0)"> <label for="toggleScore">Score</label>
+                <input type="checkbox" id="toggleGIR" checked onchange="toggleDataset(1)"> <label for="toggleGIR">GIR</label>
+            </div>
+        </div>
     </div>
 
     <div class="chart-container">
@@ -45,22 +52,56 @@
 {% block scripts %}
     <script>
         const ctx = document.getElementById('scoreChart').getContext('2d');
-        new Chart(ctx, {
+        let scoreChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: {{ labels | tojson }},
-                datasets: [{
-                    label: 'Score Trend',
-                    data: {{ data | tojson }},
-                    borderColor: 'rgba(75, 192, 192, 1)',
-                    borderWidth: 1,
-                    fill: false
-                }]
+                datasets: [
+                    {
+                        label: 'Score',
+                        data: {{ data | tojson }},
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 1,
+                        fill: false,
+                        yAxisID: 'y-score',
+                    },
+                    {
+                        label: 'GIR (%)',
+                        data: {{ rounds | map(attribute='gir') | list | tojson }},
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderWidth: 1,
+                        fill: false,
+                        yAxisID: 'y-gir',
+                    }
+                ]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
-                    y: {
-                        beginAtZero: false
+                    'y-score': {
+                        type: 'linear',
+                        position: 'left',
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Score'
+                        }
+                    },
+                    'y-gir': {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'GIR (%)'
+                        },
+                        grid: {
+                            drawOnChartArea: false, // only draw grid lines for the first y axis
+                        },
                     }
                 }
             }
@@ -69,5 +110,10 @@
         function filterRounds(year) {
             window.location.href = "{{ url_for('round_list') }}?year=" + year;
         }
-    </script>
+
+        function toggleDataset(index) {
+            const dataset = scoreChart.data.datasets[index];
+            dataset.hidden = !dataset.hidden;
+            scoreChart.update();
+        }
 {% endblock %}

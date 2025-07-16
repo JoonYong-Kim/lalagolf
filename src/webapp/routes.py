@@ -32,7 +32,7 @@ def round_list():
     current_year = datetime.now().year
     selected_year = request.args.get('year', 'all')
 
-    query = "SELECT * FROM rounds WHERE score IS NOT NULL"
+    query = "SELECT *, gir FROM rounds WHERE score IS NOT NULL"
     params = []
 
     if selected_year != 'all':

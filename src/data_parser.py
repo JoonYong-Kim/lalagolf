@@ -289,6 +289,15 @@ def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
         "MI" : [0,0,0], # Mid Iron (I5, I6, I7) feel counts [A, B, C]
         "SI" : [0,0,0], # Short Iron (I8, I9, IP, IA, 48, 52, 56) feel counts [A, B, C]
 
+        # Club specific penalty counts
+        "D_H": 0, "D_OB": 0, "D_UN": 0,
+        "U_H": 0, "U_OB": 0, "U_UN": 0,
+        "LI_H": 0, "LI_OB": 0, "LI_UN": 0,
+        "MI_H": 0, "MI_OB": 0, "MI_UN": 0,
+        "SI_H": 0, "SI_OB": 0, "SI_UN": 0,
+        "W_H": 0, "W_OB": 0, "W_UN": 0,
+        "P_H": 0, "P_OB": 0, "P_UN": 0,
+
         # Wedge club feel statistics (A, B, C counts):
         "W" : [0,0,0], # Wedge (UW, W3, W5) feel counts [A, B, C]
 
@@ -320,18 +329,19 @@ def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
 
     for shot in all_shots:
         # Penalty and OK counts
-        if shot['penalty'] == 'H':
-            data['H'] += 1
-            if shot['club'] == 'D':
-                data['DH'] += 1
-        elif shot['penalty'] == 'OB':
-            data['OB'] += 1
-            if shot['club'] == 'D':
-                data['DOB'] += 1
-        elif shot['penalty'] == 'UN':
-            data['UN'] += 1
-            if shot['club'] == 'D':
-                data['DUN'] += 1
+        if shot['penalty']:
+            penalty_type = shot['penalty']
+            club_type_prefix = ''
+            if shot['club'] == 'D': club_type_prefix = 'D'
+            elif shot['club'] in ["UW", "W3", "W5"]: club_type_prefix = 'W'
+            elif shot['club'] in ["U3", "U4"]: club_type_prefix = 'U'
+            elif shot['club'] in ["I3", "I4"]: club_type_prefix = 'LI'
+            elif shot['club'] in ["I5", "I6", "I7"]: club_type_prefix = 'MI'
+            elif shot['club'] in ["I8", "I9", "IP", "IA", "48", "52", "56"]: club_type_prefix = 'SI'
+            elif shot['club'] == 'P': club_type_prefix = 'P'
+            
+            if club_type_prefix:
+                data[f'{club_type_prefix}_{penalty_type}'] += 1
 
         if shot['concede']:
             data['OK'] += 1 
