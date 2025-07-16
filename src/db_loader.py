@@ -47,7 +47,7 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict, raw_data: str = N
 
     if round_id:
         # If round_id exists, delete existing hole, nine, and shot data for this round
-        delete_round_data(round_id, cursor) # Pass cursor to use the same transaction
+        delete_round_data(round_id, conn) # Pass conn to use the same transaction
 
         # Update rounds table
         update_round_sql = ("""
@@ -146,15 +146,14 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict, raw_data: str = N
     cursor.close()
     conn.close()
 
-def delete_round_data(round_id: int, cursor=None):
-    if cursor is None:
+def delete_round_data(round_id: int, conn=None):
+    if conn is None:
         conn = get_db_connection()
-        cursor = conn.cursor()
         _close_conn = True
     else:
-        conn = cursor.connection
         _close_conn = False
 
+    cursor = conn.cursor()
     try:
         # Delete from shots table
         cursor.execute("DELETE FROM shots WHERE roundid = %s", (round_id,))
@@ -162,8 +161,9 @@ def delete_round_data(round_id: int, cursor=None):
         cursor.execute("DELETE FROM holes WHERE roundid = %s", (round_id,))
         # Delete from nines table
         cursor.execute("DELETE FROM nines WHERE roundid = %s", (round_id,))
-        # Delete from rounds table
-        cursor.execute("DELETE FROM rounds WHERE id = %s", (round_id,))
+        # Delete from rounds table (only if not part of a larger transaction)
+        if _close_conn:
+            cursor.execute("DELETE FROM rounds WHERE id = %s", (round_id,))
         
         if _close_conn:
             conn.commit()
@@ -172,6 +172,6 @@ def delete_round_data(round_id: int, cursor=None):
             conn.rollback()
         raise e
     finally:
+        cursor.close()
         if _close_conn:
-            cursor.close()
             conn.close()
