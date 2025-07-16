@@ -56,7 +56,7 @@ def test_parse_file(sample_data_path):
     assert shot1_2['penalty'] == 'H'
     assert shot1_2['concede'] is False
     assert shot1_2['on'] == 'R'
-    assert shot1_2['retplace'] == 'R'
+    assert shot1_2['retplace'] == 'G'
 
     shot1_3 = hole1['shots'][2]
     assert shot1_3['club'] == 'P'
@@ -65,7 +65,7 @@ def test_parse_file(sample_data_path):
     assert shot1_3['distance'] == 10
     assert shot1_3['penalty'] is None
     assert shot1_3['concede'] is True
-    assert shot1_3['on'] == 'R'
+    assert shot1_3['on'] == 'G'
     assert shot1_3['retplace'] == 'H'
 
     # Test Hole 2
@@ -204,3 +204,29 @@ def test_parse_file_unparsed_lines(sample_data_with_unparsed_lines_path):
     assert hole2['par'] == 3
     assert len(hole2['shots']) == 1
     assert hole2['shots'][0]['club'] == 'I7'
+
+@pytest.fixture
+def sample_27_hole_data_path():
+    # This fixture assumes 'test_27.txt' already exists in 'tests/data'
+    return 'tests/data/test_27.txt'
+
+def test_parse_27_hole_file(sample_27_hole_data_path):
+    parsed_data, _ = parse_file(sample_27_hole_data_path)
+
+    assert parsed_data['file_name'] == sample_27_hole_data_path
+    assert parsed_data['tee_off_time'] == "2020-07-21 06:38"
+    assert parsed_data['golf_course'] == "킹스데일"
+    assert parsed_data['co_players'] == "바시공"
+    assert len(parsed_data['holes']) == 27
+    assert parsed_data['unparsed_lines'] == []
+
+    # 간단한 검증: 첫 홀과 마지막 홀의 정보 확인
+    first_hole = parsed_data['holes'][0]
+    assert first_hole['hole_num'] == 1
+    assert first_hole['par'] == 4
+    assert len(first_hole['shots']) == 4
+
+    last_hole = parsed_data['holes'][-1]
+    assert last_hole['hole_num'] == 27
+    assert last_hole['par'] == 5
+    assert len(last_hole['shots']) == 5

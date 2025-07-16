@@ -35,6 +35,14 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict):
     else:
         co_players_to_save = co_players_str
 
+    total_par = scores_and_stats['overall']['total_par']
+    total_shots = scores_and_stats['overall']['total_shots']
+
+    if total_par > 0 and len(parsed_data['holes']) != 18:
+        score_to_save = round((total_shots / total_par) * 72)
+    else:
+        score_to_save = total_shots
+
     # Insert into rounds table
     add_round = ("""
         INSERT INTO rounds (player, gcname, coplayers, playdate, score, gir)
@@ -45,7 +53,7 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict):
         parsed_data['golf_course'], # Assuming 'club' in rounds table is gcname
         co_players_to_save,
         parsed_data['tee_off_time'],
-        scores_and_stats['overall']['total_shots'],
+        score_to_save,
         scores_and_stats['overall']['gir']
     )
     cursor.execute(add_round, round_values)
