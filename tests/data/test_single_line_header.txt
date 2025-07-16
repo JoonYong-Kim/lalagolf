@@ -1,0 +1,4 @@
+2024.07.15 10:00 Single Line Golf Club PlayerA, PlayerB
+1P4
+D A A
+P A A 1 OK
