@@ -2,7 +2,7 @@
 import os
 import json
 from src.data_parser import parse_file
-from src.db_loader import save_round_data
+from src.db_loader import save_round_data, init_connection_pool
 
 # --- CONFIGURATION LOADING ---
 CONFIG_FILE = 'conf/lalagolf.conf'
@@ -24,6 +24,7 @@ except (FileNotFoundError, json.JSONDecodeError, ValueError) as e:
     exit(1)
 
 def main():
+    init_connection_pool(DB_CONFIG)
     data_dir = 'data'
     for year_dir in os.listdir(data_dir):
         year_path = os.path.join(data_dir, year_dir)
@@ -34,7 +35,7 @@ def main():
                     print(f"Processing {file_path}...")
                     try:
                         round_data, scores_and_stats = parse_file(file_path)
-                        save_round_data(DB_CONFIG, round_data, scores_and_stats)
+                        save_round_data(round_data, scores_and_stats)
                         print(f"Successfully loaded {file_path} into the database.")
                     except Exception as e:
                         print(f"Error processing {file_path}: {e}")
