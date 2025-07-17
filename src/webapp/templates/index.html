@@ -13,7 +13,7 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Golf Rounds Chart</h2>
-        <form id="yearFilterForm" class="d-flex align-items-center" method="GET" action="{{ url_for('home') }}">
+        <form id="yearFilterForm" class="d-flex align-items-center flex-nowrap" method="GET" action="{{ url_for('home') }}">
             <div class="form-group mb-0 me-2">
                 <label for="yearFilter" class="sr-only">Filter by Year</label>
                 <select class="form-control" id="yearFilter" name="year" onchange="document.getElementById('yearFilterForm').submit();">

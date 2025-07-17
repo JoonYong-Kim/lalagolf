@@ -8,7 +8,7 @@
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2>Golf Rounds</h2>
-        <form id="filterForm" class="d-flex align-items-center" method="GET" action="{{ url_for('list_rounds') }}">
+        <form id="filterForm" class="d-flex align-items-center flex-nowrap" method="GET" action="{{ url_for('list_rounds') }}">
             <div class="form-group mb-0 me-2">
                 <label for="yearFilter" class="sr-only">Filter by Year</label>
                 <select class="form-control" id="yearFilter" name="year" onchange="document.getElementById('filterForm').submit();">
@@ -39,7 +39,7 @@
         </form>
     </div>
 
-    <h2 class="mt-4">Round List</h2>
+    
     <div class="mb-3">
         <input type="text" class="form-control" id="searchInput" placeholder="Search by golf course or companion..." value="{{ search_query if search_query is not none else '' }}">
     </div>
