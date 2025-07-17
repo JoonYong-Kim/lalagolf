@@ -7,57 +7,45 @@ from typing import List, Dict, Union
 VALID_CLUBS = ["D", "W3", "W5", "UW", "U3", "U4", "I3", "I4", "I5", "I6", "I7", "I8", "I9", "IP", "IA", "48", "52", "56", "58", "P"]
 DEFAULT_DISTANCES = [220, 200, 180, 190, 180, 170, 175, 165, 155, 145, 135, 125, 115, 105, 95, 95, 85, 75, 70, 7]
 
-def _parse_tee_off_time(original_line: str) -> tuple[Union[str, None], Union[str, None]]:
+def _parse_tee_off_time(original_line: str) -> Union[str, None]:
     """Parses a line to extract tee-off time in 'YYYY-MM-DD HH:MM' format and any remaining part of the line."""
     processed_line = original_line.strip()
 
     # Try YYYY.MM.DD HH:MM
     match_dot_time = re.match(r'(\d{4})\.(\d{2})\.(\d{2})\s+(\d{2}:\d{2})', processed_line)
     if match_dot_time:
-        parsed_time = f"{match_dot_time.group(1)}-{match_dot_time.group(2)}-{match_dot_time.group(3)} {match_dot_time.group(4)}"
-        remaining_line = processed_line[match_dot_time.end():].strip()
-        return parsed_time, remaining_line
+        return f"{match_dot_time.group(1)}-{match_dot_time.group(2)}-{match_dot_time.group(3)} {match_dot_time.group(4)}"
 
     # Try YYYYMMDD HH:MM
     match_8digit_time = re.match(r'(\d{8})\s+(\d{2}:\d{2})', processed_line)
     if match_8digit_time:
         date_part = match_8digit_time.group(1)
         time_part = match_8digit_time.group(2)
-        parsed_time = f"{date_part[:4]}-{date_part[4:6]}-{date_part[6:]} {time_part}"
-        remaining_line = processed_line[match_8digit_time.end():].strip()
-        return parsed_time, remaining_line
+        return f"{date_part[:4]}-{date_part[4:6]}-{date_part[6:]} {time_part}"
 
     # Try YYYY-MM-DD HH:MM (already in target format)
     match_hyphen_time = re.match(r'(\d{4}-\d{2}-\d{2})\s+(\d{2}:\d{2})', processed_line)
     if match_hyphen_time:
-        parsed_time = processed_line[match_hyphen_time.start():match_hyphen_time.end()]
-        remaining_line = processed_line[match_hyphen_time.end():].strip()
-        return parsed_time, remaining_line
+        return processed_line[match_hyphen_time.start():match_hyphen_time.end()]
 
     # If only date is provided, append default time
     # Try YYYY.MM.DD
     match_dot_date_only = re.match(r'(\d{4})\.(\d{2})\.(\d{2})', processed_line)
     if match_dot_date_only:
-        parsed_time = f"{match_dot_date_only.group(1)}-{match_dot_date_only.group(2)}-{match_dot_date_only.group(3)} 00:00"
-        remaining_line = processed_line[match_dot_date_only.end():].strip()
-        return parsed_time, remaining_line
+        return f"{match_dot_date_only.group(1)}-{match_dot_date_only.group(2)}-{match_dot_date_only.group(3)} 00:00"
 
     # Try YYYYMMDD
     match_8digit_date_only = re.match(r'(\d{8})', processed_line)
     if match_8digit_date_only:
         date_part = match_8digit_date_only.group(1)
-        parsed_time = f"{date_part[:4]}-{date_part[4:6]}-{date_part[6:]} 00:00"
-        remaining_line = processed_line[match_8digit_date_only.end():].strip()
-        return parsed_time, remaining_line
+        return f"{date_part[:4]}-{date_part[4:6]}-{date_part[6:]} 00:00"
 
     # Try YYYY-MM-DD
     match_hyphen_date_only = re.match(r'(\d{4}-\d{2}-\d{2})', processed_line)
     if match_hyphen_date_only:
-        parsed_time = f"{match_hyphen_date_only.group(1)} 00:00"
-        remaining_line = processed_line[match_hyphen_date_only.end():].strip()
-        return parsed_time, remaining_line
+        return f"{match_hyphen_date_only.group(1)} 00:00"
 
-    return None, original_line # Return original_line as remaining if no date is found
+    return None
 
 def _find_club(line:str) -> str:
     for i in range(1, 3):
@@ -151,7 +139,8 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
         'unparsed_lines': []
     }
     current_hole = None # Initialize current_hole here
-    header_processing_done = False
+    header_processing = 0
+
     for line_num, line in enumerate(lines):
         original_line = line.strip()
         processed_line = original_line.upper()
@@ -161,32 +150,23 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
 
         hole_match = re.match(r'(\d+)\s*P(\d+)', processed_line)
 
-        if not header_processing_done:
-            parsed_time, remaining_line = _parse_tee_off_time(original_line)
+        if header_processing == 0:
+            parsed_time = _parse_tee_off_time(original_line)
             if parsed_time:
                 round_data['tee_off_time'] = parsed_time
-                if remaining_line:
-                    round_data['unparsed_lines'].append(remaining_line)
-                header_processing_done = True
-            
-            # If tee_off_time was not found on this line, check for hole_match
-            # or add to unparsed_lines.
-            if not round_data['tee_off_time']: # Only proceed if tee_off_time wasn't found on this line
-                if hole_match:
-                    header_processing_done = True
-                else:
-                    round_data['unparsed_lines'].append(original_line)
+                header_processing = 1
+            else:
+                round_data['unparsed_lines'].append(remaining_line)
+            continue
 
-            # If header processing is now done (either by finding time or hole),
-            # and we have a hole_match on the current line, process it.
-            if header_processing_done and hole_match:
-                if current_hole:
-                    round_data['holes'].append(current_hole)
-                current_hole = {
-                    'hole_num': int(hole_match.group(1)),
-                    'par': int(hole_match.group(2)),
-                    'shots': []
-                }
+        elif header_processing == 1:
+            round_data['golf_course'] = original_line
+            header_processing = 2
+            continue
+
+        elif header_processing == 2:
+            round_data['co_players'] = original_line
+            head_processing = 3
             continue
 
         if hole_match:
