@@ -102,3 +102,13 @@ table th {
     border-bottom-right-radius: 8px;
     background-color: white;
 }
+
+a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--color-point-accent);
+    text-decoration: underline;
+}
