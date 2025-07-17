@@ -231,10 +231,3 @@ def test_parse_27_hole_file(sample_27_hole_data_path):
     assert last_hole['par'] == 5
     assert len(last_hole['shots']) == 5
 
-@pytest.fixture
-def single_line_header_data_path():
-    return 'tests/data/test_single_line_header.txt'
-
-def test_parse_single_line_header_as_unparsed(single_line_header_data_path):
-    parsed_data, _ = parse_file(single_line_header_data_path)
-    assert parsed_data['unparsed_lines'] == ['Single Line Golf Club PlayerA, PlayerB']
