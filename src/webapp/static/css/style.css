@@ -38,8 +38,9 @@ table th {
 }
 
 .navbar-logo {
-    height: 60px; /* 50% larger */
+    height: 60px;
     width: auto;
+    transform: scaleX(1.5);
 }
 
 .navbar-custom-bg {
