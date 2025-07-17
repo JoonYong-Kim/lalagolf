@@ -1,7 +1,7 @@
 
 from flask import render_template, current_app, jsonify, request, session, redirect, url_for, flash
 from src.webapp import app
-from src.db_loader import get_db_connection, save_round_data, delete_round_data, init_connection_pool
+from src.db_loader import get_db_connection, save_round_data, delete_round_data, init_connection_pool, get_filtered_rounds
 from src.data_parser import parse_file, analyze_shots_and_stats # Import analyze_shots_and_stats
 import os
 from datetime import datetime
@@ -24,7 +24,38 @@ def before_request():
 
 @app.route('/')
 def home():
-    return render_template('index.html')
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    selected_year = request.args.get('year', 'all')
+
+    query = "SELECT *, gir FROM rounds WHERE score IS NOT NULL"
+    params = []
+
+    if selected_year != 'all':
+        query += " AND YEAR(playdate) = %s"
+        params.append(selected_year)
+    
+    query += " ORDER BY playdate ASC"
+
+    cursor.execute(query, params)
+    rounds = cursor.fetchall()
+
+    labels = [r['playdate'].strftime('%Y-%m-%d') for r in rounds]
+    data = [r['score'] for r in rounds]
+
+    cursor.execute("SELECT DISTINCT YEAR(playdate) AS year FROM rounds ORDER BY year DESC")
+    unique_years = [row['year'] for row in cursor.fetchall()]
+
+    cursor.close() 
+    conn.close()  
+
+    return render_template('index.html', 
+                           rounds=rounds, 
+                           labels=labels, 
+                           data=data, 
+                           selected_year=selected_year,
+                           unique_years=unique_years)
 
 @app.route('/rounds')
 def list_rounds():
@@ -41,10 +72,6 @@ def list_rounds():
     search_query = request.args.get('search_query')
 
     rounds = get_filtered_rounds(year=selected_year, golf_course=selected_golf_course, companion=selected_companion, sort_by=sort_by, sort_order=sort_order, search_query=search_query)
-
-    # Prepare data for the chart
-    labels = [r['playdate'].strftime('%Y-%m-%d') for r in rounds]
-    data = [r['score'] for r in rounds]
 
     # Get all unique years from the database
     cursor.execute("SELECT DISTINCT YEAR(playdate) AS year FROM rounds ORDER BY year DESC")
@@ -77,26 +104,6 @@ def list_rounds():
                            sort_by=sort_by,
                            sort_order=sort_order,
                            search_query=search_query)
-
-@app.route('/charts')
-def charts():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
-    query = "SELECT *, gir FROM rounds WHERE score IS NOT NULL ORDER BY playdate ASC"
-    cursor.execute(query)
-    rounds = cursor.fetchall()
-
-    labels = [r['playdate'].strftime('%Y-%m-%d') for r in rounds]
-    data = [r['score'] for r in rounds]
-
-    cursor.close() 
-    conn.close()  
-
-    return render_template('charts.html', 
-                           rounds=rounds, 
-                           labels=labels, 
-                           data=data)
 
 @app.route('/delete_round/<int:round_id>', methods=['POST'])
 @login_required

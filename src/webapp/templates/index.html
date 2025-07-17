@@ -1,8 +1,110 @@
 {% extends "base.html" %}
 
+{% block title %}Lala Golf - Home{% endblock %}
+
+{% block head %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="container">
     <h1>Welcome to Lalagolf!</h1>
     <p>Use the navigation above to explore your golf rounds or upload new data.</p>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Golf Rounds Chart</h2>
+        <form id="yearFilterForm" class="d-flex align-items-center" method="GET" action="{{ url_for('home') }}">
+            <div class="form-group mb-0 me-2">
+                <label for="yearFilter" class="sr-only">Filter by Year</label>
+                <select class="form-control" id="yearFilter" name="year" onchange="document.getElementById('yearFilterForm').submit();">
+                    <option value="all" {% if selected_year == 'all' %}selected{% endif %}>All Years</option>
+                    {% for year in unique_years %}
+                        <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group mb-0">
+                <label for="dataToggle" class="sr-only">Toggle Data</label>
+                <div id="dataToggle">
+                    <input type="checkbox" id="toggleScore" checked onchange="toggleDataset(0)"> <label for="toggleScore">Score</label>
+                    <input type="checkbox" id="toggleGIR" checked onchange="toggleDataset(1)"> <label for="toggleGIR">GIR</label>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="chart-container">
+        <canvas id="scoreChart"></canvas>
+    </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        const ctx = document.getElementById('scoreChart').getContext('2d');
+        console.log("Chart context (ctx):", ctx);
+        console.log("Labels data:", {{ labels | tojson }});
+        console.log("Score data:", {{ data | tojson }});
+        console.log("GIR data:", {{ rounds | map(attribute='gir') | list | tojson }});
+        let scoreChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ labels | tojson }},
+                datasets: [
+                    {
+                        label: 'Score',
+                        data: {{ data | tojson }},
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderWidth: 1,
+                        fill: false,
+                        yAxisID: 'y-score',
+                    },
+                    {
+                        label: 'GIR (%)',
+                        data: {{ rounds | map(attribute='gir') | list | tojson }},
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderWidth: 1,
+                        fill: false,
+                        yAxisID: 'y-gir',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    'y-score': {
+                        type: 'linear',
+                        position: 'left',
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Score'
+                        }
+                    },
+                    'y-gir': {
+                        type: 'linear',
+                        position: 'right',
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'GIR (%)'
+                        },
+                        grid: {
+                            drawOnChartArea: false, // only draw grid lines for the first y axis
+                        },
+                    }
+                }
+            }
+        });
+
+        function toggleDataset(index) {
+            const dataset = scoreChart.data.datasets[index];
+            dataset.hidden = !dataset.hidden;
+            scoreChart.update();
+        }
+    </script>
 {% endblock %}

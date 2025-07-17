@@ -14,7 +14,6 @@
             <ul>
                 <li><a href="{{ url_for('home') }}">Home</a></li>
                 <li><a href="{{ url_for('list_rounds') }}">라운드 목록</a></li>
-                <li><a href="{{ url_for('charts') }}">차트</a></li>
                 <li><a href="{{ url_for('upload_round') }}">라운드 업로드</a></li>
                 {% if session.logged_in %}
                 <li><a href="{{ url_for('logout') }}">로그아웃 ({{ session.username }})</a></li>
