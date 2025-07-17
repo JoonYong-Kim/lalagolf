@@ -192,6 +192,19 @@ table tr:hover {
 }
 
 .navbar-logo {
-    height: 40px; /* Adjust as needed */
+    height: 60px; /* 50% larger than 40px */
     width: auto;
+}
+
+.navbar-custom-bg {
+    background-color: var(--color-accent) !important;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: white;
+}
+
+.navbar-dark .navbar-nav .nav-link.active,
+.navbar-dark .navbar-nav .nav-link:hover {
+    color: var(--color-primary);
 }
