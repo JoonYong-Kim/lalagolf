@@ -35,8 +35,8 @@
             <textarea class="form-control" id="scores_and_stats" name="scores_and_stats" rows="15">{{ scores_and_stats | tojson(indent=4) }}</textarea>
         </div>
 
-        <button type="submit" name="action" value="save" class="btn btn-success">Save to Database</button>
-        <button type="submit" name="action" value="reparse" class="btn btn-info">Re-parse Data</button>
-        <button type="submit" name="action" value="cancel" class="btn btn-danger">Cancel</button>
+        <button type="submit" name="action" value="save" class="btn btn-success custom-btn">Save to Database</button>
+        <button type="submit" name="action" value="reparse" class="btn btn-info custom-btn">Re-parse Data</button>
+        <button type="submit" name="action" value="cancel" class="btn btn-danger custom-btn">Cancel</button>
     </form>
 {% endblock %}

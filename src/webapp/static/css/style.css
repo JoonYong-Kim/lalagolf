@@ -6,11 +6,12 @@
     --color-background: #F3E9D2; /* Oatmeal Beige */
     --color-light-text: #666666; /* Keeping this as a general light text color */
     --color-point-accent: #7A5D35; /* Dessert Brown for button hover */
+    --color-header-text: #FFFFFF; /* White text for header and nav links */
 }
 
 header {
     background-color: var(--color-accent);
-    color: white;
+    color: var(--color-header-text);
     padding: 1em 0;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -27,7 +28,7 @@ nav ul {
 }
 
 table th {
-    background-color: #E1D9C0;
+    background-color: var(--color-background);
     color: var(--color-text);
 }
 
