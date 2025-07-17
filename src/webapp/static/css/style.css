@@ -1,10 +1,11 @@
 :root {
-    --color-primary: #A2D2FF; /* Light Blue */
-    --color-secondary: #BDE0FE; /* Lighter Blue */
-    --color-accent: #FFC8DD; /* Pink */
-    --color-text: #333333;
-    --color-background: #F0F8FF; /* Alice Blue */
-    --color-light-text: #666666;
+    --color-primary: #C7963A; /* Gold Bronze */
+    --color-secondary: #3A3323; /* Dark Olive Green */
+    --color-accent: #77804E; /* Light Grass Green */
+    --color-text: #3A3323;
+    --color-background: #F3E9D2; /* Oatmeal Beige */
+    --color-light-text: #666666; /* Keeping this as a general light text color */
+    --color-point-accent: #7A5D35; /* Dessert Brown for button hover */
 }
 
 body {
@@ -16,7 +17,7 @@ body {
 }
 
 header {
-    background-color: var(--color-primary);
+    background-color: var(--color-secondary);
     color: white;
     padding: 1em 0;
     text-align: center;
@@ -34,7 +35,7 @@ nav ul {
     margin: 0;
     display: flex;
     justify-content: center;
-    background-color: var(--color-secondary);
+    background-color: var(--color-accent);
     padding: 0.5em 0;
 }
 
@@ -66,7 +67,7 @@ nav ul li a:hover {
 }
 
 h2 {
-    color: var(--color-primary);
+    color: var(--color-secondary);
     text-align: center;
     margin-bottom: 20px;
 }
@@ -84,7 +85,7 @@ table th, table td {
 }
 
 table th {
-    background-color: var(--color-secondary);
+    background-color: var(--color-accent);
     color: white;
 }
 
@@ -152,7 +153,7 @@ table tr:hover {
 }
 
 .btn {
-    background-color: var(--color-accent);
+    background-color: var(--color-primary);
     color: white;
     padding: 10px 15px;
     border: none;
@@ -163,7 +164,7 @@ table tr:hover {
 }
 
 .btn:hover {
-    background-color: #FFB3CC; /* Slightly darker pink */
+    background-color: var(--color-point-accent); /* Slightly darker pink */
 }
 
 .flash-message {
