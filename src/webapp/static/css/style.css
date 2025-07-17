@@ -31,6 +31,16 @@ table th {
     color: var(--color-text);
 }
 
+.chart-container {
+    width: 80%;
+    margin: 20px auto;
+}
+
+.navbar-logo {
+    height: 40px; /* Adjusted back to original size */
+    width: auto;
+}
+
 .navbar-custom-bg {
     background-color: var(--color-accent) !important;
 }
