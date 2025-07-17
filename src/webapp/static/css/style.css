@@ -57,6 +57,10 @@ table th {
     margin: 0 12px; /* Adjusted menu spacing */
 }
 
+.navbar-nav:not(.ms-auto) {
+    margin-left: 5rem; /* Pushes menu to the right to avoid logo overlap */
+}
+
 .container {
     border-radius: 12px; /* Increased card rounding */
     box-shadow: 0 0 8px rgba(0, 0, 0, 0.08); /* Slightly reduced shadow */
