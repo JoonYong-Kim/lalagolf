@@ -41,6 +41,7 @@ table th {
     height: 60px;
     width: auto;
     transform: scaleX(1.5);
+    transform-origin: left;
 }
 
 .navbar-custom-bg {
