@@ -1,32 +1,19 @@
 :root {
     --color-primary: #C7963A; /* Gold Bronze */
     --color-secondary: #3A3323; /* Dark Olive Green */
-    --color-accent: #77804E; /* Light Grass Green */
+    --color-accent: #5F6841; /* Darker Green for Navbar */
     --color-text: #3A3323;
     --color-background: #F3E9D2; /* Oatmeal Beige */
     --color-light-text: #666666; /* Keeping this as a general light text color */
     --color-point-accent: #7A5D35; /* Dessert Brown for button hover */
 }
 
-body {
-    font-family: 'Arial', sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: var(--color-background);
-    color: var(--color-text);
-}
-
 header {
-    background-color: var(--color-secondary);
+    background-color: var(--color-accent);
     color: white;
     padding: 1em 0;
     text-align: center;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-header h1 {
-    margin: 0;
-    font-size: 2.5em;
 }
 
 nav ul {
@@ -39,161 +26,9 @@ nav ul {
     padding: 0.5em 0;
 }
 
-nav ul li {
-    margin: 0 15px;
-}
-
-nav ul li a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-}
-
-nav ul li a:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-}
-
-.container {
-    width: 90%;
-    max-width: 1200px;
-    margin: 20px auto;
-    padding: 20px;
-    background-color: white;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-h2 {
-    color: var(--color-secondary);
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-}
-
-table th, table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-}
-
 table th {
-    background-color: var(--color-accent);
-    color: white;
-}
-
-table tr:nth-child(even) {
-    background-color: #f2f2f2;
-}
-
-table tr:hover {
-    background-color: #e0f7fa; /* Light cyan for hover */
-}
-
-/* Tab styles */
-.tab-buttons {
-    display: flex;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #ddd;
-}
-.tab-button {
-    background-color: #f1f1f1;
-    border: none;
-    outline: none;
-    cursor: pointer;
-    padding: 14px 16px;
-    transition: 0.3s;
-    font-size: 17px;
-    border-radius: 5px 5px 0 0;
-    margin-right: 5px;
-}
-.tab-button:hover {
-    background-color: #ddd;
-}
-.tab-button.active {
-    background-color: var(--color-primary);
-    color: white;
-}
-.tab-content {
-    display: none;
-    padding: 6px 12px;
-    border: 1px solid #ddd;
-    border-top: none;
-    border-radius: 0 0 5px 5px;
-}
-.tab-content.active {
-    display: block;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-}
-
-.form-group input[type="text"],
-.form-group input[type="password"],
-.form-group input[type="file"],
-.form-group textarea {
-    width: calc(100% - 16px);
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-}
-
-.btn {
-    background-color: var(--color-primary);
-    color: white;
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.3s ease;
-}
-
-.btn:hover {
-    background-color: var(--color-point-accent); /* Slightly darker pink */
-}
-
-.flash-message {
-    padding: 10px;
-    margin-bottom: 15px;
-    border-radius: 5px;
-    text-align: center;
-}
-
-.flash-message.success {
-    background-color: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-}
-
-.flash-message.danger {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-}
-
-.chart-container {
-    width: 80%;
-    margin: 20px auto;
-}
-
-.navbar-logo {
-    height: 60px; /* 50% larger than 40px */
-    width: auto;
+    background-color: #E1D9C0;
+    color: var(--color-text);
 }
 
 .navbar-custom-bg {
@@ -202,9 +37,18 @@ table tr:hover {
 
 .navbar-dark .navbar-nav .nav-link {
     color: white;
+    font-weight: bold;
 }
 
-.navbar-dark .navbar-nav .nav-link.active,
-.navbar-dark .navbar-nav .nav-link:hover {
-    color: var(--color-primary);
+.navbar-dark .navbar-nav .nav-item {
+    margin: 0 12px; /* Adjusted menu spacing */
+}
+
+.container {
+    border-radius: 12px; /* Increased card rounding */
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.08); /* Slightly reduced shadow */
+}
+
+.btn:hover {
+    background-color: var(--color-point-accent);
 }

@@ -363,4 +363,9 @@ def review_round():
             session.pop('unparsed_lines', None)
             return redirect(url_for('upload_round'))
 
+    parsed_data = session.get('parsed_data')
+    scores_and_stats = session.get('scores_and_stats')
+    raw_data_content = session.get('raw_data_content')
+    unparsed_lines = session.get('unparsed_lines')
+
     return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats, raw_data_content=raw_data_content, unparsed_lines=unparsed_lines)
