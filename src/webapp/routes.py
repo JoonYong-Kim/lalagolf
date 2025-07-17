@@ -331,16 +331,36 @@ def review_round():
                 session.pop('parsed_data', None)
                 session.pop('scores_and_stats', None)
                 session.pop('raw_data_content', None)
+                session.pop('unparsed_lines', None)
                 
                 return redirect(url_for('list_rounds')) # Redirect to list after saving
             except json.JSONDecodeError as e:
                 return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats, raw_data_content=raw_data_content, error=f"JSON parsing error: {e}. Please check your JSON format.")
             except Exception as e:
                 return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats, raw_data_content=raw_data_content, error=f"Save error: {e}")
+        elif request.form.get('action') == 'reparse':
+            raw_data_content = request.form['raw_data_content']
+            temp_file_path = "tmp/uploaded_golf_data.txt"
+            with open(temp_file_path, 'w') as f:
+                f.write(raw_data_content)
+            try:
+                parsed_data, scores_and_stats = parse_file(temp_file_path)
+                session['parsed_data'] = parsed_data
+                session['scores_and_stats'] = scores_and_stats
+                session['raw_data_content'] = raw_data_content
+                session['unparsed_lines'] = parsed_data.get('unparsed_lines', [])
+                flash('Data re-parsed successfully!', 'success')
+            except Exception as e:
+                flash(f'Error re-parsing data: {e}', 'danger')
+                session['parsed_data'] = None # Clear parsed data on re-parse error
+                session['scores_and_stats'] = None
+                session['unparsed_lines'] = [raw_data_content] # Show the raw data as unparsed
+            return redirect(url_for('review_round'))
         elif request.form.get('action') == 'cancel':
             session.pop('parsed_data', None)
             session.pop('scores_and_stats', None)
             session.pop('raw_data_content', None)
+            session.pop('unparsed_lines', None)
             return redirect(url_for('upload_round'))
 
     return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats, raw_data_content=raw_data_content, unparsed_lines=unparsed_lines)

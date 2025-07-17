@@ -22,20 +22,21 @@
 
         <h4 class="mt-4">Raw Data Content:</h4>
         <div class="mb-3">
-            <textarea class="form-control" id="raw_data_content" name="raw_data_content" rows="10"></textarea>
+            <textarea class="form-control" id="raw_data_content" name="raw_data_content" rows="10">{{ raw_data_content }}</textarea>
         </div>
 
         <h4 class="mt-4">Parsed Round Data (JSON):</h4>
         <div class="mb-3">
-            <textarea class="form-control" id="parsed_data" name="parsed_data" rows="15"></textarea>
+            <textarea class="form-control" id="parsed_data" name="parsed_data" rows="15">{{ parsed_data | tojson(indent=4) }}</textarea>
         </div>
 
         <h4 class="mt-4">Scores and Statistics (JSON):</h4>
         <div class="mb-3">
-            <textarea class="form-control" id="scores_and_stats" name="scores_and_stats" rows="15"></textarea>
+            <textarea class="form-control" id="scores_and_stats" name="scores_and_stats" rows="15">{{ scores_and_stats | tojson(indent=4) }}</textarea>
         </div>
 
         <button type="submit" name="action" value="save" class="btn btn-success">Save to Database</button>
+        <button type="submit" name="action" value="reparse" class="btn btn-info">Re-parse Data</button>
         <button type="submit" name="action" value="cancel" class="btn btn-danger">Cancel</button>
     </form>
 {% endblock %}
