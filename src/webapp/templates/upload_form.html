@@ -3,17 +3,20 @@
 {% block title %}Upload Golf Round Data{% endblock %}
 
 {% block content %}
-    <h2>Upload Golf Round Data</h2>
+    <h2 class="my-4">Upload Golf Round Data</h2>
     {% if error %}
-        <div class="flash-message danger">{{ error }}</div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     {% endif %}
     <form action="{{ url_for('upload_round') }}" method="post" enctype="multipart/form-data">
-        <div class="form-group">
-            <label for="file">Upload Text File:</label>
-            <input type="file" class="form-control-file" id="file" name="file" accept=".txt">
+        <div class="mb-3">
+            <label for="file" class="form-label">Upload Text File:</label>
+            <input type="file" class="form-control" id="file" name="file" accept=".txt">
         </div>
-        <div class="form-group">
-            <label for="raw_text">Or Paste Raw Data Here:</label>
+        <div class="mb-3">
+            <label for="raw_text" class="form-label">Or Paste Raw Data Here:</label>
             <textarea class="form-control" id="raw_text" name="raw_text" rows="10"></textarea>
         </div>
         <button type="submit" class="btn btn-primary">Parse Data</button>

@@ -7,29 +7,29 @@
 
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Golf Rounds</h2>
+        <h2 class="mb-0">Golf Rounds</h2>
         <form id="filterForm" class="d-flex align-items-center flex-nowrap" method="GET" action="{{ url_for('list_rounds') }}">
-            <div class="form-group mb-0 me-2">
-                <label for="yearFilter" class="sr-only">Filter by Year</label>
-                <select class="form-control" id="yearFilter" name="year" onchange="document.getElementById('filterForm').submit();">
+            <div class="mb-0 me-2">
+                <label for="yearFilter" class="visually-hidden">Filter by Year</label>
+                <select class="form-select form-select-sm" id="yearFilter" name="year" onchange="document.getElementById('filterForm').submit();">
                     <option value="all" {% if selected_year == 'all' %}selected{% endif %}>All Years</option>
                     {% for year in unique_years %}
                         <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="form-group mb-0 me-2">
-                <label for="golfCourseFilter" class="sr-only">Filter by Golf Course</label>
-                <select class="form-control" id="golfCourseFilter" name="golf_course" onchange="document.getElementById('filterForm').submit();">
+            <div class="mb-0 me-2">
+                <label for="golfCourseFilter" class="visually-hidden">Filter by Golf Course</label>
+                <select class="form-select form-select-sm" id="golfCourseFilter" name="golf_course" onchange="document.getElementById('filterForm').submit();">
                     <option value="all" {% if selected_golf_course == 'all' %}selected{% endif %}>All Courses</option>
                     {% for course in unique_golf_courses %}
                         <option value="{{ course }}" {% if selected_golf_course == course %}selected{% endif %}>{{ course }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div class="form-group mb-0 me-2">
-                <label for="companionFilter" class="sr-only">Filter by Companion</label>
-                <select class="form-control" id="companionFilter" name="companion" onchange="document.getElementById('filterForm').submit();">
+            <div class="mb-0 me-2">
+                <label for="companionFilter" class="visually-hidden">Filter by Companion</label>
+                <select class="form-select form-select-sm" id="companionFilter" name="companion" onchange="document.getElementById('filterForm').submit();">
                     <option value="all" {% if selected_companion == 'all' %}selected{% endif %}>All Companions</option>
                     {% for companion in unique_companions %}
                         <option value="{{ companion }}" {% if selected_companion == companion %}selected{% endif %}>{{ companion }}</option>
@@ -39,11 +39,10 @@
         </form>
     </div>
 
-    
     <div class="mb-3">
         <input type="text" class="form-control" id="searchInput" placeholder="Search by golf course or companion..." value="{{ search_query if search_query is not none else '' }}">
     </div>
-    <table class="table table-striped table-hover">
+    <table class="table table-striped table-hover table-responsive">
         <thead>
             <tr>
                 <th><a href="{{ url_for('list_rounds', year=selected_year, golf_course=selected_golf_course, companion=selected_companion, sort_by='playdate', sort_order='DESC' if sort_by == 'playdate' and sort_order == 'ASC' else 'ASC', search_query=search_query) }}">Playdate {% if sort_by == 'playdate' %}{% if sort_order == 'ASC' %}▲{% else %}▼{% endif %}{% endif %}</a></th>

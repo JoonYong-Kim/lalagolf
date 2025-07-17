@@ -3,33 +3,36 @@
 {% block title %}Review Parsed Data{% endblock %}
 
 {% block content %}
-    <h2>Review Parsed Golf Round Data</h2>
+    <h2 class="my-4">Review Parsed Golf Round Data</h2>
     {% if error %}
-        <div class="flash-message danger">{{ error }}</div>
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ error }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
     {% endif %}
 
     <form action="{{ url_for('review_round') }}" method="post" class="mt-4">
         {% if unparsed_lines %}
             <h4 class="mt-4 text-danger">Unparsed Lines Detected!</h4>
             <p class="text-danger">The following lines could not be parsed. Please review and correct them in the Raw Data Content section above if necessary.</p>
-            <div class="form-group">
+            <div class="mb-3">
                 <textarea class="form-control" rows="5" readonly>{{ "\n".join(unparsed_lines) }}</textarea>
             </div>
         {% endif %}
 
         <h4 class="mt-4">Raw Data Content:</h4>
-        <div class="form-group">
-            <textarea class="form-control" id="raw_data_content" name="raw_data_content" rows="10">{{ raw_data_content }}</textarea>
+        <div class="mb-3">
+            <textarea class="form-control" id="raw_data_content" name="raw_data_content" rows="10"></textarea>
         </div>
 
         <h4 class="mt-4">Parsed Round Data (JSON):</h4>
-        <div class="form-group">
-            <textarea class="form-control" id="parsed_data" name="parsed_data" rows="15">{{ parsed_data | tojson(indent=4) }}</textarea>
+        <div class="mb-3">
+            <textarea class="form-control" id="parsed_data" name="parsed_data" rows="15"></textarea>
         </div>
 
         <h4 class="mt-4">Scores and Statistics (JSON):</h4>
-        <div class="form-group">
-            <textarea class="form-control" id="scores_and_stats" name="scores_and_stats" rows="15">{{ scores_and_stats | tojson(indent=4) }}</textarea>
+        <div class="mb-3">
+            <textarea class="form-control" id="scores_and_stats" name="scores_and_stats" rows="15"></textarea>
         </div>
 
         <button type="submit" name="action" value="save" class="btn btn-success">Save to Database</button>
