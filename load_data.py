@@ -34,8 +34,8 @@ def main():
                     file_path = os.path.join(year_path, file_name)
                     print(f"Processing {file_path}...")
                     try:
-                        round_data, scores_and_stats = parse_file(file_path)
-                        save_round_data(round_data, scores_and_stats)
+                        raw_content, round_data, scores_and_stats = parse_file(file_path)
+                        save_round_data(round_data, scores_and_stats, raw_content)
                         print(f"Successfully loaded {file_path} into the database.")
                     except Exception as e:
                         print(f"Error processing {file_path}: {e}")

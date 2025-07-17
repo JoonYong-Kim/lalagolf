@@ -233,6 +233,26 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict, raw_data: str = N
     cursor.close()
     conn.close()
 
+def get_yearly_round_statistics():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = """
+        SELECT
+            YEAR(playdate) AS year,
+            COUNT(id) AS total_rounds,
+            AVG(score) AS average_score,
+            MIN(score) AS lowest_score,
+            MAX(score) AS highest_score
+        FROM rounds
+        GROUP BY YEAR(playdate)
+        ORDER BY year DESC
+    """
+    cursor.execute(query)
+    yearly_stats = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return yearly_stats
+
 def delete_round_data(round_id: int, conn=None):
     if conn is None:
         conn = get_db_connection()

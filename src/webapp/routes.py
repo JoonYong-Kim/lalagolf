@@ -1,7 +1,7 @@
 
 from flask import render_template, current_app, jsonify, request, session, redirect, url_for, flash
 from src.webapp import app
-from src.db_loader import get_db_connection, save_round_data, delete_round_data, init_connection_pool, get_filtered_rounds
+from src.db_loader import get_db_connection, save_round_data, delete_round_data, init_connection_pool, get_filtered_rounds, get_yearly_round_statistics
 from src.data_parser import parse_file, analyze_shots_and_stats # Import analyze_shots_and_stats
 import os
 from datetime import datetime
@@ -50,12 +50,15 @@ def home():
     cursor.close() 
     conn.close()  
 
+    yearly_stats = get_yearly_round_statistics()
+
     return render_template('index.html', 
                            rounds=rounds, 
                            labels=labels, 
                            data=data, 
                            selected_year=selected_year,
-                           unique_years=unique_years)
+                           unique_years=unique_years,
+                           yearly_stats=yearly_stats)
 
 @app.route('/rounds')
 def list_rounds():

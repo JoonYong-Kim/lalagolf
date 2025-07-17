@@ -63,3 +63,42 @@ table th {
 .btn:hover {
     background-color: var(--color-point-accent);
 }
+
+.tab-buttons {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid var(--color-primary);
+}
+
+.tab-button {
+    background-color: var(--color-background);
+    color: var(--color-text);
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s, color 0.3s;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    margin-right: 5px;
+}
+
+.tab-button:hover {
+    background-color: var(--color-primary);
+    color: var(--color-header-text);
+}
+
+.tab-button.active {
+    background-color: var(--color-primary);
+    color: var(--color-header-text);
+    border-bottom: 2px solid var(--color-primary);
+}
+
+.tab-content {
+    padding: 20px;
+    border: 1px solid var(--color-background);
+    border-top: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+    background-color: white;
+}

@@ -128,7 +128,8 @@ def _parse_shot(original_line:str) -> Dict:
 
 def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
     with open(file_path, 'r') as f:
-        lines = f.readlines()
+        raw_content = f.read()
+        lines = raw_content.splitlines()
 
     round_data = {
         'file_name': file_path,
@@ -179,7 +180,7 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
         round_data['holes'].append(current_hole)
 
     _post_process_shots(round_data)
-    return round_data, calculate_scores_and_stats(round_data)
+    return raw_content, round_data, calculate_scores_and_stats(round_data)
 
 def _post_process_shots(round_data: Dict):
     for hole in round_data['holes']:
