@@ -209,6 +209,45 @@ def round_detail(round_id):
     # Analyze detailed shot statistics
     detailed_shot_stats = analyze_shots_and_stats(processed_shots)
 
+    # Comparison data
+    comparison_stats = {}
+
+    # Overall average
+    cursor.execute("""
+        SELECT AVG(r.score) as avg_score, AVG(r.gir) as avg_gir, AVG(h.putt) as avg_putt
+        FROM rounds r, holes h
+        WHERE r.id = h.roundid
+    """)
+    comparison_stats['overall'] = cursor.fetchone()
+
+    # Same golf course average
+    cursor.execute("""
+        SELECT AVG(r.score) as avg_score, AVG(r.gir) as avg_gir, AVG(h.putt) as avg_putt
+        FROM rounds r, holes h
+        WHERE r.id = h.roundid AND r.gcname = %s
+    """, (round_info['gcname'],))
+    comparison_stats['same_course'] = cursor.fetchone()
+
+    # Recent 5 rounds average
+    cursor.execute("""
+        SELECT AVG(r.score) as avg_score, AVG(r.gir) as avg_gir, AVG(h.putt) as avg_putt
+        FROM (
+            SELECT id, score, gir, playdate FROM rounds ORDER BY playdate DESC LIMIT 5
+        ) as r, holes h
+        WHERE r.id = h.roundid
+    """)
+    comparison_stats['recent_5'] = cursor.fetchone()
+
+    # Personal best
+    cursor.execute("SELECT MIN(score) as best_score, MAX(gir) as best_gir FROM rounds")
+    comparison_stats['personal_best'] = cursor.fetchone()
+
+    # Previous and next rounds
+    cursor.execute("(SELECT id, playdate, score FROM rounds WHERE playdate < %s ORDER BY playdate DESC LIMIT 1)", (round_info['playdate'],))
+    comparison_stats['prev_round'] = cursor.fetchone()
+    cursor.execute("(SELECT id, playdate, score FROM rounds WHERE playdate > %s ORDER BY playdate ASC LIMIT 1)", (round_info['playdate'],))
+    comparison_stats['next_round'] = cursor.fetchone()
+
     cursor.close()
     conn.close()
 
@@ -218,7 +257,8 @@ def round_detail(round_id):
                            shots=processed_shots, # Still pass processed_shots for the detailed shots table
                            club_labels=club_labels, 
                            club_data=club_data, 
-                           detailed_shot_stats=detailed_shot_stats)
+                           detailed_shot_stats=detailed_shot_stats,
+                           comparison_stats=comparison_stats)
 
 @app.route('/update_round_raw_data/<int:round_id>', methods=['POST'])
 @login_required

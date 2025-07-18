@@ -9,11 +9,21 @@
 {% block content %}
     <h1>Round on {{ round_info.playdate.strftime('%Y-%m-%d') }}</h1>
 
+    <div class="round-navigation">
+        {% if comparison_stats.prev_round %}
+            <a href="{{ url_for('round_detail', round_id=comparison_stats.prev_round.id) }}">&laquo; Previous Round</a>
+        {% endif %}
+        {% if comparison_stats.next_round %}
+            <a href="{{ url_for('round_detail', round_id=comparison_stats.next_round.id) }}">Next Round &raquo;</a>
+        {% endif %}
+    </div>
+
     <div class="tab-buttons">
         <button class="tab-button active" onclick="openTab(event, 'roundOverview')">라운드 개요</button>
         <button class="tab-button" onclick="openTab(event, 'holeDetails')">홀별 상세</button>
         <button class="tab-button" onclick="openTab(event, 'shotStatistics')">샷 통계</button>
         <button class="tab-button" onclick="openTab(event, 'clubStatistics')">클럽 통계</button>
+        <button class="tab-button" onclick="openTab(event, 'roundComparison')">라운드 비교</button>
         <button class="tab-button" onclick="openTab(event, 'rawData')">Raw Data</button>
     </div>
 
@@ -304,6 +314,52 @@
         </div>
     </div>
 
+    <div id="roundComparison" class="tab-content">
+        <h3>Round Comparison</h3>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Stat</th>
+                    <th>This Round</th>
+                    <th>Overall Avg.</th>
+                    <th>Same Course Avg.</th>
+                    <th>Recent 5 Avg.</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Score</td>
+                    <td>{{ "%.1f" % round_info.score }}</td>
+                    <td>{{ "%.1f" % comparison_stats.overall.avg_score }}</td>
+                    <td>{{ "%.1f" % comparison_stats.same_course.avg_score }}</td>
+                    <td>{{ "%.1f" % comparison_stats.recent_5.avg_score }}</td>
+                </tr>
+                <tr>
+                    <td>GIR</td>
+                    <td>{{ "%.1f" % round_info.gir }}%</td>
+                    <td>{{ "%.1f" % comparison_stats.overall.avg_gir }}%</td>
+                    <td>{{ "%.1f" % comparison_stats.same_course.avg_gir }}%</td>
+                    <td>{{ "%.1f" % comparison_stats.recent_5.avg_gir }}%</td>
+                </tr>
+                <tr>
+                    <td>Putts</td>
+                    <td>{{ holes_info[0] | sum(attribute='putt') + holes_info[1] | sum(attribute='putt') + holes_info[2] | sum(attribute='putt') }}</td>
+                    <td>{{ "%.1f" % comparison_stats.overall.avg_putt }}</td>
+                    <td>{{ "%.1f" % comparison_stats.same_course.avg_putt }}</td>
+                    <td>{{ "%.1f" % comparison_stats.recent_5.avg_putt }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Personal Best</h3>
+        <p><strong>Best Score:</strong> {{ comparison_stats.personal_best.best_score }}</p>
+        <p><strong>Best GIR:</strong> {{ "%.1f" % comparison_stats.personal_best.best_gir }}%</p>
+
+        <div class="chart-container">
+            <canvas id="comparisonChart"></canvas>
+        </div>
+    </div>
+
     <div id="rawData" class="tab-content">
         {% if session.logged_in %}
         <form action="{{ url_for('update_round_raw_data', round_id=round_info.id) }}" method="post">
@@ -435,6 +491,46 @@
                     ],
                     borderWidth: 1
                 }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Comparison Chart
+        const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+        new Chart(comparisonCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Score', 'GIR', 'Putts'],
+                datasets: [
+                    {
+                        label: 'This Round',
+                        data: [
+                            {{ round_info.score | tojson }},
+                            {{ round_info.gir | tojson }},
+                            {{ (holes_info[0] | sum(attribute='putt') + holes_info[1] | sum(attribute='putt') + holes_info[2] | sum(attribute='putt')) | tojson }}
+                        ],
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Overall Avg.',
+                        data: [
+                            {{ comparison_stats.overall.avg_score | tojson }},
+                            {{ comparison_stats.overall.avg_gir | tojson }},
+                            {{ comparison_stats.overall.avg_putt | tojson }}
+                        ],
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
             },
             options: {
                 scales: {
