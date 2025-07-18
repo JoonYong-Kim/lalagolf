@@ -485,7 +485,7 @@ def round_trends():
     CLUB_ORDER = ['Driver', 'Wood/Utility', 'Long Iron', 'Middle Iron', 'Short Iron', 'Wedge', 'Putter']
 
     calculated_trends = defaultdict(lambda: {"girs": [], "putts_per_hole_list": [], "ob_penalties": [], "h_penalties": [], "birdies": 0, "pars": 0, "bogeys": 0, "double_bogeys_plus": 0, "total_holes": 0, "round_count": 0})
-    club_trends = defaultdict(lambda: defaultdict(lambda: {"A": 0, "B": 0, "C": 0}))
+    club_trends = defaultdict(lambda: defaultdict(lambda: {"A": 0, "B": 0, "C": 0, "total": 0}))
 
     for row in raw_trend_data:
         round_id = row['round_id']
