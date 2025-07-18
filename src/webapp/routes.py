@@ -531,7 +531,6 @@ def round_trends():
 
                 break # Found the range, move to next round
 
-    final_trends = {}
     final_club_trends = {}
 
     for range_name in score_ranges.keys():
