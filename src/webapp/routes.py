@@ -9,6 +9,7 @@ import os
 from datetime import datetime
 from functools import wraps
 import json
+import numpy as np
 
 # Decorator to check if user is logged in
 def login_required(f):
@@ -566,4 +567,26 @@ def round_trends():
             if club_type not in club_trends_raw_counts[range_name]:
                  final_club_trends[range_name][club_type] = {"A": 0, "B": 0, "C": 0}
 
-    return render_template('round_trends.html', calculated_trends=final_trends, club_trends=final_club_trends)
+    # Calculate correlations
+    scores = [d['score'] for d in rounds_data.values() if d['score'] is not None]
+    girs = [d['gir'] for d in rounds_data.values() if d['score'] is not None]
+    avg_putts = [d['avg_putts_per_hole'] for d in rounds_data.values() if d['score'] is not None]
+    ob_penalties = [d['ob_penalties'] for d in rounds_data.values() if d['score'] is not None]
+    h_penalties = [d['h_penalties'] for d in rounds_data.values() if d['score'] is not None]
+    birdie_ratios = [d['birdies'] / d['total_holes'] if d['total_holes'] > 0 else 0 for d in rounds_data.values() if d['score'] is not None]
+    par_ratios = [d['pars'] / d['total_holes'] if d['total_holes'] > 0 else 0 for d in rounds_data.values() if d['score'] is not None]
+    bogey_ratios = [d['bogeys'] / d['total_holes'] if d['total_holes'] > 0 else 0 for d in rounds_data.values() if d['score'] is not None]
+    double_bogey_plus_ratios = [d['double_bogeys_plus'] / d['total_holes'] if d['total_holes'] > 0 else 0 for d in rounds_data.values() if d['score'] is not None]
+
+    correlation_data = {}
+    if len(scores) > 1:
+        correlation_data['GIR'] = np.corrcoef(scores, girs)[0, 1]
+        correlation_data['Avg Putts'] = np.corrcoef(scores, avg_putts)[0, 1]
+        correlation_data['OB Penalties'] = np.corrcoef(scores, ob_penalties)[0, 1]
+        correlation_data['H Penalties'] = np.corrcoef(scores, h_penalties)[0, 1]
+        correlation_data['Birdie Ratio'] = np.corrcoef(scores, birdie_ratios)[0, 1]
+        correlation_data['Par Ratio'] = np.corrcoef(scores, par_ratios)[0, 1]
+        correlation_data['Bogey Ratio'] = np.corrcoef(scores, bogey_ratios)[0, 1]
+        correlation_data['Double Bogey+ Ratio'] = np.corrcoef(scores, double_bogey_plus_ratios)[0, 1]
+
+    return render_template('round_trends.html', calculated_trends=final_trends, club_trends=final_club_trends, correlation_data=correlation_data)

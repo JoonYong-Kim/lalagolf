@@ -12,6 +12,7 @@
     <div class="tab-buttons">
         <button class="tab-button active" onclick="openTab(event, 'generalStats')">일반 통계</button>
         <button class="tab-button" onclick="openTab(event, 'clubStats')">클럽 통계</button>
+        <button class="tab-button" onclick="openTab(event, 'correlation')">상관 분석</button>
     </div>
 
     <div id="generalStats" class="tab-content active">
@@ -100,6 +101,13 @@
             <canvas id="clubPerformanceChart"></canvas>
         </div>
     </div>
+
+    <div id="correlation" class="tab-content">
+        <h2>Score Correlation Analysis</h2>
+        <div class="chart-container">
+            <canvas id="correlationChart"></canvas>
+        </div>
+    </div>
 {% endblock %}
 
 {% block scripts %}
@@ -125,6 +133,7 @@
 
         const calculatedTrends = {{ calculated_trends | tojson }};
         const clubTrends = {{ club_trends | tojson }};
+        const correlationData = {{ correlation_data | tojson }};
         const scoreRanges = Object.keys(calculatedTrends);
 
         // Helper to get data for charts, handling nulls
@@ -350,6 +359,59 @@
                         title: {
                             display: true,
                             text: 'Average Shots per Round'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Correlation Chart
+        const correlationCtx = document.getElementById('correlationChart').getContext('2d');
+        const correlationLabels = Object.keys(correlationData);
+        const correlationValues = Object.values(correlationData);
+        const correlationBackgroundColors = correlationValues.map(value => value > 0 ? 'rgba(255, 99, 132, 0.5)' : 'rgba(75, 192, 192, 0.5)');
+        const correlationBorderColors = correlationValues.map(value => value > 0 ? 'rgba(255, 99, 132, 1)' : 'rgba(75, 192, 192, 1)');
+
+        new Chart(correlationCtx, {
+            type: 'bar',
+            data: {
+                labels: correlationLabels,
+                datasets: [{
+                    label: 'Correlation with Score',
+                    data: correlationValues,
+                    backgroundColor: correlationBackgroundColors,
+                    borderColor: correlationBorderColors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Correlation of Various Stats with Final Score'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y.toFixed(3);
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Correlation Coefficient'
                         }
                     }
                 }
