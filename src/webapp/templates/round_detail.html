@@ -343,7 +343,7 @@
                 </tr>
                 <tr>
                     <td>Putts</td>
-                    <td>{{ holes_info[0] | sum(attribute='putt') + holes_info[1] | sum(attribute='putt') + holes_info[2] | sum(attribute='putt') }}</td>
+                    <td>{{ "%.1f" % (holes_info[0] | sum(attribute='putt') + holes_info[1] | sum(attribute='putt') + holes_info[2] | sum(attribute='putt')) }}</td>
                     <td>{{ "%.1f" % comparison_stats.overall.avg_putt }}</td>
                     <td>{{ "%.1f" % comparison_stats.same_course.avg_putt }}</td>
                     <td>{{ "%.1f" % comparison_stats.recent_5.avg_putt }}</td>

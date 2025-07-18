@@ -214,7 +214,7 @@ def round_detail(round_id):
 
     # Overall average
     cursor.execute("""
-        SELECT AVG(r.score) as avg_score, AVG(r.gir) as avg_gir, AVG(h.putt) as avg_putt
+        SELECT AVG(r.score) as avg_score, AVG(r.gir) as avg_gir, SUM(h.putt)/COUNT(DISTINCT r.id) as avg_putt
         FROM rounds r, holes h
         WHERE r.id = h.roundid
     """)
@@ -222,7 +222,7 @@ def round_detail(round_id):
 
     # Same golf course average
     cursor.execute("""
-        SELECT AVG(r.score) as avg_score, AVG(r.gir) as avg_gir, AVG(h.putt) as avg_putt
+        SELECT AVG(r.score) as avg_score, AVG(r.gir) as avg_gir, SUM(h.putt)/COUNT(DISTINCT r.id) as avg_putt
         FROM rounds r, holes h
         WHERE r.id = h.roundid AND r.gcname = %s
     """, (round_info['gcname'],))
@@ -230,7 +230,7 @@ def round_detail(round_id):
 
     # Recent 5 rounds average
     cursor.execute("""
-        SELECT AVG(r.score) as avg_score, AVG(r.gir) as avg_gir, AVG(h.putt) as avg_putt
+        SELECT AVG(r.score) as avg_score, AVG(r.gir) as avg_gir, SUM(h.putt)/COUNT(DISTINCT r.id) as avg_putt
         FROM (
             SELECT id, score, gir, playdate FROM rounds ORDER BY playdate DESC LIMIT 5
         ) as r, holes h
