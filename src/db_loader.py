@@ -306,7 +306,8 @@ def get_all_rounds_for_trend_analysis():
             h.putt,
             s.club,
             s.penalty,
-            s.distance
+            s.distance,
+            s.retgrade
         FROM rounds r
         LEFT JOIN holes h ON r.id = h.roundid
         LEFT JOIN shots s ON r.id = s.roundid AND h.holenum = s.holenum
