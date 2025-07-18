@@ -245,7 +245,7 @@ def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
         # Iron club feel statistics (A, B, C counts for each iron type):
         "LI":[0,0,0], # Long Iron (I3, I4) feel counts [A, B, C]
         "MI" : [0,0,0], # Mid Iron (I5, I6, I7) feel counts [A, B, C]
-        "SI" : [0,0,0], # Short Iron (I8, I9, IP, IA, 48, 52, 56) feel counts [A, B, C]
+        "SI" : [0,0,0], # Short Iron (I8, I9, IP, IW, IA, 48, 52, 56) feel counts [A, B, C]
 
         # Club specific penalty counts
         "D_H": 0, "D_OB": 0, "D_UN": 0,
@@ -295,7 +295,7 @@ def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
             elif shot['club'] in ["U3", "U4"]: club_type_prefix = 'U'
             elif shot['club'] in ["I3", "I4"]: club_type_prefix = 'LI'
             elif shot['club'] in ["I5", "I6", "I7"]: club_type_prefix = 'MI'
-            elif shot['club'] in ["I8", "I9", "IP", "IA", "48", "52", "56"]: club_type_prefix = 'SI'
+            elif shot['club'] in ["I8", "I9", "IP", "IW", "IA", "48", "52", "56"]: club_type_prefix = 'SI'
             elif shot['club'] == 'P': club_type_prefix = 'P'
             
             if club_type_prefix:
@@ -319,7 +319,7 @@ def analyze_shots_and_stats(all_shots: List[Dict]) -> Dict:
             data['LI'] = _update_club_feel(data['LI'], shot['feel'])
         elif shot['club'] in ["I5", "I6", "I7"]:
             data['MI'] = _update_club_feel(data['MI'], shot['feel'])
-        elif shot['club'] in ["I8", "I9", "IP", "IA", "48", "52", "56"]:
+        elif shot['club'] in ["I8", "I9", "IP", "IW", "IA", "48", "52", "56"]:
             data['SI'] = _update_club_feel(data['SI'], shot['feel'])
 
         # Feel and Result combinations
