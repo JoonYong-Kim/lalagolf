@@ -273,7 +273,7 @@ def update_round_raw_data(round_id):
         f.write(raw_data_content)
 
     try:
-        parsed_data, scores_and_stats = parse_file(temp_file_path)
+        _, parsed_data, scores_and_stats = parse_file(temp_file_path)
         parsed_data['id'] = round_id # Set the ID for update
         save_round_data(parsed_data, scores_and_stats, raw_data_content)
         flash('Raw data updated successfully!', 'success')
@@ -323,7 +323,7 @@ def upload_round():
                 f.write(raw_data)
             
             try:
-                parsed_data, scores_and_stats = parse_file(temp_file_path)
+                _, parsed_data, scores_and_stats = parse_file(temp_file_path)
                 session['parsed_data'] = parsed_data
                 session['scores_and_stats'] = scores_and_stats
                 session['raw_data_content'] = raw_data # Store raw content for saving to file later
@@ -389,7 +389,7 @@ def review_round():
             with open(temp_file_path, 'w') as f:
                 f.write(raw_data_content)
             try:
-                parsed_data, scores_and_stats = parse_file(temp_file_path)
+                _, parsed_data, scores_and_stats = parse_file(temp_file_path)
                 session['parsed_data'] = parsed_data
                 session['scores_and_stats'] = scores_and_stats
                 session['raw_data_content'] = raw_data_content
