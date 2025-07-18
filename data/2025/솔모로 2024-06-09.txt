@@ -1,0 +1,96 @@
+2024-06-09 13:55
+솔모로 체리-퍼시몬
+정대현 조인
+
+1P4
+D C C
+I5 B B
+I4 C C
+56 C B 33
+P C A 6
+2 P4
+D C C
+48 B C
+56 B B 25
+P C C 17
+P C C 10
+P A A 2
+3P4
+D B B
+I9 C C
+56 B A 17 OK
+4P3
+I5 C C
+56 C B 20
+P B A 4
+5 P4
+D C C
+56  B B
+48 C C
+P C C 15
+P B B 5 OK
+6 P4
+D C B
+I4 B C
+56 B B 17
+P B A 3
+7p5
+d b b
+uw b b
+i9 b c
+p b b 30
+p b c 2 ok
+8 p4
+d a b
+i6 c c 
+56 a a 27
+p b b 2.5 ok
+9 p3
+i9 b c
+56 b b 7
+p c c 2.5 ok
+10 p3
+w3 b b
+p c c 9
+p b b 4 ok
+11 p4
+D b b
+48 b b 
+p b b 4 ok
+12 p4
+d b b 
+52 c c 42
+56 c b 15
+p c c 10
+p b b 6 ok
+13p4
+d b c 
+i7 c c 125
+56 b c 70
+52 b b 22
+p b b 8 ok
+14 p3
+i7 c c
+56 a b 15
+p b b 5 ok
+15 p5
+d c c 
+i5 c c 
+i8 b c
+56 b b 10
+p b c 2 ok
+16 p4
+uw a b
+i9c c 
+56 c b 15
+p b b 5 ok
+17 p4
+d a b
+i7 b c
+52 a a 15 ok
+18 p5
+d b c b
+i7 b b
+i6 c c h
+56 b b 20
+p b b 6 ok

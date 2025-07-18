@@ -1,0 +1,118 @@
+2025-04-25 12:40
+로얄포레
+김영주 박두산 박영준
+
+1P4
+u3 c c 
+u3 b c
+56 b b 33
+p b a 7
+2p4
+d c b
+u3 c c h
+52 b a 40
+p b b 1
+3p3
+i7 c c
+56 b b 20
+p b b 13 ok
+4 p5
+d c b
+uw c c h
+i9 c b
+p a b 20 ok
+5p4
+d c c b
+i5 c c
+i7 b c b
+52 a b 60
+p c c 8
+p c c 5 ok
+6 p4
+d c c 
+ip b b
+p c c 3 ok
+7 p3
+i4 c c
+p b b 8
+p b c 3 ok
+8 p5
+d c c h
+uw c b
+52 b b 40
+p b b 9 ok
+9 p4
+d c c h
+i9 c c
+56 b b 25
+p b b 6 ok
+10 p4
+d b b 
+i9 b b 
+p b b 5 ok
+11 p4
+d b b
+i7 c c h
+56 b a 20 ok
+12p3
+i4 c c
+56 b b 40
+p b b 13 ok
+13 p4
+d b b
+i7 b b 
+p b b 30
+p b b 2
+14 p5
+d b b
+i7 c b
+48 c c 70
+52 b b 15
+p b b 5 ok
+15p4
+d c c 
+ip c c 80
+52 c c 15
+p b b 12 ok
+16 p3
+u4 c b
+p c b 15
+p b b 2
+17p4
+d b b
+i6 c c
+52 b b 24
+p b a 6
+18 p5
+d b c h
+i5 c c
+52 b b 40
+p b b 9 ok
+
+Total Score : 87
+Average Putt : 1.8888888888888888
+GIR Rate : 27.77777777777778,77.77777777777779
+Total Penalty : 6
+Expected : 100
+
+| Hole | 1 P4 | 2 P4 | 3 P3 | 4 P5 | 5 P4 | 6 P4 | 7 P3 | 8 P5 | 9 P4 | Total |
+|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+| Score | 4 | 5 | 4 | 6 | 7 | 4 | 4 | 6 | 6 | 46 |
+| Putt | 1 | 1 | 2 | 2 | 3 | 2 | 3 | 2 | 2 | 18 |
+| Penalty | 0 | 1 | 0 | 1 | 0 | 0 | 0 | 1 | 1 | 4 |
+| GIR | 1 | X | 1 | 1 | X | O | O | 1 | X | 2 |
+
+| Hole | 10 P4 | 11 P4 | 12 P3 | 13 P4 | 14 P5 | 15 P4 | 16 P3 | 17 P4 | 18 P5 | Total |
+|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+| Score | 4 | 5 | 4 | 4 | 6 | 5 | 3 | 4 | 6 | 41 |
+| Putt | 2 | 1 | 2 | 2 | 2 | 2 | 2 | 1 | 2 | 16 |
+| Penalty | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 2 |
+| GIR | O | X | 1 | O | 1 | 1 | O | 1 | 1 | 3 |
+
+```chart
+  type: pie
+  labels: [A, B, C]
+  series:
+    - data: [2.9411764705882355,54.411764705882355,42.64705882352941]
+  labelColors: true
+```

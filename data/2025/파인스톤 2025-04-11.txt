@@ -1,0 +1,120 @@
+2025-04-11 16:40
+파인스톤
+홍성걸, 김수현, 임길수
+
+1P4
+D B b
+i4 c b
+56 b b 17
+p b b 7
+p b b 1.5
+2 p3
+i5 c c
+56 b b 15
+p b b 2.5
+3 p4
+d b b
+i7 c c 
+56 b b 10
+p c b 3.5 ok
+4 p5
+d b c b
+i7 b b
+i4 c c
+56 c b 20
+p b b 7 ok
+5 p4
+d b b
+i7 c c b
+56 b c 20
+56 b b 10
+p b c 4 ok
+6 p4
+d b c h
+i6 c c
+56 b b 30
+p b b 12 ok
+7 p3
+i6 c c 
+56 b b 15
+p b b 2.5
+8 p5
+d b b
+uw c b
+56 b b 
+p c c 15
+p b c 6 ok
+9 p4
+d a b
+ip a b
+p b a 4
+10 p4
+d c b
+i9 c a
+p c b 4 ok
+11 p4
+d b c b
+i8 b b 108
+p b b 30
+p c c 4.5
+p b b 3
+12 p3
+i6 b c
+56 c c 15
+p b b 15 ok
+13 p5
+d b c b
+i5 b b
+uw b c 
+56 b b 30
+p b b 8
+p b b 2
+14 p4
+d c b 
+i8 b b 
+p b b 5 ok
+15 p4
+d c b
+i8 b b 
+p b b 20 ok
+16 p4
+d b b 
+ip a b 
+p b b 10 ok
+17 p3
+ip c b
+p b b 10 ok
+18 p5
+d b b 
+uw c b
+i9 b b 90
+p b b 13 ok
+
+
+Total Score : 82
+Average Putt : 1.9444444444444444
+GIR Rate : 50,88.88888888888889
+Total Penalty : 1
+Expected : 89
+
+| Hole | 1 P4 | 2 P3 | 3 P4 | 4 P5 | 5 P4 | 6 P4 | 7 P3 | 8 P5 | 9 P4 | Total |
+|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+| Score | 5 | 3 | 5 | 6 | 6 | 6 | 3 | 6 | 3 | 43 |
+| Putt | 2 | 1 | 2 | 2 | 2 | 2 | 1 | 3 | 1 | 16 |
+| Penalty | 0 | 0 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 1 |
+| GIR | 1 | 1 | 1 | 1 | X | X | 1 | O | O | 2 |
+
+| Hole | 10 P4 | 11 P4 | 12 P3 | 13 P5 | 14 P4 | 15 P4 | 16 P4 | 17 P3 | 18 P5 | Total |
+|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+| Score | 4 | 5 | 4 | 6 | 4 | 4 | 4 | 3 | 5 | 39 |
+| Putt | 2 | 3 | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 19 |
+| Penalty | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| GIR | O | O | 1 | 1 | O | O | O | O | O | 7 |
+
+```chart
+  type: pie
+  labels: [A, B, C]
+  series:
+    - data: [4.3478260869565215,66.66666666666667,28.985507246376812]
+  labelColors: true
+```

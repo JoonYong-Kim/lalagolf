@@ -290,3 +290,30 @@ def delete_round_data(round_id: int, conn=None):
         cursor.close()
         if _close_conn:
             conn.close()
+
+def get_all_rounds_for_trend_analysis():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = """
+        SELECT
+            r.id AS round_id,
+            r.score AS round_score,
+            r.gir AS round_gir,
+            r.playdate,
+            h.holenum,
+            h.par AS hole_par,
+            h.score AS hole_score,
+            h.putt,
+            s.club,
+            s.penalty,
+            s.distance
+        FROM rounds r
+        LEFT JOIN holes h ON r.id = h.roundid
+        LEFT JOIN shots s ON r.id = s.roundid AND h.holenum = s.holenum
+        ORDER BY r.playdate ASC, h.holenum ASC, s.id ASC
+    """
+    cursor.execute(query)
+    data = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return data

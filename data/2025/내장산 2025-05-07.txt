@@ -1,0 +1,126 @@
+2025-05-07 13:00
+내장산
+박수현, 서해근, 정대현
+
+1 P4
+D B C B
+I6 C C
+52 A C 40
+P C C 17
+P B B 2 OK
+
+2P5
+d b b
+uw b b 
+i9 b c 90
+p c c 15
+p c c 8
+p b b 2.5
+
+3 p4
+d c c ob
+i7 c c 
+56 b b 15
+p c c 7 ok
+4 p3
+i4 b c 
+p b b 15 ok
+5 p5
+d b b 
+i5 a b 
+ip c b 
+p b b 20
+p b a 5.5
+6 p4
+d b b 
+i8 b b
+p b b 13
+p b b 2
+7 p4
+uw c b
+uw b b
+i5 a b 42
+p b b 2.5
+
+8 p3
+i7 c c h
+56 c c 30
+p b b 10 ok
+9p4
+d b c ob
+ip b b
+p b c 7
+p c c 3 ok
+10 p4
+d c c
+i4 b b
+56 b b 30
+p c c 2 ok
+11 p4
+d b b 
+i8 b b
+p b b 10 ok
+12 p5
+d c c
+uw c c
+i5 c c 
+i7 a c
+56 c b 15
+p b b 6 ok
+13 p3
+i7 c b
+p b b 11 ok
+
+14 p4
+d b c
+i8 c c 100
+52 b c
+52 c c 20
+p b c 13
+p b b 2
+15 p4
+d b b 
+i8 b b 100
+p b b 6 ok
+16 p5
+d b b
+i5 b b 
+56 c b 35
+p b b 8 ok
+17 p3
+i6 c c 
+56 c b 28
+p c c 15
+p c c 3 ok
+18 p4
+d b b 
+48 b b
+p b b 9 ok
+
+Total Score : 90
+Average Putt : 2.1666666666666665
+GIR Rate : 50,72.22222222222221
+Total Penalty : 5
+Expected : 106
+
+| Hole | 1 P4 | 2 P5 | 3 P4 | 4 P3 | 5 P5 | 6 P4 | 7 P4 | 8 P3 | 9 P4 | Total |
+|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+| Score | 6 | 6 | 7 | 3 | 5 | 4 | 4 | 5 | 7 | 47 |
+| Putt | 3 | 3 | 2 | 2 | 2 | 2 | 1 | 2 | 3 | 20 |
+| Penalty | 0 | 0 | 2 | 0 | 0 | 0 | 0 | 1 | 2 | 5 |
+| GIR | 1 | O | X | O | O | O | 1 | X | X | 4 |
+
+| Hole | 10 P4 | 11 P4 | 12 P5 | 13 P3 | 14 P4 | 15 P4 | 16 P5 | 17 P3 | 18 P4 | Total |
+|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+| Score | 5 | 4 | 7 | 3 | 6 | 4 | 5 | 5 | 4 | 43 |
+| Putt | 2 | 2 | 2 | 2 | 2 | 2 | 2 | 3 | 2 | 19 |
+| Penalty | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| GIR | 1 | O | X | O | X | O | O | 1 | O | 5 |
+
+```chart
+  type: pie
+  labels: [A, B, C]
+  series:
+    - data: [5.555555555555555,58.333333333333336,36.111111111111114]
+  labelColors: true
+```

@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+
+{% block title %}Round Trends{% endblock %}
+
+{% block head %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+    <h1>Round Trends</h1>
+
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Score Range</th>
+                <th>Min GIR</th>
+                <th>Avg GIR</th>
+                <th>Max GIR</th>
+                <th>Min Putts</th>
+                <th>Avg Putts</th>
+                <th>Max Putts</th>
+                <th>Avg Penalties</th>
+                <th>Avg Driver Distance</th>
+                <th>Birdie Ratio</th>
+                <th>Par Ratio</th>
+                <th>Bogey Ratio</th>
+                <th>Double Bogey+ Ratio</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for range_name, stats in calculated_trends.items() %}
+            <tr>
+                <td>{{ range_name }}</td>
+                <td>{{ "%.1f" % stats.min_gir if stats.min_gir is not none else '-' }}</td>
+                <td>{{ "%.1f" % stats.avg_gir if stats.avg_gir is not none else '-' }}</td>
+                <td>{{ "%.1f" % stats.max_gir if stats.max_gir is not none else '-' }}</td>
+                <td>{{ "%.1f" % stats.min_putts if stats.min_putts is not none else '-' }}</td>
+                <td>{{ "%.1f" % stats.avg_putts if stats.avg_putts is not none else '-' }}</td>
+                <td>{{ "%.1f" % stats.max_putts if stats.max_putts is not none else '-' }}</td>
+                <td>{{ "%.1f" % stats.avg_penalties if stats.avg_penalties is not none else '-' }}</td>
+                <td>{{ "%.1f" % stats.avg_driver_distance if stats.avg_driver_distance is not none else '-' }}</td>
+                <td>{{ "%.1f" % (stats.birdie_ratio * 100) if stats.birdie_ratio is not none else '-' }}%</td>
+                <td>{{ "%.1f" % (stats.par_ratio * 100) if stats.par_ratio is not none else '-' }}%</td>
+                <td>{{ "%.1f" % (stats.bogey_ratio * 100) if stats.bogey_ratio is not none else '-' }}%</td>
+                <td>{{ "%.1f" % (stats.double_bogey_plus_ratio * 100) if stats.double_bogey_plus_ratio is not none else '-' }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="chart-container">
+        <canvas id="girChart"></canvas>
+        <canvas id="puttChart"></canvas>
+        <canvas id="penaltyChart"></canvas>
+        <canvas id="driverDistanceChart"></canvas>
+        <canvas id="scoreRatioChart"></canvas>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // Chart.js initialization for GIR, Putts, Penalties, Driver Distance, Score Ratios
+        const calculatedTrends = {{ calculated_trends | tojson }};
+        const scoreRanges = Object.keys(calculatedTrends);
+
+        // Helper to get data for charts, handling nulls
+        const getData = (key) => scoreRanges.map(range => calculatedTrends[range][key] !== null ? calculatedTrends[range][key] : 0);
+        const getPercentageData = (key) => scoreRanges.map(range => calculatedTrends[range][key] !== null ? calculatedTrends[range][key] * 100 : 0);
+
+        // GIR Chart
+        const girCtx = document.getElementById('girChart').getContext('2d');
+        new Chart(girCtx, {
+            type: 'bar',
+            data: {
+                labels: scoreRanges,
+                datasets: [{
+                    label: 'Average GIR',
+                    data: getData('avg_gir'),
+                    backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Average GIR by Score Range'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Average GIR (%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Putts Chart
+        const puttCtx = document.getElementById('puttChart').getContext('2d');
+        new Chart(puttCtx, {
+            type: 'bar',
+            data: {
+                labels: scoreRanges,
+                datasets: [{
+                    label: 'Average Putts',
+                    data: getData('avg_putts'),
+                    backgroundColor: 'rgba(153, 102, 255, 0.5)',
+                    borderColor: 'rgba(153, 102, 255, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Average Putts by Score Range'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Average Putts'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Penalty Chart
+        const penaltyCtx = document.getElementById('penaltyChart').getContext('2d');
+        new Chart(penaltyCtx, {
+            type: 'bar',
+            data: {
+                labels: scoreRanges,
+                datasets: [{
+                    label: 'Average Penalties',
+                    data: getData('avg_penalties'),
+                    backgroundColor: 'rgba(255, 159, 64, 0.5)',
+                    borderColor: 'rgba(255, 159, 64, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Average Penalties by Score Range'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Average Penalties'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Driver Distance Chart
+        const driverDistanceCtx = document.getElementById('driverDistanceChart').getContext('2d');
+        new Chart(driverDistanceCtx, {
+            type: 'bar',
+            data: {
+                labels: scoreRanges,
+                datasets: [{
+                    label: 'Average Driver Distance',
+                    data: getData('avg_driver_distance'),
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Average Driver Distance by Score Range'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Distance (yards)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Score Ratio Chart (Stacked Bar or Grouped Bar)
+        const scoreRatioCtx = document.getElementById('scoreRatioChart').getContext('2d');
+        new Chart(scoreRatioCtx, {
+            type: 'bar',
+            data: {
+                labels: scoreRanges,
+                datasets: [
+                    {
+                        label: 'Birdie',
+                        data: getPercentageData('birdie_ratio'),
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                    },
+                    {
+                        label: 'Par',
+                        data: getPercentageData('par_ratio'),
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    },
+                    {
+                        label: 'Bogey',
+                        data: getPercentageData('bogey_ratio'),
+                        backgroundColor: 'rgba(255, 206, 86, 0.7)',
+                    },
+                    {
+                        label: 'Double Bogey+',
+                        data: getPercentageData('double_bogey_plus_ratio'),
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Score Ratios by Score Range'
+                    },
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Percentage (%)'
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}

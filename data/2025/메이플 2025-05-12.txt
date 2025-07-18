@@ -1,0 +1,87 @@
+2025-05-12 17:40
+메이플비치
+박수현, 이혁찬, 김준기
+
+1P4
+d b b
+i5 b b 
+56 c b 45
+p b b 25
+p b a 5
+2 p5
+d b c
+i5 c c
+i7 c b
+p c c 15
+p b b 7 ok
+3 p4
+d b b 
+48 b b
+p b b 7 ok
+4 p4
+d b b 
+i9 b a 90
+p b a 7
+5 p3
+i7 b c
+56 b a 10
+p b b 1.5
+6 p5
+uw c b
+uw b b
+48 c b 80
+p b a 23 ok
+7 p4
+d b b
+i6 c a
+p b b 8 ok
+8 p3
+i7 b c
+56 b c
+p c c 13
+p b b 7 ok
+9 p4
+d c c h
+i5 b c b
+56 a a 20 ok
+10 p4
+d b b
+52 b c 
+52 c c 7
+p b b 7 ok
+11p5
+d c b 
+uw c b
+i4 b c 
+p c c 17
+p b b 6 ok
+12 p4
+d b b 
+i6 b c 
+56 b b 18 ok
+13 p3
+i6 c c h
+56 b b 25
+p b a 3
+14 p5
+d b b 
+uw b c
+48 c b
+p b b 12 ok
+15 p3
+i8 c c
+52 b b 12 ok
+16 p4
+d b b 
+56 b b 18
+p b b 10
+p b b 3 ok
+17 p4
+d c c h
+i8 a a
+p c b 7 ok
+18 p4
+d b c
+i6 a b
+p c c 25
+p b b 6 ok

@@ -1,0 +1,94 @@
+2025-06-05 17:54
+태광
+정대현, 김수현, 유교수님
+
+1P4
+D B B
+I9 C C
+56 A A 21
+P B B 3
+2P4
+D C C
+I7 C C
+52 A B 60
+P C B 2.5 OK
+3 P4
+D C C OB
+I9 C C
+52 B B 25
+P B B 5 OK
+4 P4
+D C B
+I4 C C
+52 B B 85
+P C C 6
+P B B 4 OK
+5 P5
+D B C
+UW B C OB
+IP B B
+P C C 8
+P C C 3
+P B B 5OK
+6 P3
+I6 B B
+P B B 12 OK
+7P5
+D B B
+UW C B
+48 B B
+P C B 5 OK
+8 P3
+I5 B B
+P B B 10 OK
+9 P4
+D C C
+UW B B
+56 B B
+P B B 6 OK
+10 P4
+D B C
+I8 A A 110
+P B B 3
+11 P5
+D B B
+UW C B
+IP C C
+P C C 9
+P B B 3
+12 P4
+D C C H
+I7 B B
+56 C B 15 OK
+13 P3
+I4 C C B
+52 C C 60
+56 B A 33
+P B B 2
+14 P4
+D B B
+48 B B 73
+P C C 7
+P B C 2 OK
+15 P4
+D B B
+I9 C B 90
+P B B 10 OK
+16P5
+D B B
+UW B C H
+56 B B 55
+P C C 11
+P B B 2.5
+17 P3
+I6 C C
+56 B C 20
+56 B B 10
+P B B 3
+18 P4
+D C C
+I8 B C
+I8 B B 12
+P C C 3 OK
+
+

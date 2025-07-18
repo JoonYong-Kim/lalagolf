@@ -3,6 +3,8 @@ from flask import render_template, current_app, jsonify, request, session, redir
 from src.webapp import app
 from src.db_loader import get_db_connection, save_round_data, delete_round_data, init_connection_pool, get_filtered_rounds, get_yearly_round_statistics
 from src.data_parser import parse_file, analyze_shots_and_stats # Import analyze_shots_and_stats
+from src.db_loader import get_all_rounds_for_trend_analysis
+from collections import defaultdict
 import os
 from datetime import datetime
 from functools import wraps
@@ -412,3 +414,116 @@ def review_round():
     unparsed_lines = session.get('unparsed_lines')
 
     return render_template('review_data.html', parsed_data=parsed_data, scores_and_stats=scores_and_stats, raw_data_content=raw_data_content, unparsed_lines=unparsed_lines)
+
+@app.route('/trends')
+def round_trends():
+    raw_trend_data = get_all_rounds_for_trend_analysis()
+    
+    # Group data by round_id
+    rounds_data = defaultdict(lambda: {"score": None, "gir": None, "playdate": None, "putts": 0, "penalties": 0, "driver_distances": [], "hole_pars": {}, "hole_scores": {}})
+    for row in raw_trend_data:
+        round_id = row['round_id']
+        if rounds_data[round_id]["score"] is None:
+            rounds_data[round_id]["score"] = row['round_score']
+            rounds_data[round_id]["gir"] = row['round_gir']
+            rounds_data[round_id]["playdate"] = row['playdate']
+        
+        if row['putt'] is not None:
+            rounds_data[round_id]["putts"] += row['putt'] # Accumulate putts for the round
+        
+        if row['penalty'] is not None:
+            rounds_data[round_id]["penalties"] += 1
+        
+        if row['club'] == 'D' and row['distance'] is not None:
+            rounds_data[round_id]["driver_distances"].append(row['distance'])
+        
+        if row['holenum'] is not None and row['hole_par'] is not None and row['hole_score'] is not None:
+            rounds_data[round_id]["hole_pars"][row['holenum']] = row['hole_par']
+            rounds_data[round_id]["hole_scores"][row['holenum']] = row['hole_score']
+
+    # Calculate average driver distance per round and hole results
+    for round_id, data in rounds_data.items():
+        rounds_data[round_id]["avg_driver_distance"] = sum(data["driver_distances"]) / len(data["driver_distances"]) if data["driver_distances"] else 0
+        
+        birdies = 0
+        pars = 0
+        bogeys = 0
+        double_bogeys_plus = 0
+        total_holes = 0
+
+        for holenum in data["hole_pars"]:
+            hole_par = data["hole_pars"][holenum]
+            hole_score = data["hole_scores"][holenum]
+            diff = hole_score - hole_par
+            if diff == -1:
+                birdies += 1
+            elif diff == 0:
+                pars += 1
+            elif diff == 1:
+                bogeys += 1
+            else:
+                double_bogeys_plus += 1
+            total_holes += 1
+        
+        rounds_data[round_id]["birdies"] = birdies
+        rounds_data[round_id]["pars"] = pars
+        rounds_data[round_id]["bogeys"] = bogeys
+        rounds_data[round_id]["double_bogeys_plus"] = double_bogeys_plus
+        rounds_data[round_id]["total_holes"] = total_holes
+
+    # Define score ranges
+    score_ranges = {
+        "70s": (70, 79),
+        "80-83": (80, 83),
+        "84-86": (84, 86),
+        "87-89": (87, 89),
+        "90-93": (90, 93),
+        "94+": (94, 200) # Assuming max score is 200 for practical purposes
+    }
+
+    calculated_trends = defaultdict(lambda: {"girs": [], "putts": [], "penalties": [], "driver_distances": [], "birdies": 0, "pars": 0, "bogeys": 0, "double_bogeys_plus": 0, "total_holes": 0, "round_count": 0})
+    
+    for round_id, data in rounds_data.items():
+        score = data["score"]
+        if score is None:
+            continue
+
+        for range_name, (min_score, max_score) in score_ranges.items():
+            if min_score <= score <= max_score:
+                if data["gir"] is not None:
+                    calculated_trends[range_name]["girs"].append(data["gir"])
+                if data["putts"] is not None:
+                    calculated_trends[range_name]["putts"].append(data["putts"])
+                calculated_trends[range_name]["penalties"].append(data["penalties"])
+                if data["avg_driver_distance"] is not None:
+                    calculated_trends[range_name]["driver_distances"].append(data["avg_driver_distance"])
+                
+                calculated_trends[range_name]["birdies"] += data["birdies"]
+                calculated_trends[range_name]["pars"] += data["pars"]
+                calculated_trends[range_name]["bogeys"] += data["bogeys"]
+                calculated_trends[range_name]["double_bogeys_plus"] += data["double_bogeys_plus"]
+                calculated_trends[range_name]["total_holes"] += data["total_holes"]
+                calculated_trends[range_name]["round_count"] += 1
+                
+                break # Found the range, move to next round
+
+    final_trends = {}
+    for range_name, stats in calculated_trends.items():
+        num_rounds_in_range = stats["round_count"]
+        
+        final_trends[range_name] = {
+            "min_gir": min(stats["girs"]) if stats["girs"] else None,
+            "max_gir": max(stats["girs"]) if stats["girs"] else None,
+            "avg_gir": sum(stats["girs"]) / num_rounds_in_range if num_rounds_in_range > 0 else None,
+            "min_putts": min(stats["putts"]) if stats["putts"] else None,
+            "max_putts": max(stats["putts"]) if stats["putts"] else None,
+            "avg_putts": sum(stats["putts"]) / num_rounds_in_range if num_rounds_in_range > 0 else None,
+            "avg_penalties": sum(stats["penalties"]) / num_rounds_in_range if num_rounds_in_range > 0 else None,
+            "avg_driver_distance": sum(stats["driver_distances"]) / len(stats["driver_distances"]) if stats["driver_distances"] else None,
+            "birdie_ratio": stats["birdies"] / stats["total_holes"] if stats["total_holes"] > 0 else None,
+            "par_ratio": stats["pars"] / stats["total_holes"] if stats["total_holes"] > 0 else None,
+            "bogey_ratio": stats["bogeys"] / stats["total_holes"] if stats["total_holes"] > 0 else None,
+            "double_bogey_plus_ratio": stats["double_bogeys_plus"] / stats["total_holes"] if stats["total_holes"] > 0 else None,
+        }
+
+    return render_template('round_trends.html', calculated_trends=final_trends)

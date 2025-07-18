@@ -1,0 +1,125 @@
+2025-03-25 17:07
+솔트베이
+홍성걸, 양명욱, 임길수
+
+1P4
+D B B
+I9 B B
+P C C 17
+P B C 7
+P B B 3
+2 P5
+D C C B
+I5 B C
+I5 B B 30
+I6 C C
+52 A A 65 OK
+3P4
+D C C
+IP B C
+56 B B 20
+P B B 7 OK
+4 P3
+I7 B C
+P B B 15
+P B B 4
+5 P4
+D B B
+IP B B 80
+P C C 10
+P C C 3 OK
+6 P5
+D C B
+I6 C B
+I6 C C
+56 B C 20
+56 B B 10
+P B B 2
+7 P4
+D B B
+I9 B B
+P C C 7
+P A A 3.5
+8 P3
+I6 C C B
+56 C C B 20
+56 C C B 17
+56 B B 10
+P B B 4.5 OK
+9 P4
+UW A B
+I7 C B
+P A A 20 OK
+10 P5
+D B B
+I5 B B
+I6 B C B
+56 B B 15
+P B B 4
+11 P4
+D C C
+I8 B C 100
+56 C B 10
+P C C 3 OK
+12 P4
+D B B
+I6 C C
+56 C C
+56 B B 15
+P B B 3 Ok
+13 P3
+I7 A C
+P B C 10
+P B B 5 OK
+14 P4
+D B B
+I6 C B
+P B B 25
+P C C 1.5 Ok
+15 P5
+D C C
+UW B B
+52 A B 60
+P B B 7 OK
+16 P3
+I7 C C
+56 B B 25
+P A A 7
+17 P4
+D C C
+U3 C B
+56 B B 31
+P B B 3 OK
+18 P4
+D B B
+I9 B B
+P C B 6 OK
+
+
+Total Score : 86
+Average Putt : 2
+GIR Rate : 50,77.77777777777779
+Total Penalty : 0
+Expected : 96
+
+| Hole | 1P4 | 2P5 | 3P4 | 4P3 | 5P4 | 6P5 | 7P4 | 8P3 | 9P4 | Total |
+|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+| Score | 5 | 6 | 5 | 3 | 5 | 6 | 4 | 6 | 4 | 44 |
+| Putt | 3 | 1 | 2 | 2 | 3 | 1 | 2 | 2 | 2 | 18 |
+| Penalty | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| GIR | O | X | 1 | O | O | X | O | X | O | 5 |
+
+| Hole | 10P5 | 11P4 | 12P4 | 13P3 | 14P4 | 15P5 | 16P3 | 17P4 | 18P4 | Total |
+|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+| Score | 5 | 5 | 6 | 4 | 5 | 5 | 3 | 5 | 4 | 42 |
+| Putt | 1 | 2 | 2 | 3 | 3 | 2 | 1 | 2 | 2 | 18 |
+| Penalty | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+| GIR | 1 | 1 | X | O | O | O | 1 | 1 | O | 4 |
+
+```chart
+  type: pie
+  labels: [A, B, C]
+  series:
+    - data: [9.45945945945946,55.4054054054054,35.13513513513514]
+  labelColors: true
+```

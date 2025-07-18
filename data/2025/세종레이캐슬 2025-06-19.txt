@@ -1,0 +1,93 @@
+2025-06-19 07:18
+세종레이캐슬
+박수현 김수현 송대근
+
+1P4
+D C B
+I8 C B
+p b b 14
+p b b 3
+
+2P4
+d b b
+i8 a a 
+p a a 4
+3p5
+d b c b 
+i7 c c h
+i7 c b 
+i7 b b
+52 b b 64
+p b b 12 ok
+4p4
+d b b
+i8 b b
+p b b 7
+p b b 1.5
+5 p3
+i7 b b 
+p b b 10
+p b b 1.5
+6 p5
+d b b 
+uw c b
+i7 c c 
+p a b 11 ok
+7p4
+uw b b
+i8 c b
+p a a  20 ok
+8 p3
+i4 c c
+56 b a 28
+p b b 1.5
+9p4
+d b c
+i7 c c 
+56 c b 18
+p c c 6
+p b b 3
+10p4
+d b b 
+48 c c b
+56 ab 20
+p b b 10 ok
+11p4
+d c b
+56 b b 74
+p b b 5 ok
+12 p3
+i6 c c 
+56 b b 15
+p b b 4 ok
+13 p5
+d c c h
+uw c c h
+i7 c c b
+56  b b
+p b b 7 ok
+14 p4
+d c b
+52 b b 42
+p b b 8
+p b b 2
+15 p3
+i9 c c
+56 b c 20
+56 b b 8
+p b b 5 ok
+16 p4
+d b b
+56 b c 33
+p a a 13
+17 p4
+d c c 
+i7 b b 
+i8 b b 100
+p a a 6
+18 p5
+d b c ob
+i7 b b
+i5 b b
+48 c a 98
+p c c 3 ok

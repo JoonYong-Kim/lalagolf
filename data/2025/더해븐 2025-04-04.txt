@@ -1,0 +1,126 @@
+2025-04-04 11:42
+더해븐
+박수현, 이덕형, 정대현
+
+1P4
+D C C
+I5 C C
+56 B B 72
+P B B 17
+P C C 3 OK
+2 P4
+uw c b
+uw b c
+52 c c 40
+56 c c 10
+p a a 8
+3 p4
+d b b
+i9 b c
+56 c b 10
+p b b 3 ok
+4 P4
+uw b c ob
+uw c b
+ip c b
+p b b 10 ok
+5 p3
+i4 c c b
+56 b a 35
+p b b 20
+p c c 3 ok
+6 p5
+d b b
+i5 c c
+52 a b 82
+p b b 10 ok
+7 p4
+d c c
+i6 c c h
+52 b b 40
+p b c 7
+p b c 3 ok
+8 p3
+i7 c c 
+52 a a 20
+p b b 5 ok
+9p4
+d c c
+i7 c c b
+56 c c 25
+56 c b 30
+p b b 5.5 ok
+10 p4
+d c c h
+i7 c c
+52 c c 40
+52 b c 20
+p b b 7 ok
+11 p4
+d c c h
+ip b c
+56 c c 10
+p b b 8 ok
+12p5
+uw c b
+uw c b
+52 b b
+p b b 17
+p c c 3 ok
+13 p3
+ip b b
+p b b 25
+p c a 3
+14 p4
+uw c b
+i5 b c
+56 c c 20
+56 b b 10
+p c c 4 ok
+15 p4
+d c b
+ip b c
+p b b 15 ok
+16 p3
+i9 b b
+p b b 7 ok
+17 p5
+d b b 
+w3 b b
+56 b b 20
+p b b 4 ok
+18 p4
+d b c
+i5 b b
+52 b b 60
+p b b 25
+p b b 2
+
+
+Total Score : 95
+Average Putt : 2.1666666666666665
+GIR Rate : 33.33333333333333,61.111111111111114
+Total Penalty : 5
+Expected : 104
+
+| Hole | 1 P4 | 2 P4 | 3 P4 | 4 P4 | 5 P3 | 6 P5 | 7 P4 | 8 P3 | 9 P4 | Total |
+|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+| Score | 6 | 5 | 5 | 7 | 5 | 5 | 7 | 4 | 6 | 50 |
+| Putt | 3 | 1 | 2 | 2 | 3 | 2 | 3 | 2 | 2 | 20 |
+| Penalty | 0 | 0 | 0 | 2 | 0 | 0 | 1 | 0 | 0 | 3 |
+| GIR | 1 | X | 1 | X | 1 | O | X | 1 | X | 1 |
+
+| Hole | 10 P4 | 11 P4 | 12 P5 | 13 P3 | 14 P4 | 15 P4 | 16 P3 | 17 P5 | 18 P4 | Total |
+|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+| Score | 7 | 6 | 6 | 3 | 6 | 4 | 3 | 5 | 5 | 45 |
+| Putt | 2 | 2 | 3 | 2 | 2 | 2 | 2 | 2 | 2 | 19 |
+| Penalty | 1 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 2 |
+| GIR | X | X | O | O | X | O | O | O | 1 | 5 |
+
+```chart
+  type: pie
+  labels: [A, B, C]
+  series:
+    - data: [4,53.333333333333336,42.666666666666664]
+  labelColors: true
+```
