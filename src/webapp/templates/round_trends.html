@@ -64,29 +64,41 @@
 
     <div id="clubStats" class="tab-content">
         <h2>Club Statistics</h2>
-        {% for range_name, club_stats in club_trends.items() %}
-            <h3>Score Range: {{ range_name }}</h3>
-            <table class="table table-bordered">
-                <thead>
-                    <tr>
-                        <th>Club Type</th>
-                        <th>A (Avg Shots)</th>
-                        <th>B (Avg Shots)</th>
-                        <th>C (Avg Shots)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for club_type, stats in club_stats.items() %}
+        <table class="table table-bordered text-center">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="vertical-align: middle;">Club Type</th>
+                    {% for range_name in club_trends.keys() %}
+                        <th colspan="3">{{ range_name }}</th>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    {% for _ in club_trends.keys() %}
+                        <th>A</th>
+                        <th>B</th>
+                        <th>C</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% set club_order = ['Driver', 'Wood/Utility', 'Long Iron', 'Middle Iron', 'Short Iron', 'Wedge', 'Putter'] %}
+                {% for club_type in club_order %}
                     <tr>
                         <td>{{ club_type }}</td>
-                        <td>{{ "%.1f" % stats.A }}</td>
-                        <td>{{ "%.1f" % stats.B }}</td>
-                        <td>{{ "%.1f" % stats.C }}</td>
+                        {% for range_name in club_trends.keys() %}
+                            {% set stats = club_trends[range_name][club_type] %}
+                            <td>{{ "%.1f" % stats.A if stats else '0.0' }}</td>
+                            <td>{{ "%.1f" % stats.B if stats else '0.0' }}</td>
+                            <td>{{ "%.1f" % stats.C if stats else '0.0' }}</td>
+                        {% endfor %}
                     </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="chart-container">
+            <canvas id="clubPerformanceChart"></canvas>
+        </div>
     </div>
 {% endblock %}
 
@@ -277,6 +289,63 @@
                         title: {
                             display: true,
                             text: 'Percentage (%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        // Club Performance Chart
+        const clubPerformanceCtx = document.getElementById('clubPerformanceChart').getContext('2d');
+        const clubTypes = ['Driver', 'Wood/Utility', 'Long Iron', 'Middle Iron', 'Short Iron', 'Wedge', 'Putter'];
+        const scoreRangesForClubChart = Object.keys(clubTrends);
+
+        const datasets = [];
+        const colors = {
+            'A': 'rgba(75, 192, 192, 0.7)',
+            'B': 'rgba(255, 206, 86, 0.7)',
+            'C': 'rgba(255, 99, 132, 0.7)'
+        };
+
+        ['A', 'B', 'C'].forEach(grade => {
+            const data = clubTypes.map(club => {
+                return scoreRangesForClubChart.reduce((total, range) => {
+                    const clubData = clubTrends[range][club];
+                    return total + (clubData ? clubData[grade] : 0);
+                }, 0);
+            });
+
+            datasets.push({
+                label: `${grade} Shots`,
+                data: data,
+                backgroundColor: colors[grade],
+            });
+        });
+
+        new Chart(clubPerformanceCtx, {
+            type: 'bar',
+            data: {
+                labels: clubTypes,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Total Club Performance (A, B, C Shots)'
+                    },
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Total Shots'
                         }
                     }
                 }
