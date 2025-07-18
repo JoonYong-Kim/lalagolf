@@ -498,7 +498,7 @@ def round_trends():
     CLUB_ORDER = ['Driver', 'Wood/Utility', 'Long Iron', 'Middle Iron', 'Short Iron', 'Wedge', 'Putter']
 
     calculated_trends = defaultdict(lambda: {"girs": [], "putts_per_hole_list": [], "ob_penalties": [], "h_penalties": [], "birdies": 0, "pars": 0, "bogeys": 0, "double_bogeys_plus": 0, "total_holes": 0, "round_ids": set()}) # Use a set to count unique rounds
-    club_trends_raw_counts = defaultdict(lambda: defaultdict(lambda: {"A": 0, "B": 0, "C": 0, "total_shots": 0})) # Accumulate raw counts for A, B, C per club per score range
+    club_trends_raw_counts = defaultdict(lambda: defaultdict(lambda: {"A": 0, "B": 0, "C": 0})) # Accumulate raw counts for A, B, C per club per score range
 
     for round_id, data in rounds_data.items():
         score = data["score"]
