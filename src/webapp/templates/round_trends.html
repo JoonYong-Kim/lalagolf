@@ -9,57 +9,112 @@
 {% block content %}
     <h1>Round Trends</h1>
 
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Score Range</th>
-                <th>Min GIR</th>
-                <th>Avg GIR</th>
-                <th>Max GIR</th>
-                <th>Min Putts</th>
-                <th>Avg Putts</th>
-                <th>Max Putts</th>
-                <th>Avg OB Penalties</th>
-                <th>Avg H Penalties</th>
-                <th>Birdie Ratio</th>
-                <th>Par Ratio</th>
-                <th>Bogey Ratio</th>
-                <th>Double Bogey+ Ratio</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for range_name, stats in calculated_trends.items() %}
-            <tr>
-                <td>{{ range_name }}</td>
-                <td>{{ "%.1f" % stats.min_gir if stats.min_gir is not none else '-' }}</td>
-                <td>{{ "%.1f" % stats.avg_gir if stats.avg_gir is not none else '-' }}</td>
-                <td>{{ "%.1f" % stats.max_gir if stats.max_gir is not none else '-' }}</td>
-                <td>{{ "%.1f" % stats.min_putts if stats.min_putts is not none else '-' }}</td>
-                <td>{{ "%.1f" % stats.avg_putts if stats.avg_putts is not none else '-' }}</td>
-                <td>{{ "%.1f" % stats.max_putts if stats.max_putts is not none else '-' }}</td>
-                <td>{{ "%.1f" % stats.avg_ob_penalties if stats.avg_ob_penalties is not none else '-' }}</td>
-                <td>{{ "%.1f" % stats.avg_h_penalties if stats.avg_h_penalties is not none else '-' }}</td>
-                <td>{{ "%.1f" % (stats.birdie_ratio * 100) if stats.birdie_ratio is not none else '-' }}%</td>
-                <td>{{ "%.1f" % (stats.par_ratio * 100) if stats.par_ratio is not none else '-' }}%</td>
-                <td>{{ "%.1f" % (stats.bogey_ratio * 100) if stats.bogey_ratio is not none else '-' }}%</td>
-                <td>{{ "%.1f" % (stats.double_bogey_plus_ratio * 100) if stats.double_bogey_plus_ratio is not none else '-' }}%</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="tab-buttons">
+        <button class="tab-button active" onclick="openTab(event, 'generalStats')">일반 통계</button>
+        <button class="tab-button" onclick="openTab(event, 'clubStats')">클럽 통계</button>
+    </div>
 
-    <div class="chart-container">
-        <canvas id="girChart"></canvas>
-        <canvas id="puttChart"></canvas>
-        <canvas id="penaltyChart"></canvas>
-        <canvas id="scoreRatioChart"></canvas>
+    <div id="generalStats" class="tab-content active">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Score Range</th>
+                    <th>Min GIR</th>
+                    <th>Avg GIR</th>
+                    <th>Max GIR</th>
+                    <th>Min Putts</th>
+                    <th>Avg Putts</th>
+                    <th>Max Putts</th>
+                    <th>Avg OB Penalties</th>
+                    <th>Avg H Penalties</th>
+                    <th>Birdie Ratio</th>
+                    <th>Par Ratio</th>
+                    <th>Bogey Ratio</th>
+                    <th>Double Bogey+ Ratio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for range_name, stats in calculated_trends.items() %}
+                <tr>
+                    <td>{{ range_name }}</td>
+                    <td>{{ "%.1f" % stats.min_gir if stats.min_gir is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_gir if stats.avg_gir is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.max_gir if stats.max_gir is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.min_putts if stats.min_putts is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_putts if stats.avg_putts is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.max_putts if stats.max_putts is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_ob_penalties if stats.avg_ob_penalties is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_h_penalties if stats.avg_h_penalties is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.birdie_ratio * 100) if stats.birdie_ratio is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.par_ratio * 100) if stats.par_ratio is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.bogey_ratio * 100) if stats.bogey_ratio is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.double_bogey_plus_ratio * 100) if stats.double_bogey_plus_ratio is not none else '-' }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="chart-container">
+            <canvas id="girChart"></canvas>
+            <canvas id="puttChart"></canvas>
+            <canvas id="penaltyChart"></canvas>
+            <canvas id="scoreRatioChart"></canvas>
+        </div>
+    </div>
+
+    <div id="clubStats" class="tab-content">
+        <h2>Club Statistics</h2>
+        {% for range_name, club_stats in club_trends.items() %}
+            <h3>Score Range: {{ range_name }}</h3>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Club Type</th>
+                        <th>A (%)</th>
+                        <th>B (%)</th>
+                        <th>C (%)</th>
+                        <th>Total Shots</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for club_type, stats in club_stats.items() %}
+                    <tr>
+                        <td>{{ club_type }}</td>
+                        <td>{{ "%.1f" % stats.A }}</td>
+                        <td>{{ "%.1f" % stats.B }}</td>
+                        <td>{{ "%.1f" % stats.C }}</td>
+                        <td>{{ stats.total_shots }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endfor %}
     </div>
 {% endblock %}
 
 {% block scripts %}
     <script>
-        // Chart.js initialization for GIR, Putts, Penalties, Driver Distance, Score Ratios
+        function openTab(evt, tabName) {
+            var i, tabcontent, tabbuttons;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tabbuttons = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tabbuttons.length; i++) {
+                tabbuttons[i].className = tabbuttons[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+
+        // Activate the first tab by default on page load
+        document.addEventListener('DOMContentLoaded', (event) => {
+            document.querySelector('.tab-button').click();
+        });
+
         const calculatedTrends = {{ calculated_trends | tojson }};
+        const clubTrends = {{ club_trends | tojson }};
         const scoreRanges = Object.keys(calculatedTrends);
 
         // Helper to get data for charts, handling nulls
@@ -176,8 +231,6 @@
                 }
             }
         });
-
-        // Driver Distance Chart (Removed)
 
         // Score Ratio Chart (Stacked Bar or Grouped Bar)
         const scoreRatioCtx = document.getElementById('scoreRatioChart').getContext('2d');
