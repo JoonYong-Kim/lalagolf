@@ -100,6 +100,13 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict, raw_data: str = N
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    # Check for duplicate tee_off_time before proceeding
+    cursor.execute("SELECT id FROM rounds WHERE playdate = %s", (parsed_data['tee_off_time'],))
+    if cursor.fetchone() and not parsed_data.get('id'): # Check only for new entries
+        cursor.close()
+        conn.close()
+        raise Exception(f"Duplicate entry: A round with tee-off time {parsed_data['tee_off_time']} already exists.")
+
     # Determine player and co_players
     default_player = "김준용"
     co_players_str = parsed_data['co_players']

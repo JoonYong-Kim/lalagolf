@@ -35,6 +35,13 @@ def main():
                     print(f"Processing {file_path}...")
                     try:
                         raw_content, round_data, scores_and_stats = parse_file(file_path)
+                        
+                        if round_data.get('unparsed_lines'):
+                            print(f"Skipping {file_path} due to unparsed lines:")
+                            for line in round_data['unparsed_lines']:
+                                print(f"  - {line}")
+                            continue
+
                         save_round_data(round_data, scores_and_stats, raw_content)
                         print(f"Successfully loaded {file_path} into the database.")
                     except Exception as e:
