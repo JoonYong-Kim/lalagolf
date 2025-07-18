@@ -300,25 +300,27 @@
         const clubTypes = ['Driver', 'Wood/Utility', 'Long Iron', 'Middle Iron', 'Short Iron', 'Wedge', 'Putter'];
         const scoreRangesForClubChart = Object.keys(clubTrends);
 
-        const datasets = [];
-        const colors = {
+        const gradeColors = {
             'A': 'rgba(75, 192, 192, 0.7)',
             'B': 'rgba(255, 206, 86, 0.7)',
             'C': 'rgba(255, 99, 132, 0.7)'
         };
 
-        ['A', 'B', 'C'].forEach(grade => {
-            const data = clubTypes.map(club => {
-                return scoreRangesForClubChart.reduce((total, range) => {
-                    const clubData = clubTrends[range][club];
-                    return total + (clubData ? clubData[grade] : 0);
-                }, 0);
-            });
+        const datasets = [];
 
-            datasets.push({
-                label: `${grade} Shots`,
-                data: data,
-                backgroundColor: colors[grade],
+        scoreRangesForClubChart.forEach(range => {
+            ['A', 'B', 'C'].forEach(grade => {
+                const data = clubTypes.map(club => {
+                    const clubData = clubTrends[range] ? clubTrends[range][club] : null;
+                    return clubData ? clubData[grade] : 0;
+                });
+
+                datasets.push({
+                    label: `${range} - ${grade}`,
+                    data: data,
+                    backgroundColor: gradeColors[grade],
+                    stack: range
+                });
             });
         });
 
@@ -333,19 +335,21 @@
                 plugins: {
                     title: {
                         display: true,
-                        text: 'Total Club Performance (A, B, C Shots)'
+                        text: 'Club Performance by Score Range (Avg Shots per Round)'
                     },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
                 },
                 scales: {
-                    x: {
-                        stacked: true,
-                    },
+                    x: {},
                     y: {
                         stacked: true,
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Total Shots'
+                            text: 'Average Shots per Round'
                         }
                     }
                 }
