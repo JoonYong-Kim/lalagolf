@@ -507,7 +507,8 @@ def round_trends():
                 break # Found the range, move to next round
 
     final_trends = {}
-    for range_name, stats in calculated_trends.items():
+    for range_name in score_ranges.keys():
+        stats = calculated_trends[range_name]
         num_rounds_in_range = stats["round_count"]
         
         final_trends[range_name] = {
