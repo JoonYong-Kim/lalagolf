@@ -420,7 +420,7 @@ def round_trends():
     raw_trend_data = get_all_rounds_for_trend_analysis()
     
     # Group data by round_id
-    rounds_data = defaultdict(lambda: {"score": None, "gir": None, "playdate": None, "total_putts_in_round": 0, "num_holes_in_round": 0, "ob_penalties": 0, "h_penalties": 0, "hole_pars": {}, "hole_scores": {}})
+    rounds_data = defaultdict(lambda: {"score": None, "gir": None, "playdate": None, "total_putts_in_round": 0, "num_holes_in_round": 0, "ob_penalties": 0, "h_penalties": 0, "hole_pars": {}, "hole_scores": {}, "shots_by_club_retgrade": defaultdict(lambda: {"A": 0, "B": 0, "C": 0})}) # Added shots_by_club_retgrade
     for row in raw_trend_data:
         round_id = row['round_id']
         if rounds_data[round_id]["score"] is None:
@@ -440,6 +440,19 @@ def round_trends():
         if row['holenum'] is not None and row['hole_par'] is not None and row['hole_score'] is not None:
             rounds_data[round_id]["hole_pars"][row['holenum']] = row['hole_par']
             rounds_data[round_id]["hole_scores"][row['holenum']] = row['hole_score']
+
+        # Populate shots_by_club_retgrade
+        club_type = None
+        if row['club'] == 'D': club_type = 'Driver'
+        elif row['club'] in ['W3', 'W5', 'UW', 'U3', 'U4']: club_type = 'Wood/Utility'
+        elif row['club'] in ['I3', 'I4']: club_type = 'Long Iron'
+        elif row['club'] in ['I5', 'I6', 'I7']: club_type = 'Middle Iron'
+        elif row['club'] in ['I8', 'I9', 'IP', 'IA', '48']: club_type = 'Short Iron'
+        elif row['club'] in ['52', '56', '58']: club_type = 'Wedge'
+        elif row['club'] == 'P': club_type = 'Putter'
+
+        if club_type and row['retgrade']:
+            rounds_data[round_id]["shots_by_club_retgrade"][club_type][row['retgrade']] += 1
 
     # Calculate average putts per hole for each round and hole results
     for round_id, data in rounds_data.items():
