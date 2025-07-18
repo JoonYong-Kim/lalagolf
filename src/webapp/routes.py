@@ -481,8 +481,11 @@ def round_trends():
         "94+": (94, 200) # Assuming max score is 200 for practical purposes
     }
 
+    # Define a fixed order for club types
+    CLUB_ORDER = ['Driver', 'Wood/Utility', 'Long Iron', 'Middle Iron', 'Short Iron', 'Wedge', 'Putter']
+
     calculated_trends = defaultdict(lambda: {"girs": [], "putts_per_hole_list": [], "ob_penalties": [], "h_penalties": [], "birdies": 0, "pars": 0, "bogeys": 0, "double_bogeys_plus": 0, "total_holes": 0, "round_count": 0})
-    club_trends = defaultdict(lambda: defaultdict(lambda: {"A": 0, "B": 0, "C": 0, "total": 0}))
+    club_trends = defaultdict(lambda: defaultdict(lambda: {"A": 0, "B": 0, "C": 0}))
 
     for row in raw_trend_data:
         round_id = row['round_id']
@@ -519,7 +522,6 @@ def round_trends():
 
                 if club_type and row['retgrade']:
                     club_trends[range_name][club_type][row['retgrade']] += 1
-                    club_trends[range_name][club_type]["total"] += 1
                 
                 break # Found the range, move to next round
 
@@ -545,15 +547,18 @@ def round_trends():
             "double_bogey_plus_ratio": stats["double_bogeys_plus"] / stats["total_holes"] if stats["total_holes"] > 0 else None,
         }
 
-        # Calculate club percentages
+        # Calculate club average shots per round
         final_club_trends[range_name] = {}
-        for club_type, grades in club_trends[range_name].items():
-            total = grades["total"]
+        for club_type in CLUB_ORDER: # Iterate through fixed order
+            grades = club_trends[range_name][club_type]
+            # Calculate average shots per round for A, B, C
             final_club_trends[range_name][club_type] = {
-                "A": (grades["A"] / total) * 100 if total > 0 else 0,
-                "B": (grades["B"] / total) * 100 if total > 0 else 0,
-                "C": (grades["C"] / total) * 100 if total > 0 else 0,
-                "total_shots": total
+                "A": grades["A"] / num_rounds_in_range if num_rounds_in_range > 0 else 0,
+                "B": grades["B"] / num_rounds_in_range if num_rounds_in_range > 0 else 0,
+                "C": grades["C"] / num_rounds_in_range if num_rounds_in_range > 0 else 0,
             }
+            # Ensure all club types are present even if no data for a range
+            if club_type not in club_trends[range_name]:
+                 final_club_trends[range_name][club_type] = {"A": 0, "B": 0, "C": 0}
 
     return render_template('round_trends.html', calculated_trends=final_trends, club_trends=final_club_trends)

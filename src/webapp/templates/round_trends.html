@@ -70,10 +70,9 @@
                 <thead>
                     <tr>
                         <th>Club Type</th>
-                        <th>A (%)</th>
-                        <th>B (%)</th>
-                        <th>C (%)</th>
-                        <th>Total Shots</th>
+                        <th>A (Avg Shots)</th>
+                        <th>B (Avg Shots)</th>
+                        <th>C (Avg Shots)</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -83,7 +82,6 @@
                         <td>{{ "%.1f" % stats.A }}</td>
                         <td>{{ "%.1f" % stats.B }}</td>
                         <td>{{ "%.1f" % stats.C }}</td>
-                        <td>{{ stats.total_shots }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>
