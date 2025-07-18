@@ -19,8 +19,8 @@
                 <th>Min Putts</th>
                 <th>Avg Putts</th>
                 <th>Max Putts</th>
-                <th>Avg Penalties</th>
-                <th>Avg Driver Distance</th>
+                <th>Avg OB Penalties</th>
+                <th>Avg H Penalties</th>
                 <th>Birdie Ratio</th>
                 <th>Par Ratio</th>
                 <th>Bogey Ratio</th>
@@ -37,8 +37,8 @@
                 <td>{{ "%.1f" % stats.min_putts if stats.min_putts is not none else '-' }}</td>
                 <td>{{ "%.1f" % stats.avg_putts if stats.avg_putts is not none else '-' }}</td>
                 <td>{{ "%.1f" % stats.max_putts if stats.max_putts is not none else '-' }}</td>
-                <td>{{ "%.1f" % stats.avg_penalties if stats.avg_penalties is not none else '-' }}</td>
-                <td>{{ "%.1f" % stats.avg_driver_distance if stats.avg_driver_distance is not none else '-' }}</td>
+                <td>{{ "%.1f" % stats.avg_ob_penalties if stats.avg_ob_penalties is not none else '-' }}</td>
+                <td>{{ "%.1f" % stats.avg_h_penalties if stats.avg_h_penalties is not none else '-' }}</td>
                 <td>{{ "%.1f" % (stats.birdie_ratio * 100) if stats.birdie_ratio is not none else '-' }}%</td>
                 <td>{{ "%.1f" % (stats.par_ratio * 100) if stats.par_ratio is not none else '-' }}%</td>
                 <td>{{ "%.1f" % (stats.bogey_ratio * 100) if stats.bogey_ratio is not none else '-' }}%</td>
@@ -52,7 +52,6 @@
         <canvas id="girChart"></canvas>
         <canvas id="puttChart"></canvas>
         <canvas id="penaltyChart"></canvas>
-        <canvas id="driverDistanceChart"></canvas>
         <canvas id="scoreRatioChart"></canvas>
     </div>
 {% endblock %}
@@ -141,13 +140,22 @@
             type: 'bar',
             data: {
                 labels: scoreRanges,
-                datasets: [{
-                    label: 'Average Penalties',
-                    data: getData('avg_penalties'),
-                    backgroundColor: 'rgba(255, 159, 64, 0.5)',
-                    borderColor: 'rgba(255, 159, 64, 1)',
-                    borderWidth: 1
-                }]
+                datasets: [
+                    {
+                        label: 'Average OB Penalties',
+                        data: getData('avg_ob_penalties'),
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Average H Penalties',
+                        data: getData('avg_h_penalties'),
+                        backgroundColor: 'rgba(255, 159, 64, 0.5)',
+                        borderColor: 'rgba(255, 159, 64, 1)',
+                        borderWidth: 1
+                    }
+                ]
             },
             options: {
                 responsive: true,
@@ -169,39 +177,7 @@
             }
         });
 
-        // Driver Distance Chart
-        const driverDistanceCtx = document.getElementById('driverDistanceChart').getContext('2d');
-        new Chart(driverDistanceCtx, {
-            type: 'bar',
-            data: {
-                labels: scoreRanges,
-                datasets: [{
-                    label: 'Average Driver Distance',
-                    data: getData('avg_driver_distance'),
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    title: {
-                        display: true,
-                        text: 'Average Driver Distance by Score Range'
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: 'Distance (yards)'
-                        }
-                    }
-                }
-            }
-        });
+        // Driver Distance Chart (Removed)
 
         // Score Ratio Chart (Stacked Bar or Grouped Bar)
         const scoreRatioCtx = document.getElementById('scoreRatioChart').getContext('2d');

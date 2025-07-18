@@ -420,7 +420,7 @@ def round_trends():
     raw_trend_data = get_all_rounds_for_trend_analysis()
     
     # Group data by round_id
-    rounds_data = defaultdict(lambda: {"score": None, "gir": None, "playdate": None, "putts": 0, "penalties": 0, "driver_distances": [], "hole_pars": {}, "hole_scores": {}})
+    rounds_data = defaultdict(lambda: {"score": None, "gir": None, "playdate": None, "total_putts_in_round": 0, "num_holes_in_round": 0, "ob_penalties": 0, "h_penalties": 0, "hole_pars": {}, "hole_scores": {}})
     for row in raw_trend_data:
         round_id = row['round_id']
         if rounds_data[round_id]["score"] is None:
@@ -429,21 +429,21 @@ def round_trends():
             rounds_data[round_id]["playdate"] = row['playdate']
         
         if row['putt'] is not None:
-            rounds_data[round_id]["putts"] += row['putt'] # Accumulate putts for the round
+            rounds_data[round_id]["total_putts_in_round"] += row['putt']
+            rounds_data[round_id]["num_holes_in_round"] += 1
         
-        if row['penalty'] is not None:
-            rounds_data[round_id]["penalties"] += 1
-        
-        if row['club'] == 'D' and row['distance'] is not None:
-            rounds_data[round_id]["driver_distances"].append(row['distance'])
+        if row['penalty'] == 'OB':
+            rounds_data[round_id]["ob_penalties"] += 1
+        elif row['penalty'] == 'H':
+            rounds_data[round_id]["h_penalties"] += 1
         
         if row['holenum'] is not None and row['hole_par'] is not None and row['hole_score'] is not None:
             rounds_data[round_id]["hole_pars"][row['holenum']] = row['hole_par']
             rounds_data[round_id]["hole_scores"][row['holenum']] = row['hole_score']
 
-    # Calculate average driver distance per round and hole results
+    # Calculate average putts per hole for each round and hole results
     for round_id, data in rounds_data.items():
-        rounds_data[round_id]["avg_driver_distance"] = sum(data["driver_distances"]) / len(data["driver_distances"]) if data["driver_distances"] else 0
+        rounds_data[round_id]["avg_putts_per_hole"] = data["total_putts_in_round"] / data["num_holes_in_round"] if data["num_holes_in_round"] > 0 else 0
         
         birdies = 0
         pars = 0
@@ -481,7 +481,7 @@ def round_trends():
         "94+": (94, 200) # Assuming max score is 200 for practical purposes
     }
 
-    calculated_trends = defaultdict(lambda: {"girs": [], "putts": [], "penalties": [], "driver_distances": [], "birdies": 0, "pars": 0, "bogeys": 0, "double_bogeys_plus": 0, "total_holes": 0, "round_count": 0})
+    calculated_trends = defaultdict(lambda: {"girs": [], "putts_per_hole_list": [], "ob_penalties": [], "h_penalties": [], "birdies": 0, "pars": 0, "bogeys": 0, "double_bogeys_plus": 0, "total_holes": 0, "round_count": 0})
     
     for round_id, data in rounds_data.items():
         score = data["score"]
@@ -492,11 +492,10 @@ def round_trends():
             if min_score <= score <= max_score:
                 if data["gir"] is not None:
                     calculated_trends[range_name]["girs"].append(data["gir"])
-                if data["putts"] is not None:
-                    calculated_trends[range_name]["putts"].append(data["putts"])
-                calculated_trends[range_name]["penalties"].append(data["penalties"])
-                if data["avg_driver_distance"] is not None:
-                    calculated_trends[range_name]["driver_distances"].append(data["avg_driver_distance"])
+                if data["avg_putts_per_hole"] is not None:
+                    calculated_trends[range_name]["putts_per_hole_list"].append(data["avg_putts_per_hole"])
+                calculated_trends[range_name]["ob_penalties"].append(data["ob_penalties"])
+                calculated_trends[range_name]["h_penalties"].append(data["h_penalties"])
                 
                 calculated_trends[range_name]["birdies"] += data["birdies"]
                 calculated_trends[range_name]["pars"] += data["pars"]
@@ -515,11 +514,11 @@ def round_trends():
             "min_gir": min(stats["girs"]) if stats["girs"] else None,
             "max_gir": max(stats["girs"]) if stats["girs"] else None,
             "avg_gir": sum(stats["girs"]) / num_rounds_in_range if num_rounds_in_range > 0 else None,
-            "min_putts": min(stats["putts"]) if stats["putts"] else None,
-            "max_putts": max(stats["putts"]) if stats["putts"] else None,
-            "avg_putts": sum(stats["putts"]) / num_rounds_in_range if num_rounds_in_range > 0 else None,
-            "avg_penalties": sum(stats["penalties"]) / num_rounds_in_range if num_rounds_in_range > 0 else None,
-            "avg_driver_distance": sum(stats["driver_distances"]) / len(stats["driver_distances"]) if stats["driver_distances"] else None,
+            "min_putts": min(stats["putts_per_hole_list"]) if stats["putts_per_hole_list"] else None,
+            "max_putts": max(stats["putts_per_hole_list"]) if stats["putts_per_hole_list"] else None,
+            "avg_putts": sum(stats["putts_per_hole_list"]) / num_rounds_in_range if num_rounds_in_range > 0 else None,
+            "avg_ob_penalties": sum(stats["ob_penalties"]) / num_rounds_in_range if num_rounds_in_range > 0 else None,
+            "avg_h_penalties": sum(stats["h_penalties"]) / num_rounds_in_range if num_rounds_in_range > 0 else None,
             "birdie_ratio": stats["birdies"] / stats["total_holes"] if stats["total_holes"] > 0 else None,
             "par_ratio": stats["pars"] / stats["total_holes"] if stats["total_holes"] > 0 else None,
             "bogey_ratio": stats["bogeys"] / stats["total_holes"] if stats["total_holes"] > 0 else None,
