@@ -23,6 +23,9 @@
 - `src/strokes_gained.py`: shot value 집계
 - `src/recommendations.py`: 추천/우선순위/드릴 생성
 - `src/webapp/`: Flask 앱, 라우트, 템플릿
+- `scripts/schema.sql`: 현재 코드 기준 관리형 DB 스키마
+- `scripts/install_systemd.sh`: `/opt/lalagolf` + `systemd` 설치 스크립트
+- `scripts/uninstall_systemd.sh`: systemd 서비스 및 설치 경로 제거 스크립트
 - `tests/`: `pytest` 테스트
 - `docs/plan.md`: 구현 계획 및 상태 정리
 
@@ -56,6 +59,35 @@ python run_webapp.py
 ```
 
 기본 포트는 `2323`입니다.
+
+## systemd Deployment
+
+`systemd` 운영을 위해 `/opt/lalagolf` 기준 설치/삭제 스크립트를 제공합니다.
+
+설치:
+
+```bash
+sudo bash scripts/install_systemd.sh
+```
+
+삭제:
+
+```bash
+sudo bash scripts/uninstall_systemd.sh
+```
+
+설치 스크립트는 다음을 수행합니다.
+
+- `/opt/lalagolf`에 애플리케이션 배치
+- `/opt/lalagolf/.venv` 생성 및 의존성 설치
+- `/etc/lalagolf/lalagolf.env` 생성
+- `lalagolf` system user 생성
+- `/etc/systemd/system/lalagolf.service` 생성 및 활성화
+
+운영 전 확인할 파일:
+
+- `/opt/lalagolf/conf/lalagolf.conf`
+- `/etc/lalagolf/lalagolf.env`
 
 ## Testing
 
@@ -120,5 +152,5 @@ P C A 10 OK
 
 - 입력 항목을 늘리지 않고도 계산 가능한 지표 중심으로 고도화되어 있습니다.
 - 최근 추천은 손실 크기뿐 아니라 최근 흐름과 표본 수를 같이 반영합니다.
+- DB 초기 생성 기준은 `scripts/schema.sql`을 사용합니다.
 - 세부 구현 로드맵과 남은 작업은 `docs/plan.md`를 기준으로 관리합니다.
-

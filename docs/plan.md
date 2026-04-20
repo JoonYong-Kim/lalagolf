@@ -535,12 +535,14 @@ Status: `[x] completed`
 현재까지 완료된 핵심 묶음:
 
 - `[x]` 라운드 지표, 최근 요약, 샷 상태 정규화, 기대 타수, shot value 기반 분석 엔진 구축
+- `[x]` `scripts/schema.sql`을 현재 코드 기준 관리형 스키마로 재정리
 - `[x]` 클럽 신뢰도, 티샷 전략 비교, layup vs attack proxy, 리스크 지표를 `Trends` 화면에 연결
 - `[x]` 홈 / 목록 / 트렌드 / 상세 화면에 최근 10라운드 추천 섹션과 인사이트 연결
 - `[x]` 추천 우선순위를 `손실 총량 + 최근 흐름 + 표본 수` 공통 점수로 정렬
 - `[x]` 추천 카드에 샘플 경고, 손실 이유, 우선순위 근거, `이번 주 실행 문장` 추가
 - `[x]` `Top Recurring Priorities`에 반복 손실 subtype, subtype별 drill, 최근 흐름 표시 추가
 - `[x]` `Round Detail`의 `Next Action` / `Round + Trend Action`에 subtype, 라운드 컨텍스트, 실행 문장 연결
+- `[x]` `/opt/lalagolf` 배치용 `systemd` 설치/삭제 스크립트 추가
 - `[x]` 추천/상세 로직에 대한 테스트를 `tests/test_recommendations.py` 중심으로 확장
 
 ## Remaining Roadmap
@@ -551,6 +553,7 @@ Status: `[x] completed`
 - `[ ]` subtype별 drill 추천을 더 많은 카테고리와 패턴으로 확장
 - `[ ]` 추천 카드 문구 길이와 정보 밀도를 실제 사용 흐름 기준으로 추가 다듬기
 - `[ ]` `tests/test_strokes_gained.py`와 연계된 경계 조건 테스트를 더 보강
+- `[ ]` 운영 환경용 설치/업그레이드 절차를 더 세분화할지 검토
 
 ## Verification Status
 
