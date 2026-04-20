@@ -7,10 +7,155 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <h1 class="my-4">Welcome to LaLaGolf!</h1>
+	<div class="container">
+	    <h1 class="my-4">Welcome to LaLaGolf!</h1>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-3">Recent {{ recent_summary.window }} Rounds</h2>
+        <div class="row mb-4">
+            <div class="col-md-2 col-sm-6 mb-3">
+                <div class="card h-100"><div class="card-body"><h6>Avg Score</h6><div>{{ "%.1f" % recent_summary.avg_score if recent_summary.avg_score is not none else '-' }}</div></div></div>
+            </div>
+            <div class="col-md-2 col-sm-6 mb-3">
+                <div class="card h-100"><div class="card-body"><h6>Score To Par</h6><div>{{ "%.1f" % recent_summary.avg_score_to_par if recent_summary.avg_score_to_par is not none else '-' }}</div></div></div>
+            </div>
+            <div class="col-md-2 col-sm-6 mb-3">
+                <div class="card h-100"><div class="card-body"><h6>Avg GIR</h6><div>{{ "%.1f" % recent_summary.avg_gir if recent_summary.avg_gir is not none else '-' }}%</div></div></div>
+            </div>
+            <div class="col-md-2 col-sm-6 mb-3">
+                <div class="card h-100"><div class="card-body"><h6>3-Putt Rate</h6><div>{{ "%.1f" % (recent_summary.avg_three_putt_rate * 100) if recent_summary.avg_three_putt_rate is not none else '-' }}%</div></div></div>
+            </div>
+            <div class="col-md-2 col-sm-6 mb-3">
+                <div class="card h-100"><div class="card-body"><h6>Scrambling</h6><div>{{ "%.1f" % (recent_summary.avg_scrambling_rate * 100) if recent_summary.avg_scrambling_rate is not none else '-' }}%</div></div></div>
+            </div>
+            <div class="col-md-2 col-sm-6 mb-3">
+                <div class="card h-100"><div class="card-body"><h6>Penalty Strokes</h6><div>{{ "%.1f" % recent_summary.avg_penalty_strokes if recent_summary.avg_penalty_strokes is not none else '-' }}</div></div></div>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100"><div class="card-body"><h6>Up-and-Down</h6><div>{{ "%.1f" % (recent_summary.avg_up_and_down_rate * 100) if recent_summary.avg_up_and_down_rate is not none else '-' }}%</div></div></div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100"><div class="card-body"><h6>Driver Penalty</h6><div>{{ "%.1f" % (recent_summary.avg_driver_penalty_rate * 100) if recent_summary.avg_driver_penalty_rate is not none else '-' }}%</div></div></div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100"><div class="card-body"><h6>Driver Result C</h6><div>{{ "%.1f" % (recent_summary.avg_driver_result_c_rate * 100) if recent_summary.avg_driver_result_c_rate is not none else '-' }}%</div></div></div>
+            </div>
+            <div class="col-md-3 col-sm-6 mb-3">
+                <div class="card h-100"><div class="card-body"><h6>GIR from &lt;160m</h6><div>{{ "%.1f" % (recent_summary.avg_gir_from_under_160_rate * 100) if recent_summary.avg_gir_from_under_160_rate is not none else '-' }}%</div></div></div>
+            </div>
+        </div>
+
+        {% if recent_summary.insights %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Recent Focus</h5>
+                <ul class="mb-0">
+                    {% for insight in recent_summary.insights %}
+                    <li>{{ insight }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if trend_action_cards %}
+        <div class="card mb-4 border-info">
+            <div class="card-body">
+                <h5 class="card-title">Top Recurring Priorities</h5>
+                {% for card in trend_action_cards %}
+                <div class="{% if not loop.last %}mb-3 pb-3 border-bottom{% endif %}">
+                    <strong>{{ card.title }}</strong>
+                    <div class="mt-1">{{ card.summary }}</div>
+                    {% if card.context_subtype %}
+                    <div class="small mt-2"><strong>Loss Type:</strong> {{ card.context_subtype }}</div>
+                    {% endif %}
+                    <div class="small mt-2"><strong>Priority:</strong> {{ card.urgency_label }} / {{ card.trend_label }} ({% if card.trend_delta >= 0 %}+{% endif %}{{ "%.2f" % card.trend_delta }})</div>
+                    <div class="small text-muted mt-2"><strong>Why:</strong> {{ card.priority_reason }}</div>
+                    {% if card.context_note %}
+                    <div class="small text-muted mt-2">{{ card.context_note }}</div>
+                    {% endif %}
+                    <div class="small mt-2"><strong>This Week:</strong> {{ card.priority_action }}</div>
+                    {% if card.menu_name %}
+                    <div class="small mt-2"><strong>Drill:</strong> {{ card.menu_name }} - {{ card.menu_detail }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if recommendations.practice_priorities or recommendations.strategy_notes or recommendations.strategy_cards %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Practice Priorities</h5>
+                {% if recommendations.sample_note %}
+                <p class="text-muted mb-2">{{ recommendations.sample_note }}</p>
+                {% endif %}
+                {% if recommendations.interpretation_guide %}
+                <p class="small text-muted mb-3">{{ recommendations.interpretation_guide }}</p>
+                {% endif %}
+                {% if recommendations.practice_priorities %}
+                <ul class="mb-3">
+                {% for item in recommendations.practice_priorities %}
+                <li>
+                    <strong>{{ item.label }}</strong>: {{ item.message }}
+                    {% if item.context_subtype %}
+                    <div class="small mt-1"><strong>Loss Type:</strong> {{ item.context_subtype }}</div>
+                    {% endif %}
+                    <div class="small mt-1"><strong>Priority:</strong> {{ item.urgency_label }}</div>
+                    <div class="small text-muted mt-1"><strong>Why:</strong> {{ item.priority_reason }}</div>
+                    {% if item.context_note %}
+                    <div class="small text-muted mt-1">{{ item.context_note }}</div>
+                    {% endif %}
+                    <div class="small mt-1"><strong>This Week:</strong> {{ item.priority_action }}</div>
+                    {% if item.sample %}
+                    <div class="small mt-1"><strong>{{ item.sample.label }}</strong> - {{ item.sample.message }}</div>
+                    {% endif %}
+                        {% if item.reasons %}
+                        <div class="small text-muted mt-1">
+                            {% for reason in item.reasons %}
+                            <div>{{ reason }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    {% if item.menu %}
+                    <div class="small text-muted mt-1">
+                        <strong>Drill:</strong> {{ item.menu[0].name }} - {{ item.menu[0].detail }}
+                    </div>
+                    {% endif %}
+                </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if recommendations.strategy_cards %}
+                <h6>Strategy Cards</h6>
+                <div class="row mb-3">
+                    {% for card in recommendations.strategy_cards %}
+                    <div class="col-md-6 mb-3">
+                        <div class="border rounded p-3 h-100">
+                            <strong>{{ card.title }}</strong>
+                            <div class="small text-muted mt-1">{{ card.trigger }}</div>
+                            <div class="mt-2"><strong>Decision:</strong> {{ card.decision }}</div>
+                            <div class="mt-2"><strong>Goal:</strong> {{ card.goal }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if recommendations.strategy_notes %}
+                <h6>Strategy Notes</h6>
+                <ul class="mb-0">
+                    {% for note in recommendations.strategy_notes %}
+                    <li>{{ note }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+	    <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Golf Rounds Chart</h2>
         <form id="yearFilterForm" class="d-flex align-items-center flex-nowrap" method="GET" action="{{ url_for('home') }}">
             <div class="mb-0 me-2">

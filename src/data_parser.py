@@ -126,13 +126,10 @@ def _parse_shot(original_line:str) -> Dict:
 
     return shot_data
 
-def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
-    with open(file_path, 'r') as f:
-        raw_content = f.read()
-        lines = raw_content.splitlines()
-
+def parse_content(raw_content: str, file_name: str = "<memory>") -> Dict[str, Union[str, List[Dict], List[str]]]:
+    lines = raw_content.splitlines()
     round_data = {
-        'file_name': file_path,
+        'file_name': file_name,
         'tee_off_time': None,
         'golf_course': None,
         'co_players': None,
@@ -181,6 +178,11 @@ def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
 
     _post_process_shots(round_data)
     return raw_content, round_data, calculate_scores_and_stats(round_data)
+
+def parse_file(file_path: str) -> Dict[str, Union[str, List[Dict], List[str]]]:
+    with open(file_path, 'r') as f:
+        raw_content = f.read()
+    return parse_content(raw_content, file_path)
 
 def _post_process_shots(round_data: Dict):
     for hole in round_data['holes']:
@@ -451,11 +453,10 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     try:
-        parsed_data = parse_file(args.file_path)
+        raw_content, parsed_data, scores_and_stats = parse_file(args.file_path)
         print(json.dumps(parsed_data, indent=4, ensure_ascii=False))
         
         # Calculate and print scores and statistics
-        scores_and_stats = calculate_scores_and_stats(parsed_data)
         print("\n--- Scores and Statistics (9-hole breakdown) ---")
         print(json.dumps(scores_and_stats, indent=4, ensure_ascii=False))
 

@@ -1,0 +1,99 @@
+2026-04-11 13:23
+베르힐 영종
+홍성걸 양명욱 임길수
+
+1 p4
+d c c
+i7 c c
+ip b b
+p b b 12 ok
+2 p5
+d c c ob
+uw b b
+56 b b 50
+p c c 8
+p c c 2 ok
+3 p3
+i8 c b
+p b b 6 ok
+4 p4
+d c b
+i9 c c
+56 b b 15
+p b b 3 ok
+5 p4
+d c b
+i9 c c
+52 b b 20
+p b a 7
+6 p5
+d b b 
+i5 c b 
+i5 c c 
+52 c a 17 ok
+7 p4
+d c c
+i5 c c
+52 b b 42
+p c c 7
+p c c 3 ok
+8 p3
+i7 a b
+p c c 30
+p c c 6
+p b c 3 ok
+9 p4
+d b c ob
+i5 c c
+56 a c 27
+p b b 10
+p c c 1.5 ok
+10 p4
+d c b
+i7 c b
+p c c 25
+p c c 7
+p b b 3
+11 p3
+i8 c c
+56 b b 10
+p b b 4
+12 p5
+d c b
+uw a c b
+i8 c b
+56 b b 
+p b b 8
+p b b 1.5
+13 p4
+d c c
+uw c c 
+56 b b 50
+p c c 12
+p b b 1.5
+14 p4
+d a b
+i6 b b 120
+56 a b 24
+p b b 2
+15 p3
+i5 c c
+p a b 20
+p c c 1.5 ok
+16 p4
+d c c b
+56 c b
+56 a c 35
+p b b 9
+p b b 2
+17 p5
+d b b 
+uw b b
+i8 c c
+56 b b 30
+p b b 3 ok
+18 p4
+ d b b
+i7 c c
+i7 bb 100
+p b b 13 ok

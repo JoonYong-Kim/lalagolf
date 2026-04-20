@@ -20,14 +20,30 @@
             <thead>
                 <tr>
                     <th>Score Range</th>
+                    <th>Rounds</th>
+                    <th>Avg Score</th>
+                    <th>Avg To Par</th>
+                    <th>Course Adj To Par</th>
                     <th>Min GIR</th>
                     <th>Avg GIR</th>
                     <th>Max GIR</th>
                     <th>Min Putts</th>
                     <th>Avg Putts</th>
                     <th>Max Putts</th>
+                    <th>1-Putt Rate</th>
+                    <th>3-Putt Rate</th>
+                    <th>Scrambling</th>
+                    <th>Up-and-Down</th>
                     <th>Avg OB Penalties</th>
                     <th>Avg H Penalties</th>
+                    <th>Avg Penalty Strokes</th>
+                    <th>Tee Shot Penalty</th>
+                    <th>Driver Penalty</th>
+                    <th>Driver Result C</th>
+                    <th>GIR from &lt;160m</th>
+                    <th>Par3 To Par</th>
+                    <th>Par4 To Par</th>
+                    <th>Par5 To Par</th>
                     <th>Birdie Ratio</th>
                     <th>Par Ratio</th>
                     <th>Bogey Ratio</th>
@@ -38,14 +54,30 @@
                 {% for range_name, stats in calculated_trends.items() %}
                 <tr>
                     <td>{{ range_name }}</td>
+                    <td>{{ stats.round_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_score if stats.avg_score is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_score_to_par if stats.avg_score_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_course_adjusted_to_par if stats.avg_course_adjusted_to_par is not none else '-' }}</td>
                     <td>{{ "%.1f" % stats.min_gir if stats.min_gir is not none else '-' }}</td>
                     <td>{{ "%.1f" % stats.avg_gir if stats.avg_gir is not none else '-' }}</td>
                     <td>{{ "%.1f" % stats.max_gir if stats.max_gir is not none else '-' }}</td>
                     <td>{{ "%.1f" % stats.min_putts if stats.min_putts is not none else '-' }}</td>
                     <td>{{ "%.1f" % stats.avg_putts if stats.avg_putts is not none else '-' }}</td>
                     <td>{{ "%.1f" % stats.max_putts if stats.max_putts is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.avg_one_putt_rate * 100) if stats.avg_one_putt_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.avg_three_putt_rate * 100) if stats.avg_three_putt_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.avg_scrambling_rate * 100) if stats.avg_scrambling_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.avg_up_and_down_rate * 100) if stats.avg_up_and_down_rate is not none else '-' }}%</td>
                     <td>{{ "%.1f" % stats.avg_ob_penalties if stats.avg_ob_penalties is not none else '-' }}</td>
                     <td>{{ "%.1f" % stats.avg_h_penalties if stats.avg_h_penalties is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_penalty_strokes if stats.avg_penalty_strokes is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.avg_tee_shot_penalty_rate * 100) if stats.avg_tee_shot_penalty_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.avg_driver_penalty_rate * 100) if stats.avg_driver_penalty_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.avg_driver_result_c_rate * 100) if stats.avg_driver_result_c_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.avg_gir_from_under_160_rate * 100) if stats.avg_gir_from_under_160_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % stats.avg_par3_to_par if stats.avg_par3_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_par4_to_par if stats.avg_par4_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_par5_to_par if stats.avg_par5_to_par is not none else '-' }}</td>
                     <td>{{ "%.1f" % (stats.birdie_ratio * 100) if stats.birdie_ratio is not none else '-' }}%</td>
                     <td>{{ "%.1f" % (stats.par_ratio * 100) if stats.par_ratio is not none else '-' }}%</td>
                     <td>{{ "%.1f" % (stats.bogey_ratio * 100) if stats.bogey_ratio is not none else '-' }}%</td>
@@ -55,16 +87,681 @@
             </tbody>
         </table>
 
+        <h2>Front / Back Split</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Score Range</th>
+                    <th>Rounds</th>
+                    <th>Front To Par</th>
+                    <th>Back To Par</th>
+                    <th>Back - Front</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for range_name, stats in calculated_trends.items() %}
+                <tr>
+                    <td>{{ range_name }}</td>
+                    <td>{{ stats.round_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_front_to_par if stats.avg_front_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_back_to_par if stats.avg_back_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_back_minus_front_to_par if stats.avg_back_minus_front_to_par is not none else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="small text-muted">Back - Front가 양수면 후반이 전반보다 더 무거웠고, 음수면 후반에 더 잘 마무리한 구간입니다.</p>
+
+        <h2>Closing Stretch</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Score Range</th>
+                    <th>Rounds</th>
+                    <th>Last 3 To Par</th>
+                    <th>16-18 To Par</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for range_name, stats in calculated_trends.items() %}
+                <tr>
+                    <td>{{ range_name }}</td>
+                    <td>{{ stats.round_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_last_three_to_par if stats.avg_last_three_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_closing_16_18_to_par if stats.avg_closing_16_18_to_par is not none else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="small text-muted">Last 3는 각 라운드의 마지막 3홀 기준이며, 16-18은 정규 18홀 마무리 구간 기준입니다.</p>
+
+        <h2>Birdie Follow-Up</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Score Range</th>
+                    <th>Rounds</th>
+                    <th>Samples</th>
+                    <th>Next Hole To Par</th>
+                    <th>Par Save Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for range_name, stats in calculated_trends.items() %}
+                <tr>
+                    <td>{{ range_name }}</td>
+                    <td>{{ stats.round_count }}</td>
+                    <td>{{ stats.birdie_follow_up_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_birdie_follow_up_to_par if stats.avg_birdie_follow_up_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.birdie_follow_up_par_save_rate * 100) if stats.birdie_follow_up_par_save_rate is not none else '-' }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="small text-muted">버디 직후 다음 홀에서 흐름을 유지하는지 보기 위한 지표입니다. 샘플 수가 적을 때는 방향성 위주로 해석하는 것이 안전합니다.</p>
+
+        <h2>Penalty Recovery</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Score Range</th>
+                    <th>Rounds</th>
+                    <th>Samples</th>
+                    <th>Next Hole To Par</th>
+                    <th>Par Save Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for range_name, stats in calculated_trends.items() %}
+                <tr>
+                    <td>{{ range_name }}</td>
+                    <td>{{ stats.round_count }}</td>
+                    <td>{{ stats.penalty_recovery_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_penalty_recovery_to_par if stats.avg_penalty_recovery_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.penalty_recovery_par_save_rate * 100) if stats.penalty_recovery_par_save_rate is not none else '-' }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="small text-muted">페널티가 나온 다음 홀에서 얼마나 빨리 흐름을 회복하는지 보기 위한 지표입니다.</p>
+
+        <h2>Momentum Response</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Score Range</th>
+                    <th>Good Samples</th>
+                    <th>After Good To Par</th>
+                    <th>After Good Par Save</th>
+                    <th>Bad Samples</th>
+                    <th>After Bad To Par</th>
+                    <th>After Bad Par Save</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for range_name, stats in calculated_trends.items() %}
+                <tr>
+                    <td>{{ range_name }}</td>
+                    <td>{{ stats.positive_momentum_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_positive_momentum_to_par if stats.avg_positive_momentum_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.positive_momentum_par_save_rate * 100) if stats.positive_momentum_par_save_rate is not none else '-' }}%</td>
+                    <td>{{ stats.negative_momentum_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_negative_momentum_to_par if stats.avg_negative_momentum_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.negative_momentum_par_save_rate * 100) if stats.negative_momentum_par_save_rate is not none else '-' }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="small text-muted">Good은 버디 이상 직후, Bad는 더블보기 이상 직후 다음 홀 반응입니다.</p>
+
+        <h2>Target Score Pressure</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Score Range</th>
+                    <th>Samples</th>
+                    <th>Target Hit Rate</th>
+                    <th>Closing Delta To Target</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for range_name, stats in calculated_trends.items() %}
+                <tr>
+                    <td>{{ range_name }}</td>
+                    <td>{{ stats.target_pressure_count }}</td>
+                    <td>{{ "%.1f" % (stats.target_hit_rate * 100) if stats.target_hit_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % stats.avg_target_closing_delta if stats.avg_target_closing_delta is not none else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="small text-muted">각 라운드의 목표선은 79 / 84 / 89 / 94 상한으로 잡고, 16-18번에서 그 목표 pace를 얼마나 지켰는지 봅니다. 양수일수록 목표 대비 마무리가 무거웠습니다.</p>
+
+        <h2>Recent Windows</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Window</th>
+                    <th>Rounds</th>
+                    <th>Avg Score</th>
+                    <th>Avg To Par</th>
+                    <th>Course Adj To Par</th>
+                    <th>Avg GIR</th>
+                    <th>Avg Putts</th>
+                    <th>3-Putt Rate</th>
+                    <th>Scrambling</th>
+                    <th>Up-and-Down</th>
+                    <th>Penalty Strokes</th>
+                    <th>Tee Shot Penalty</th>
+                    <th>Driver Penalty</th>
+                    <th>Driver Result C</th>
+                    <th>GIR from &lt;160m</th>
+                    <th>Par3 To Par</th>
+                    <th>Par4 To Par</th>
+                    <th>Par5 To Par</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for label, stats in recent_trends.items() %}
+                <tr>
+                    <td>{{ label }}</td>
+                    <td>{{ stats.round_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_score if stats.avg_score is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_score_to_par if stats.avg_score_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_course_adjusted_to_par if stats.avg_course_adjusted_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_gir if stats.avg_gir is not none else '-' }}</td>
+                    <td>{{ "%.2f" % stats.avg_putts if stats.avg_putts is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.avg_three_putt_rate * 100) if stats.avg_three_putt_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.avg_scrambling_rate * 100) if stats.avg_scrambling_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.avg_up_and_down_rate * 100) if stats.avg_up_and_down_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % stats.avg_penalty_strokes if stats.avg_penalty_strokes is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.avg_tee_shot_penalty_rate * 100) if stats.avg_tee_shot_penalty_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.avg_driver_penalty_rate * 100) if stats.avg_driver_penalty_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.avg_driver_result_c_rate * 100) if stats.avg_driver_result_c_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % (stats.avg_gir_from_under_160_rate * 100) if stats.avg_gir_from_under_160_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % stats.avg_par3_to_par if stats.avg_par3_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_par4_to_par if stats.avg_par4_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_par5_to_par if stats.avg_par5_to_par is not none else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Recent Front / Back Split</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Window</th>
+                    <th>Rounds</th>
+                    <th>Front To Par</th>
+                    <th>Back To Par</th>
+                    <th>Back - Front</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for label, stats in recent_trends.items() %}
+                <tr>
+                    <td>{{ label }}</td>
+                    <td>{{ stats.round_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_front_to_par if stats.avg_front_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_back_to_par if stats.avg_back_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_back_minus_front_to_par if stats.avg_back_minus_front_to_par is not none else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Recent Closing Stretch</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Window</th>
+                    <th>Rounds</th>
+                    <th>Last 3 To Par</th>
+                    <th>16-18 To Par</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for label, stats in recent_trends.items() %}
+                <tr>
+                    <td>{{ label }}</td>
+                    <td>{{ stats.round_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_last_three_to_par if stats.avg_last_three_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % stats.avg_closing_16_18_to_par if stats.avg_closing_16_18_to_par is not none else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Recent Birdie Follow-Up</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Window</th>
+                    <th>Rounds</th>
+                    <th>Samples</th>
+                    <th>Next Hole To Par</th>
+                    <th>Par Save Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for label, stats in recent_trends.items() %}
+                <tr>
+                    <td>{{ label }}</td>
+                    <td>{{ stats.round_count }}</td>
+                    <td>{{ stats.birdie_follow_up_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_birdie_follow_up_to_par if stats.avg_birdie_follow_up_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.birdie_follow_up_par_save_rate * 100) if stats.birdie_follow_up_par_save_rate is not none else '-' }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Recent Penalty Recovery</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Window</th>
+                    <th>Rounds</th>
+                    <th>Samples</th>
+                    <th>Next Hole To Par</th>
+                    <th>Par Save Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for label, stats in recent_trends.items() %}
+                <tr>
+                    <td>{{ label }}</td>
+                    <td>{{ stats.round_count }}</td>
+                    <td>{{ stats.penalty_recovery_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_penalty_recovery_to_par if stats.avg_penalty_recovery_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.penalty_recovery_par_save_rate * 100) if stats.penalty_recovery_par_save_rate is not none else '-' }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Recent Momentum Response</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Window</th>
+                    <th>Good Samples</th>
+                    <th>After Good To Par</th>
+                    <th>After Good Par Save</th>
+                    <th>Bad Samples</th>
+                    <th>After Bad To Par</th>
+                    <th>After Bad Par Save</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for label, stats in recent_trends.items() %}
+                <tr>
+                    <td>{{ label }}</td>
+                    <td>{{ stats.positive_momentum_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_positive_momentum_to_par if stats.avg_positive_momentum_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.positive_momentum_par_save_rate * 100) if stats.positive_momentum_par_save_rate is not none else '-' }}%</td>
+                    <td>{{ stats.negative_momentum_count }}</td>
+                    <td>{{ "%.1f" % stats.avg_negative_momentum_to_par if stats.avg_negative_momentum_to_par is not none else '-' }}</td>
+                    <td>{{ "%.1f" % (stats.negative_momentum_par_save_rate * 100) if stats.negative_momentum_par_save_rate is not none else '-' }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Recent Target Score Pressure</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Window</th>
+                    <th>Samples</th>
+                    <th>Target Hit Rate</th>
+                    <th>Closing Delta To Target</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for label, stats in recent_trends.items() %}
+                <tr>
+                    <td>{{ label }}</td>
+                    <td>{{ stats.target_pressure_count }}</td>
+                    <td>{{ "%.1f" % (stats.target_hit_rate * 100) if stats.target_hit_rate is not none else '-' }}%</td>
+                    <td>{{ "%.1f" % stats.avg_target_closing_delta if stats.avg_target_closing_delta is not none else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if course_baselines %}
+        <h2>Course Baselines</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Rounds</th>
+                    <th>Avg Score</th>
+                    <th>Avg To Par</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for course in course_baselines %}
+                <tr>
+                    <td>{{ course.gcname }}</td>
+                    <td>{{ course.round_count }}</td>
+                    <td>{{ "%.1f" % course.avg_score }}</td>
+                    <td>{{ "%.1f" % course.avg_score_to_par }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="small text-muted">Course Adj To Par는 같은 코스에서의 내 평균 score to par 대비 현재 구간이 얼마나 좋거나 나빴는지 보여줍니다. 음수일수록 코스 기준선보다 좋았습니다.</p>
+        {% endif %}
+
+        {% if recommendations.practice_priorities or recommendations.strategy_notes or recommendations.strategy_cards %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Recent 10-Round Recommendations</h5>
+                {% if trend_action_cards %}
+                <div class="mb-3">
+                    {% for card in trend_action_cards %}
+                    <div class="border rounded p-3 {% if not loop.last %}mb-2{% endif %} bg-white">
+                        <strong>{{ card.title }}</strong>
+                        <div class="mt-2">{{ card.summary }}</div>
+                        {% if card.context_subtype %}
+                        <div class="small mt-2"><strong>Loss Type:</strong> {{ card.context_subtype }}</div>
+                        {% endif %}
+                        <div class="small mt-2"><strong>Priority:</strong> {{ card.urgency_label }} / {{ card.trend_label }} ({% if card.trend_delta >= 0 %}+{% endif %}{{ "%.2f" % card.trend_delta }})</div>
+                        <div class="small text-muted mt-2"><strong>Why:</strong> {{ card.priority_reason }}</div>
+                        {% if card.context_note %}
+                        <div class="small text-muted mt-2">{{ card.context_note }}</div>
+                        {% endif %}
+                        <div class="small mt-2"><strong>This Week:</strong> {{ card.priority_action }}</div>
+                        {% if card.menu_name %}
+                        <div class="small mt-2"><strong>Drill:</strong> {{ card.menu_name }} - {{ card.menu_detail }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if recommendations.sample_note %}
+                <p class="text-muted mb-2">{{ recommendations.sample_note }}</p>
+                {% endif %}
+                {% if recommendations.interpretation_guide %}
+                <p class="small text-muted mb-3">{{ recommendations.interpretation_guide }}</p>
+                {% endif %}
+                {% if recommendations.practice_priorities %}
+                <ul class="mb-3">
+                    {% for item in recommendations.practice_priorities %}
+                    <li>
+                        <strong>{{ item.label }}</strong>: {{ item.message }}
+                        {% if item.context_subtype %}
+                        <div class="small mt-1"><strong>Loss Type:</strong> {{ item.context_subtype }}</div>
+                        {% endif %}
+                        <div class="small mt-1"><strong>Priority:</strong> {{ item.urgency_label }}</div>
+                        <div class="small text-muted mt-1"><strong>Why:</strong> {{ item.priority_reason }}</div>
+                        {% if item.context_note %}
+                        <div class="small text-muted mt-1">{{ item.context_note }}</div>
+                        {% endif %}
+                        <div class="small mt-1"><strong>This Week:</strong> {{ item.priority_action }}</div>
+                        {% if item.sample %}
+                        <div class="small mt-1"><strong>{{ item.sample.label }}</strong> - {{ item.sample.message }}</div>
+                        {% endif %}
+                        {% if item.reasons %}
+                        <div class="small text-muted mt-1">
+                            {% for reason in item.reasons %}
+                            <div>{{ reason }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                        {% if item.menu %}
+                        <div class="mt-2">
+                            {% for menu in item.menu %}
+                            <div class="small text-muted"><strong>Drill:</strong> {{ menu.name }} - {{ menu.detail }}</div>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+                {% if recommendations.strategy_cards %}
+                <h6>Strategy Cards</h6>
+                <div class="row mb-3">
+                    {% for card in recommendations.strategy_cards %}
+                    <div class="col-md-6 mb-3">
+                        <div class="border rounded p-3 h-100">
+                            <strong>{{ card.title }}</strong>
+                            <div class="small text-muted mt-1">{{ card.trigger }}</div>
+                            <div class="mt-2"><strong>Decision:</strong> {{ card.decision }}</div>
+                            <div class="mt-2"><strong>Goal:</strong> {{ card.goal }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if recommendations.strategy_notes %}
+                <h6>Strategy Notes</h6>
+                <ul class="mb-0">
+                    {% for note in recommendations.strategy_notes %}
+                    <li>{{ note }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <h2>Recent Window Shot Value</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Window</th>
+                    <th>Category</th>
+                    <th>Shots</th>
+                    <th>Share</th>
+                    <th>Total Shot Value</th>
+                    <th>Average Shot Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for label, summary in recent_shot_value_trends.items() %}
+                    {% for item in summary.category_summary %}
+                    <tr>
+                        <td>{{ label }}</td>
+                        <td>{{ item.category }}</td>
+                        <td>{{ item.count }}</td>
+                        <td>{{ "%.1f" % (item.share_of_covered_shots * 100) }}%</td>
+                        <td>{{ "%.2f" % item.total_shot_value }}</td>
+                        <td>{{ "%.2f" % item.avg_shot_value }}</td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <h2>Score Range Shot Value</h2>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Score Range</th>
+                    <th>Category</th>
+                    <th>Shots</th>
+                    <th>Share</th>
+                    <th>Total Shot Value</th>
+                    <th>Average Shot Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for range_name, stats in calculated_trends.items() %}
+                    {% for item in stats.shot_value_summary.category_summary %}
+                    <tr>
+                        <td>{{ range_name }}</td>
+                        <td>{{ item.category }}</td>
+                        <td>{{ item.count }}</td>
+                        <td>{{ "%.1f" % (item.share_of_covered_shots * 100) }}%</td>
+                        <td>{{ "%.2f" % item.total_shot_value }}</td>
+                        <td>{{ "%.2f" % item.avg_shot_value }}</td>
+                    </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+
         <div class="chart-container">
             <canvas id="girChart"></canvas>
             <canvas id="puttChart"></canvas>
             <canvas id="penaltyChart"></canvas>
             <canvas id="scoreRatioChart"></canvas>
+            <canvas id="shortGameChart"></canvas>
+            <canvas id="recentWindowChart"></canvas>
+            <canvas id="recentShotValueChart"></canvas>
         </div>
     </div>
 
     <div id="clubStats" class="tab-content">
         <h2>Club Statistics</h2>
+        {% if club_reliability_report %}
+        <h3>Recent 10-Round Club Reliability</h3>
+        <table class="table table-bordered text-center">
+            <thead>
+                <tr>
+                    <th>Club Group</th>
+                    <th>Samples</th>
+                    <th>Sample Level</th>
+                    <th>Avg Distance</th>
+                    <th>Distance Stddev</th>
+                    <th>Result C</th>
+                    <th>Penalty</th>
+                    <th>Avg Shot Value</th>
+                    <th>Shot Value Stddev</th>
+                    <th>Shot Value P25</th>
+                    <th>Risk</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in club_reliability_report %}
+                <tr>
+                    <td>{{ item.club_group }}</td>
+                    <td>{{ item.sample_count }}</td>
+                    <td>{{ item.sample_level }}</td>
+                    <td>{{ "%.1f" % item.avg_distance if item.avg_distance else '-' }}</td>
+                    <td>{{ "%.1f" % item.distance_stddev if item.distance_stddev else '-' }}</td>
+                    <td>{{ "%.1f" % (item.result_c_rate * 100) }}%</td>
+                    <td>{{ "%.1f" % (item.penalty_rate * 100) }}%</td>
+                    <td>{{ "%.2f" % item.avg_shot_value }}</td>
+                    <td>{{ "%.2f" % item.shot_value_stddev }}</td>
+                    <td>{{ "%.2f" % item.shot_value_p25 }}</td>
+                    <td>{{ item.risk_level }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <p class="small text-muted">최근 10라운드 기준이며, 샘플 수가 적은 클럽 그룹은 방향성 참고용으로만 보는 것이 안전합니다.</p>
+        {% endif %}
+
+        <h3>Recent 10-Round Tee Strategy Comparison</h3>
+        {% if tee_strategy_comparison.warnings %}
+        <div class="alert alert-warning py-2">
+            {% for warning in tee_strategy_comparison.warnings %}
+            <div>{{ warning }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if tee_strategy_comparison.comparison_ready %}
+        <table class="table table-bordered text-center">
+            <thead>
+                <tr>
+                    <th>Par Type</th>
+                    <th>Strategy</th>
+                    <th>Samples</th>
+                    <th>Avg Shot Value</th>
+                    <th>SV Stddev</th>
+                    <th>SV P25</th>
+                    <th>Penalty</th>
+                    <th>Result C</th>
+                    <th>Risk Index</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in tee_strategy_comparison.rows %}
+                {% if item.sample_ok %}
+                <tr>
+                    <td>Par {{ item.par_type }}</td>
+                    <td>{{ item.strategy }}</td>
+                    <td>{{ item.sample_count }}</td>
+                    <td>{{ "%.2f" % item.avg_shot_value }}</td>
+                    <td>{{ "%.2f" % item.shot_value_stddev }}</td>
+                    <td>{{ "%.2f" % item.shot_value_p25 }}</td>
+                    <td>{{ "%.1f" % (item.penalty_rate * 100) }}%</td>
+                    <td>{{ "%.1f" % (item.result_c_rate * 100) }}%</td>
+                    <td>{{ "%.2f" % item.risk_index }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if tee_strategy_comparison.insights %}
+        <ul class="small text-muted">
+            {% for insight in tee_strategy_comparison.insights %}
+            <li>{{ insight }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% else %}
+        <p class="small text-muted">현재는 Driver와 Wood/Utility를 비교할 최근 표본이 충분하지 않습니다.</p>
+        {% endif %}
+
+        <h3>Recent 10-Round Layup vs Attack Proxy</h3>
+        {% if approach_strategy_comparison.warnings %}
+        <div class="alert alert-warning py-2">
+            {% for warning in approach_strategy_comparison.warnings %}
+            <div>{{ warning }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if approach_strategy_comparison.comparison_ready %}
+        <table class="table table-bordered text-center">
+            <thead>
+                <tr>
+                    <th>Distance Band</th>
+                    <th>Strategy</th>
+                    <th>Samples</th>
+                    <th>Avg Shot Value</th>
+                    <th>SV Stddev</th>
+                    <th>SV P25</th>
+                    <th>Penalty</th>
+                    <th>Result C</th>
+                    <th>Risk Index</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in approach_strategy_comparison.rows %}
+                {% if item.sample_ok %}
+                <tr>
+                    <td>{{ item.distance_band }}</td>
+                    <td>{{ item.strategy }}</td>
+                    <td>{{ item.sample_count }}</td>
+                    <td>{{ "%.2f" % item.avg_shot_value }}</td>
+                    <td>{{ "%.2f" % item.shot_value_stddev }}</td>
+                    <td>{{ "%.2f" % item.shot_value_p25 }}</td>
+                    <td>{{ "%.1f" % (item.penalty_rate * 100) }}%</td>
+                    <td>{{ "%.1f" % (item.result_c_rate * 100) }}%</td>
+                    <td>{{ "%.2f" % item.risk_index }}</td>
+                </tr>
+                {% endif %}
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if approach_strategy_comparison.insights %}
+        <ul class="small text-muted">
+            {% for insight in approach_strategy_comparison.insights %}
+            <li>{{ insight }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% else %}
+        <p class="small text-muted">현재는 layup proxy와 attack 패턴을 비교할 최근 표본이 충분하지 않습니다.</p>
+        {% endif %}
+
         <table class="table table-bordered text-center">
             <thead>
                 <tr>
@@ -132,13 +829,19 @@
         });
 
         const calculatedTrends = {{ calculated_trends | tojson }};
+        const recentTrends = {{ recent_trends | tojson }};
+        const recentShotValueTrends = {{ recent_shot_value_trends | tojson }};
         const clubTrends = {{ club_trends | tojson }};
         const correlationData = {{ correlation_data | tojson }};
         const scoreRanges = Object.keys(calculatedTrends);
+        const recentWindows = Object.keys(recentTrends);
+        const shotValueCategories = ['off_the_tee', 'approach', 'short_game', 'putting', 'recovery', 'penalty_impact'];
 
         // Helper to get data for charts, handling nulls
         const getData = (key) => scoreRanges.map(range => calculatedTrends[range][key] !== null ? calculatedTrends[range][key] : 0);
         const getPercentageData = (key) => scoreRanges.map(range => calculatedTrends[range][key] !== null ? calculatedTrends[range][key] * 100 : 0);
+        const getRecentData = (key) => recentWindows.map(label => recentTrends[label][key] !== null ? recentTrends[label][key] : 0);
+        const getRecentPercentageData = (key) => recentWindows.map(label => recentTrends[label][key] !== null ? recentTrends[label][key] * 100 : 0);
 
         // GIR Chart
         const girCtx = document.getElementById('girChart').getContext('2d');
@@ -298,6 +1001,163 @@
                         title: {
                             display: true,
                             text: 'Percentage (%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        const shortGameCtx = document.getElementById('shortGameChart').getContext('2d');
+        new Chart(shortGameCtx, {
+            type: 'bar',
+            data: {
+                labels: scoreRanges,
+                datasets: [
+                    {
+                        label: '3-Putt Rate',
+                        data: getPercentageData('avg_three_putt_rate'),
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    },
+                    {
+                        label: 'Scrambling',
+                        data: getPercentageData('avg_scrambling_rate'),
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                    },
+                    {
+                        label: 'Up-and-Down',
+                        data: getPercentageData('avg_up_and_down_rate'),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    },
+                    {
+                        label: 'Tee Shot Penalty',
+                        data: getPercentageData('avg_tee_shot_penalty_rate'),
+                        backgroundColor: 'rgba(255, 159, 64, 0.6)',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Short Game & Risk by Score Range'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Percentage (%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        const recentWindowCtx = document.getElementById('recentWindowChart').getContext('2d');
+        new Chart(recentWindowCtx, {
+            type: 'bar',
+            data: {
+                labels: recentWindows,
+                datasets: [
+                    {
+                        label: 'Avg Score',
+                        data: getRecentData('avg_score'),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        yAxisID: 'y',
+                    },
+                    {
+                        label: '3-Putt Rate',
+                        data: getRecentPercentageData('avg_three_putt_rate'),
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        yAxisID: 'y1',
+                    },
+                    {
+                        label: 'Scrambling',
+                        data: getRecentPercentageData('avg_scrambling_rate'),
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        yAxisID: 'y1',
+                    },
+                    {
+                        label: 'GIR from <160m',
+                        data: getRecentPercentageData('avg_gir_from_under_160_rate'),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                        yAxisID: 'y1',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Recent Windows Overview'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        position: 'left',
+                        title: {
+                            display: true,
+                            text: 'Average Score'
+                        }
+                    },
+                    y1: {
+                        beginAtZero: true,
+                        position: 'right',
+                        grid: {
+                            drawOnChartArea: false
+                        },
+                        title: {
+                            display: true,
+                            text: 'Percentage (%)'
+                        }
+                    }
+                }
+            }
+        });
+
+        const recentShotValueCtx = document.getElementById('recentShotValueChart').getContext('2d');
+        new Chart(recentShotValueCtx, {
+            type: 'bar',
+            data: {
+                labels: recentWindows,
+                datasets: shotValueCategories.map((category, index) => ({
+                    label: category,
+                    data: recentWindows.map(label => {
+                        const summary = recentShotValueTrends[label];
+                        const item = summary.category_summary.find(row => row.category === category);
+                        return item ? item.total_shot_value : 0;
+                    }),
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)',
+                        'rgba(255, 99, 132, 0.7)'
+                    ][index],
+                }))
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Recent Window Shot Value by Category'
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                    },
+                    y: {
+                        stacked: true,
+                        title: {
+                            display: true,
+                            text: 'Total Shot Value'
                         }
                     }
                 }

@@ -3,6 +3,7 @@ from flask import Flask
 import sys
 import os
 import json
+import secrets
 
 # Add the project root to the Python path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
@@ -32,6 +33,6 @@ except (FileNotFoundError, json.JSONDecodeError, ValueError) as e:
     print(f"Error loading webapp configuration: {e}")
     sys.exit(1)
 
-app.config['SECRET_KEY'] = 'a_very_secret_key_for_session_management' # Replace with a strong, random key in production
+app.config['SECRET_KEY'] = os.environ.get('LALAGOLF_SECRET_KEY', secrets.token_hex(32))
 
 from src.webapp import routes

@@ -1,0 +1,92 @@
+2026-04-01 10:22
+오라 남
+이인복 김종현 TP팀장
+
+1 P4
+D C C H
+i8 b a
+p b b2
+2 p3
+uw b c
+52 c c 15
+56 c c 10
+p c c 15
+p b a 10
+3 p4
+d b b 
+i9 b b 
+p c c 8 
+p b b 2
+4 p4
+d b b
+i7 b b 
+p c b 4 ok
+5 p5
+d c c
+uw b b
+uw b b
+56 b b 30
+p b b 3 ok
+6 p4
+d b b
+i7 c c 
+56 b a  22 ok
+7 p5
+d b b
+uw b b
+52 c c
+p c c 12
+p c a 3
+8 p4
+d c b
+i6 c c
+56 c b 20
+p b b 5 ok
+9 p3
+u3 b c
+52 b b 22
+p b b 8 ok
+10 p4
+d c c b
+i7 b b
+56 cb 45
+p c b 5 ok
+11 p4
+d a b 
+i5 c c 
+56 b b 30
+p b b 3 ok
+12 p5
+d a b
+uw c b
+i9 b c
+p b c 15
+p b c 6 ok
+13 p3
+i6 b c
+56 a b 20
+p b b 2 ok
+14 p4
+d a b
+48 c b 77
+p b b 15
+p b b 1
+15 p4
+d c b 
+i9 c a
+p c b 4 ok
+16 p4
+d c c
+i8 b b 100
+52 c c 55
+p b b 10 ok
+17 p3
+i6 c c
+56 b b 15
+p b b 4
+18 p5
+d c b 
+uw a b
+48 b b 
+p b a 15 ok
+

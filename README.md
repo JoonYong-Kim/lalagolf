@@ -1,131 +1,124 @@
-# Croft Golf Record
+# LalaGolf
 
-This project is a golf record management service designed to help personal efficiently record and manage golf round data.  
-It allows users to systematically log each hole and shot information in a structured and intuitive manner.
+취미 골프 라운드를 텍스트 파일로 기록하고, 이를 MySQL과 Flask 대시보드로 분석하는 개인용 골프 기록 서비스입니다.  
+단순 스코어 저장보다 `샷 단위 기록 -> 라운드 지표 -> 최근 추세 -> 연습/전략 추천` 흐름에 초점을 둡니다.
 
-## 🚀 Key Features
- 1. Load data from data file
- 1. Save data into Database
- 1. Various helpful information serviced by web dashboard
+## Key Features
 
-## 📥 Installation
- TBD
+- 텍스트 파일 기반 라운드 입력 및 파싱
+- MySQL 적재와 라운드/홀/샷 단위 데이터 조회
+- 라운드 상세 분석: scoring, putting, short game, penalties, tee shot, approach
+- 최근 추세 분석: 최근 `5/10/20` 라운드 비교, 코스 보정, 전/후반, 마무리 3홀, 버디 직후, 페널티 직후, 목표 타수 방어
+- 샷 가치 분석: expected score, shot value, category summary
+- 추천 레이어: `Practice Priorities`, `Top Recurring Priorities`, `Next Action`, `Round + Trend Action`
+- subtype 기반 추천: 예) `거리 오차형 어프로치`, `큰 미스 누적형 티샷`, `거리감 손실형 퍼팅`
 
-## Getting started
- TBD
+## Project Layout
 
-## 📝 Data Writing Rule
+- `src/data_parser.py`: 텍스트 라운드 파일 파싱
+- `src/db_loader.py`: DB 저장/조회
+- `src/metrics.py`: 라운드/최근 추세 지표
+- `src/shot_model.py`: 샷 상태 정규화
+- `src/expected_value.py`: 기대 타수 계산
+- `src/strokes_gained.py`: shot value 집계
+- `src/recommendations.py`: 추천/우선순위/드릴 생성
+- `src/webapp/`: Flask 앱, 라우트, 템플릿
+- `tests/`: `pytest` 테스트
+- `docs/plan.md`: 구현 계획 및 상태 정리
 
-All data files are stored data folder.
-Each data file include one round data.
+## Setup
 
-Each line of a data file is managed as either hole information or shot information.
-Hole information lines represent hole numbers from 1 to 18, with a maximum of 36 holes possible.
-After the hole number, par information is entered as P3, P4, P5, etc.
-For example, if the 1st hole is a par 4 hole, it can be entered as 1 P4 or 1P4.
-Shot information lines must include an abbreviation for the club used, shot feel, and shot result, and can optionally include additional information such as distance, penalty, or concede.
-
-The structure is approximately as follows:
-Club Feel Result \[Landing Spot\] \[Distance\] \[Penalty or Concede\]
-
-Club abbreviations are as follows:
-
- * D : Driver
- * W3 : Wood 3
- * W5 : Wood 5
- * UW : Utility Wood
- * U3 : Hybrid 3
- * U4 : Hybrid 4
- * U5 : Hybrid 5
- * I3 : Iron 3
- * I4 : Iron 4
- * I5 : Iron 5
- * I6 : Iron 6
- * I7 : Iron 7
- * I8 : Iron 8
- * I9 : Iron 9
- * IP : Iron P
- * 48 : Wedge 48
- * 52 : Wedge 52
- * 56 : Wedge 56
- * P : Putter
-
-Shot feel and shot result are divided into A, B, C grades, with A representing the best result.
-Landing Spot would be B which means it landed on bunker.
-Distance is recorded in meters, and concede is marked as OK.
-Penalty information includes general penalty and out of bounds, marked as H and OB respectively.
-
-### 🎯 Example Input
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
+
+`conf/lalagolf.conf`에 최소한 다음 항목을 맞춰야 합니다.
+
+- `DB_CONFIG`
+- `WEBAPP_USERS`
+
+실서버용 비밀값은 소스가 아니라 환경변수로 관리하세요. Flask `SECRET_KEY`는 환경변수로 주입하거나, 개발 환경에서는 자동 생성 키를 사용합니다.
+
+## Run
+
+라운드 파일을 DB에 적재:
+
+```bash
+python load_data.py
+```
+
+웹 앱 실행:
+
+```bash
+python run_webapp.py
+```
+
+기본 포트는 `2323`입니다.
+
+## Testing
+
+전체 테스트:
+
+```bash
+pytest -q
+```
+
+추천/라우트 변경 후 빠른 문법 체크:
+
+```bash
+python -m py_compile src/recommendations.py src/webapp/routes.py
+```
+
+## Data Format
+
+한 파일은 한 라운드를 의미하며, 파일은 `data/<year>/` 아래에 둡니다.  
+각 줄은 홀 정보 또는 샷 정보입니다.
+
+- 홀 정보: `1P4`, `2 P5`
+- 샷 정보: `Club Feel Result [Landing] [Distance] [Penalty|OK]`
+
+예시:
+
+```text
 1P4
 D B C
 I5 A C 150 H
 P C A 10 OK
 ```
-#### 📌 Data Format Explanation
-- `1P4` → **Hole 1, Par 4**
-- `D B C` → **Driver shot, B-grade feel, C-grade result**
-- `I5 A C 150 H` → **Iron 5, A-grade feel, C-grade result, 150 meters, Hazard**
-- `P C A 10 OK` → **Putter, C-grade feel, A-grade result, 10 meters, Conceded**
 
-## Design Guideline
+해석:
 
-### 1. ✅ 상단 내비게이션 바
+- `1P4`: 1번 홀, 파 4
+- `D B C`: 드라이버, 감각 B, 결과 C
+- `I5 A C 150 H`: 5번 아이언, 150m, 해저드
+- `P C A 10 OK`: 퍼터, 10m, 컨시드
 
-| 항목     | 현재 상태             | 개선 제안                                                             |
-| ------ | ----------------- | ----------------------------------------------------------------- |
-| 배경색    | 진한 카키 (`#77804E`) | 더 선명한 contrast를 위해 **조금 더 어두운 그린 (`#5F6841`)** 또는 **gradient 처리** |
-| 텍스트 색상 | 흰색                | 괜찮지만 **폰트를 더 굵게(Bold)** 또는 약간 **골드톤 강조** 시 `#C7963A` 계열 사용 고려     |
-| 메뉴 간격  | 약간 빽빽함            | `padding: 0 16px;` 또는 `gap: 24px` 등 간격 확보 시 고급스러움 증가              |
-| 로고 영역  | 로고+텍스트 정렬 우수      | 로고 클릭 → 메인으로 이동되게 `cursor: pointer` 및 링크 추가 권장                    |
+대표 클럽 표기:
 
----
+- `D`, `W3`, `W5`, `UW`, `U3`, `U4`
+- `I3`-`I9`, `IP`
+- `48`, `52`, `56`, `58`
+- `P`
 
-### 2. ✅ 배경 / 카드 영역
+대표 부가 표기:
 
-| 항목                     | 현재 상태                       | 개선 제안                                                     |
-| ---------------------- | --------------------------- | --------------------------------------------------------- |
-| 전체 배경                  | `#F3E9D2` 톤 적용 잘됨           | 👍 유지 추천                                                  |
-| 카드 UI (Golf Rounds 박스) | 흰색 배경 + drop shadow         | 그림자 세기 약간 줄이기 or **카드 라운딩 증가 (`border-radius: 12px`)** 추천 |
-| 카드 여백                  | `padding` / `margin` 부족해 보임 | 내부 `padding: 24px`, 외부 `margin-top: 32px` 등 공간 확보로 시각적 안정 |
+- 결과/감각 등급: `A`, `B`, `C`
+- 벙커: `B`
+- 페널티: `H`, `OB`, `UN`
+- 컨시드: `OK`
 
----
+## Current Analytics Surfaces
 
-### 3. ✅ 테이블 및 버튼
+- 홈: 최근 요약, `Recent Focus`, `Top Recurring Priorities`, `Practice Priorities`
+- 라운드 목록: 최근 추천과 반복 손실 우선순위
+- 트렌드: 최근 구간 비교, 코스 보정, 전략 비교, 추천 카드
+- 라운드 상세: 해설 카드, 손실 상위 3개, `Next Action`, `Round + Trend Action`
 
-| 항목        | 현재 상태             | 개선 제안                                                                                 |
-| --------- | ----------------- | ------------------------------------------------------------------------------------- |
-| 헤더 컬럼     | 기본 Bootstrap 스타일  | 각 컬럼 헤더에 **더 어두운 베이지 (#E1D9C0)** 또는 **하단 보더 강조** (`border-bottom: 2px solid #C7963A`) |
-| 텍스트 컬러    | 기본 블랙             | `Score`, `GIR(%)` 등 수치 데이터는 **진한 녹색 (#3A3323)** 적용 고려                                 |
-| Delete 버튼 | `#C7963A` 계열 잘 반영 | 👍 다만 **hover 시 #A67625 정도로 살짝 어둡게** 하면 UX 강화됨                                        |
+## Notes
 
----
-
-## 🎯 추가 개선 아이디어 (선택 사항)
-
-* **폰트 변경**:
-  기본 sans-serif 대신, *Montserrat*, *Noto Sans KR*, *Raleway* 등의 세련된 웹폰트로 대체 시 세련미 강화
-
-* **데이터가 없을 때 Empty UI 제공**:
-  "No golf rounds found yet" 와 함께 아이콘(⛳) 또는 CTA 버튼 추가 (예: \[첫 라운드 기록하기])
-
-* **GIR 등 중요 수치 강조 카드 추가** (대시보드 스타일):
-
-  * 예: `GIR 평균`, `최고 점수`, `총 라운드 수` 등의 숫자 카드
-
----
-
-## 🎨 색상 팔레트 요약 (적용 확인용)
-
-| 요소      | 색상             | 용도        |
-| ------- | -------------- | --------- |
-| #C7963A | 버튼, 강조 텍스트, 로고 | 메인 강조색    |
-| #3A3323 | 제목, 본문 텍스트     | 강한 텍스트 색상 |
-| #77804E | 상단 바 배경        | 카키 계열 배경  |
-| #F3E9D2 | 전체 배경          | 크림톤 배경    |
-| #7A5D35 | 버튼 hover 등     | 어두운 골드톤   |
-
-
-## 🛠️ Development & Future Enhancements
-
+- 입력 항목을 늘리지 않고도 계산 가능한 지표 중심으로 고도화되어 있습니다.
+- 최근 추천은 손실 크기뿐 아니라 최근 흐름과 표본 수를 같이 반영합니다.
+- 세부 구현 로드맵과 남은 작업은 `docs/plan.md`를 기준으로 관리합니다.
 

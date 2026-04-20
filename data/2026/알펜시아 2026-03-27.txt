@@ -1,0 +1,94 @@
+2026-03-27 11:42
+알펜시아
+이혁찬 박수현 김수현
+
+1 P4
+d b b
+u3 c c h
+52 b b 30
+p b a 2
+2 p4
+d c c b
+i7 a b
+uw a a
+p c c 8
+p c c 2 ok
+3 p3
+i5 c c 
+52 c b 30
+p c c 15
+p c c 3 ok
+4 p5
+d b c OB
+UW b b
+52 c b 43
+p b b 7 ok
+5 p4
+d c b
+56 b c 55
+p c b 10
+p b b 2
+6 p4
+d b b 
+i6 b c h
+56 c b 20
+p c c 12 OK
+7 p3
+i9 c c h
+56 b b 30
+p b c 4 ok
+8 p5
+uw c c h
+uw b c
+56 c b 30
+p c c 20
+p b c 3 ok
+9 p4
+d b c b
+i7 b c h
+52 b b 40
+p c c 4 ok
+10 p4
+uw c c
+i9 c c 
+56 b b 30
+p b b 8 ok
+11 p3
+i7 a c
+52 b b 15
+p b c 3 ok
+12 p4
+d b b
+i6 c b
+p c c 20
+p b b 6 ok
+13 p4
+d c c h
+i9 b b 
+p c c 15
+p b b 6 ok
+14 p5
+d a b
+uw a c
+52 b b 45
+p c c 10
+p c c 2 ok
+15 p3
+i4 c b 
+p b b 8 ok
+16 p5
+d b b
+uw b b
+48 b b
+p c c 15
+p b b 3.5 ok
+17 p5
+d b b 
+uw c c h
+56 b b 
+p c c 6 ok
+18 p4
+d ab
+ip b b
+p b b 6 ok
+

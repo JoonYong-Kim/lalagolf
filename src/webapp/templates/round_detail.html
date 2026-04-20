@@ -33,6 +33,184 @@
         <p><strong>Co-players:</strong> {{ round_info.coplayers }}</p>
         <p><strong>Score:</strong> {{ round_info.score }}</p>
         <p><strong>GIR:</strong> {{ "%.1f" % round_info.gir }}%</p>
+        {% if round_explanation_cards %}
+        <div class="row mt-3 mb-4">
+            {% for card in round_explanation_cards %}
+            <div class="col-md-6 mb-3">
+                <div class="border rounded p-3 h-100 bg-white">
+                    <strong>{{ card.title }}</strong>
+                    <div class="mt-2">{{ card.summary }}</div>
+                    <div class="small text-muted mt-2">{{ card.detail }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if round_loss_cards %}
+        <div class="row mb-4">
+            {% for card in round_loss_cards %}
+            <div class="col-md-4 mb-3">
+                <div class="border rounded p-3 h-100 bg-light">
+                    <strong>{{ card.title }}</strong>
+                    <div class="mt-2">{{ card.summary }}</div>
+                    <div class="small text-muted mt-2">{{ card.detail }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if round_next_action_card %}
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">{{ round_next_action_card.title }}</h5>
+                <p class="mb-2">{{ round_next_action_card.summary }}</p>
+                <p class="mb-2"><strong>Priority:</strong> {{ round_next_action_card.urgency_label }}</p>
+                {% if round_next_action_card.context_subtype %}
+                <p class="mb-2"><strong>Loss Type:</strong> {{ round_next_action_card.context_subtype }}</p>
+                {% endif %}
+                <p class="small text-muted mb-2"><strong>Why:</strong> {{ round_next_action_card.priority_reason }}</p>
+                {% if round_next_action_card.context_note %}
+                <p class="small text-muted mb-2">{{ round_next_action_card.context_note }}</p>
+                {% endif %}
+                <p class="mb-2"><strong>This Week:</strong> {{ round_next_action_card.priority_action }}</p>
+                <p class="mb-2"><strong>Focus:</strong> {{ round_next_action_card.focus }}</p>
+                {% if round_next_action_card.menu_name %}
+                <p class="mb-0"><strong>Drill:</strong> {{ round_next_action_card.menu_name }} - {{ round_next_action_card.menu_detail }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        {% if round_hybrid_action_card %}
+        <div class="card mb-4 border-info">
+            <div class="card-body">
+                <h5 class="card-title">{{ round_hybrid_action_card.title }}</h5>
+                <p class="mb-2">{{ round_hybrid_action_card.summary }}</p>
+                <p class="small text-muted mb-2">{{ round_hybrid_action_card.detail }}</p>
+                <p class="mb-2"><strong>Priority:</strong> {{ round_hybrid_action_card.urgency_label }}</p>
+                {% if round_hybrid_action_card.context_subtype %}
+                <p class="mb-2"><strong>Loss Type:</strong> {{ round_hybrid_action_card.context_subtype }}</p>
+                {% endif %}
+                <p class="small text-muted mb-2"><strong>Why:</strong> {{ round_hybrid_action_card.priority_reason }}</p>
+                {% if round_hybrid_action_card.context_note %}
+                <p class="small text-muted mb-2">{{ round_hybrid_action_card.context_note }}</p>
+                {% endif %}
+                <p class="mb-2"><strong>This Week:</strong> {{ round_hybrid_action_card.priority_action }}</p>
+                {% if round_hybrid_action_card.menu_name %}
+                <p class="mb-0"><strong>Drill:</strong> {{ round_hybrid_action_card.menu_name }} - {{ round_hybrid_action_card.menu_detail }}</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+        <div class="row mt-4">
+            <div class="col-md-6">
+                <h4>Scoring Summary</h4>
+                <table class="table table-bordered table-sm">
+                    <tbody>
+                        <tr><th>Score to Par</th><td>{{ round_metrics.summary.score_to_par }}</td></tr>
+                        <tr><th>Birdies</th><td>{{ round_metrics.scoring.birdie_count }}</td></tr>
+                        <tr><th>Pars</th><td>{{ round_metrics.scoring.par_count }}</td></tr>
+                        <tr><th>Bogeys</th><td>{{ round_metrics.scoring.bogey_count }}</td></tr>
+                        <tr><th>Double Bogey+</th><td>{{ round_metrics.scoring.double_bogey_plus_count }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h4>Putting & Recovery</h4>
+                <table class="table table-bordered table-sm">
+                    <tbody>
+                        <tr><th>Average Putts</th><td>{{ "%.2f" % round_metrics.putting.avg_putts_per_hole }}</td></tr>
+                        <tr><th>1-Putt Rate</th><td>{{ "%.1f" % (round_metrics.putting.one_putt_rate * 100) }}%</td></tr>
+                        <tr><th>3-Putt Rate</th><td>{{ "%.1f" % (round_metrics.putting.three_putt_rate * 100) }}%</td></tr>
+                        <tr><th>Scrambling</th><td>{{ "%.1f" % (round_metrics.short_game.scrambling_rate * 100) }}%</td></tr>
+                        <tr><th>Up-and-Down</th><td>{{ "%.1f" % (round_metrics.short_game.up_and_down_rate * 100) }}%</td></tr>
+                        <tr><th>Sand Save</th><td>{{ "%.1f" % (round_metrics.short_game.sand_save_rate * 100) }}%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Penalties</h4>
+                <table class="table table-bordered table-sm">
+                    <tbody>
+                        <tr><th>Penalty Strokes</th><td>{{ round_metrics.penalties.penalty_strokes_per_round }}</td></tr>
+                        <tr><th>OB</th><td>{{ round_metrics.penalties.ob_count }}</td></tr>
+                        <tr><th>Hazard</th><td>{{ round_metrics.penalties.hazard_count }}</td></tr>
+                        <tr><th>Unplayable</th><td>{{ round_metrics.penalties.unplayable_count }}</td></tr>
+                        <tr><th>Tee Shot Penalty Rate</th><td>{{ "%.1f" % (round_metrics.penalties.tee_shot_penalty_rate * 100) }}%</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h4>Par Type Performance</h4>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th>Type</th><th>Count</th><th>Avg Score</th><th>To Par</th></tr>
+                    </thead>
+	                    <tbody>
+	                        <tr><td>Par 3</td><td>{{ round_metrics.par_types.par3.count }}</td><td>{{ "%.2f" % round_metrics.par_types.par3.avg_score if round_metrics.par_types.par3.count else "-" }}</td><td>{{ round_metrics.par_types.par3.score_to_par }}</td></tr>
+	                        <tr><td>Par 4</td><td>{{ round_metrics.par_types.par4.count }}</td><td>{{ "%.2f" % round_metrics.par_types.par4.avg_score if round_metrics.par_types.par4.count else "-" }}</td><td>{{ round_metrics.par_types.par4.score_to_par }}</td></tr>
+	                        <tr><td>Par 5</td><td>{{ round_metrics.par_types.par5.count }}</td><td>{{ "%.2f" % round_metrics.par_types.par5.avg_score if round_metrics.par_types.par5.count else "-" }}</td><td>{{ round_metrics.par_types.par5.score_to_par }}</td></tr>
+	                    </tbody>
+	                </table>
+                    {% for par_key in ['par3', 'par4', 'par5'] %}
+                    {% if round_metrics.par_types[par_key].tee_strategy %}
+                    <h6>{{ par_key|upper }} Tee Strategy</h6>
+                    <table class="table table-bordered table-sm">
+                        <thead>
+                            <tr><th>Club</th><th>Count</th><th>Avg To Par</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for item in round_metrics.par_types[par_key].tee_strategy %}
+                            <tr><td>{{ item.club }}</td><td>{{ item.count }}</td><td>{{ "%.2f" % item.avg_score_to_par }}</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% endif %}
+                    {% endfor %}
+	            </div>
+	        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Tee Shot Profile</h4>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th>Club</th><th>Usage</th><th>Avg Hole To Par</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for item in round_metrics.tee_shots.club_avg_score_to_par_sorted %}
+                        <tr>
+                            <td>{{ item.club }}</td>
+                            <td>{{ round_metrics.tee_shots.club_usage.get(item.club, 0) }}</td>
+                            <td>{{ "%.2f" % item.avg_score_to_par }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+	                <p><strong>Result Distribution:</strong>
+	                    A {{ round_metrics.tee_shots.result_distribution.A }},
+	                    B {{ round_metrics.tee_shots.result_distribution.B }},
+	                    C {{ round_metrics.tee_shots.result_distribution.C }}
+	                </p>
+                    <p><strong>Driver Risk:</strong>
+                        Penalty {{ "%.1f" % (round_metrics.tee_shots.driver_penalty_rate * 100) }}%,
+                        Result C {{ "%.1f" % (round_metrics.tee_shots.driver_result_c_rate * 100) }}%
+                    </p>
+	            </div>
+	            <div class="col-md-6">
+	                <h4>Approach Proxy</h4>
+	                <table class="table table-bordered table-sm">
+	                    <tbody>
+	                        <tr><th>Under 160m Results</th><td>A {{ round_metrics.approach.under_160_result_distribution.A }}, B {{ round_metrics.approach.under_160_result_distribution.B }}, C {{ round_metrics.approach.under_160_result_distribution.C }}</td></tr>
+	                        <tr><th>Under 160m Avg Error</th><td>{{ "%.1f" % round_metrics.approach.under_160_average_error }}</td></tr>
+                            <tr><th>GIR from Under 160m</th><td>{{ "%.1f" % (round_metrics.approach.gir_from_under_160_rate * 100) }}%</td></tr>
+	                        <tr><th>First Putt Distance</th><td>{{ "%.1f" % round_metrics.putting.first_putt_distance_avg }} m ({{ round_metrics.putting.first_putt_sample_size }} samples)</td></tr>
+	                        <tr><th>Putts on GIR Holes</th><td>{{ "%.2f" % round_metrics.putting.putts_per_gir_hole }}</td></tr>
+	                        <tr><th>Putts on Missed GIR Holes</th><td>{{ "%.2f" % round_metrics.putting.putts_per_non_gir_hole }}</td></tr>
+	                    </tbody>
+	                </table>
+            </div>
+        </div>
     </div>
 
     <div id="holeDetails" class="tab-content">
@@ -202,6 +380,157 @@
 
     <div id="shotStatistics" class="tab-content">
         <h3 class="mt-4">Detailed Shot Statistics</h3>
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Shot State Summary</h5>
+                <table class="table table-bordered table-sm">
+                    <tbody>
+                        <tr><th>Total Shots</th><td>{{ shot_state_summary.total_shots }}</td></tr>
+                        <tr><th>Tee Shots</th><td>{{ shot_state_summary.tee_shots }}</td></tr>
+                        <tr><th>Putts</th><td>{{ shot_state_summary.putts }}</td></tr>
+                        <tr><th>Recovery Shots</th><td>{{ shot_state_summary.recovery_shots }}</td></tr>
+                        <tr><th>Penalty Shots</th><td>{{ shot_state_summary.penalty_shots }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h5>Shot Value Summary</h5>
+                <table class="table table-bordered table-sm">
+                    <tbody>
+                        <tr><th>Covered Shots</th><td>{{ shot_value_summary.covered_shots }} / {{ shot_state_summary.total_shots }} ({{ "%.1f" % (shot_value_summary.coverage_rate * 100) }}%)</td></tr>
+                        <tr><th>Total Shot Value</th><td>{{ "%.2f" % shot_value_summary.total_shot_value }}</td></tr>
+                        <tr><th>Average Shot Value</th><td>{{ "%.2f" % shot_value_summary.avg_shot_value }}</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Shot Categories</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th>Category</th><th>Count</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for category, count in shot_state_summary.by_category.items() %}
+                        <tr><td>{{ category }}</td><td>{{ count }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h5>Category Shot Value</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th>Category</th><th>Count</th><th>Total</th><th>Average</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for item in shot_value_summary.category_summary %}
+                        <tr>
+                            <td>{{ item.category }}</td>
+                            <td>{{ item.count }}</td>
+                            <td>{{ "%.2f" % item.total_shot_value }}</td>
+                            <td>{{ "%.2f" % item.avg_shot_value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Penalty by Club Group</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th>Group</th><th>Penalty Count</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for group, count in round_metrics.penalties.penalty_by_club_group.items() %}
+                        <tr><td>{{ group }}</td><td>{{ count }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h5>Club Group Shot Value</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th>Group</th><th>Count</th><th>Total</th><th>Average</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for item in shot_value_summary.club_group_summary %}
+                        <tr>
+                            <td>{{ item.club_group }}</td>
+                            <td>{{ item.count }}</td>
+                            <td>{{ "%.2f" % item.total_shot_value }}</td>
+                            <td>{{ "%.2f" % item.avg_shot_value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Distance Band Breakdown</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th>Band</th><th>Shots</th><th>Avg Error</th><th>A/B/C</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for band in round_metrics.approach.distance_bands.values() %}
+                        <tr>
+                            <td>{{ band.label }}</td>
+                            <td>{{ band.shot_count }}</td>
+                            <td>{{ "%.1f" % band.average_error }}</td>
+                            <td>{{ band.result_distribution.A }}/{{ band.result_distribution.B }}/{{ band.result_distribution.C }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <h5>Start States</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th>State</th><th>Count</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for state, count in shot_state_summary.by_start_state.items() %}
+                        <tr><td>{{ state }}</td><td>{{ count }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h5>Normalized Shot Facts</h5>
+                <table class="table table-bordered table-sm">
+                    <thead>
+                        <tr><th>Hole</th><th>#</th><th>Category</th><th>Start</th><th>End</th><th>Bucket</th><th>Expected</th><th>After</th><th>Cost</th><th>Value</th><th>Level</th><th>Samples</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for fact in shot_facts %}
+                        <tr>
+                            <td>{{ fact.hole_num }}</td>
+                            <td>{{ fact.shot_num }}</td>
+                            <td>{{ fact.shot_category }}</td>
+                            <td>{{ fact.start_state }}</td>
+                            <td>{{ fact.end_state }}</td>
+                            <td>{{ fact.distance_bucket if fact.distance_bucket else '-' }}</td>
+                            <td>{{ "%.2f" % fact.expected_before if fact.expected_before is not none else '-' }}</td>
+                            <td>{{ "%.2f" % fact.expected_after if fact.expected_before is not none else '-' }}</td>
+                            <td>{{ fact.shot_cost if fact.shot_cost is not none else '-' }}</td>
+                            <td>{{ "%.2f" % fact.shot_value if fact.shot_value is not none else '-' }}</td>
+                            <td>{{ fact.expected_lookup_level if fact.expected_lookup_level else '-' }}</td>
+                            <td>{{ fact.expected_sample_count if fact.expected_sample_count else '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <div class="row">
             <div class="col-md-6">
                 <h5>Penalty & Concede Stats</h5>
@@ -347,6 +676,34 @@
                     <td>{{ "%.1f" % comparison_stats.overall.avg_putt }}</td>
                     <td>{{ "%.1f" % comparison_stats.same_course.avg_putt }}</td>
                     <td>{{ "%.1f" % comparison_stats.recent_5.avg_putt }}</td>
+                </tr>
+                <tr>
+                    <td>Score to Par</td>
+                    <td>{{ round_metrics.summary.score_to_par }}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>3-Putt Rate</td>
+                    <td>{{ "%.1f" % (round_metrics.putting.three_putt_rate * 100) }}%</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Scrambling</td>
+                    <td>{{ "%.1f" % (round_metrics.short_game.scrambling_rate * 100) }}%</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Penalty Strokes</td>
+                    <td>{{ round_metrics.penalties.penalty_strokes_per_round }}</td>
+                    <td>-</td>
+                    <td>-</td>
+                    <td>-</td>
                 </tr>
             </tbody>
         </table>

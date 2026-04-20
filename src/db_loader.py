@@ -100,9 +100,11 @@ def save_round_data(parsed_data: Dict, scores_and_stats: Dict, raw_data: str = N
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Check for duplicate tee_off_time before proceeding
+    # Check for duplicate tee_off_time before proceeding, excluding the current round on update.
+    round_id = parsed_data.get('id')
     cursor.execute("SELECT id FROM rounds WHERE playdate = %s", (parsed_data['tee_off_time'],))
-    if cursor.fetchone() and not parsed_data.get('id'): # Check only for new entries
+    duplicate_row = cursor.fetchone()
+    if duplicate_row and duplicate_row[0] != round_id:
         cursor.close()
         conn.close()
         raise Exception(f"Duplicate entry: A round with tee-off time {parsed_data['tee_off_time']} already exists.")
@@ -299,13 +301,18 @@ def get_all_rounds_for_trend_analysis():
             r.id AS round_id,
             r.score AS round_score,
             r.gir AS round_gir,
+            r.gcname,
             r.playdate,
             h.holenum,
             h.par AS hole_par,
             h.score AS hole_score,
             h.putt,
             s.club,
+            s.score AS shot_score,
+            s.feelgrade,
             s.penalty,
+            s.shotplace,
+            s.retplace,
             s.distance,
             s.retgrade
         FROM rounds r

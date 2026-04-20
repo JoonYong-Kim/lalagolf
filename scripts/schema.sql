@@ -75,6 +75,7 @@ CREATE TABLE `rounds` (
 --
 
 CREATE INDEX idx_playdate ON rounds(playdate);
+CREATE UNIQUE INDEX uq_rounds_playdate ON rounds(playdate);
 
 --
 -- Table structure for table `shots`

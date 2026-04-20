@@ -27,12 +27,12 @@
 
         <h4 class="mt-4">Parsed Round Data (JSON):</h4>
         <div class="mb-3">
-            <textarea class="form-control" id="parsed_data" name="parsed_data" rows="15">{{ parsed_data | tojson(indent=4) }}</textarea>
+            <textarea class="form-control" id="parsed_data" name="parsed_data" rows="15" readonly>{{ parsed_data | tojson(indent=4) }}</textarea>
         </div>
 
         <h4 class="mt-4">Scores and Statistics (JSON):</h4>
         <div class="mb-3">
-            <textarea class="form-control" id="scores_and_stats" name="scores_and_stats" rows="15">{{ scores_and_stats | tojson(indent=4) }}</textarea>
+            <textarea class="form-control" id="scores_and_stats" name="scores_and_stats" rows="15" readonly>{{ scores_and_stats | tojson(indent=4) }}</textarea>
         </div>
 
         <button type="submit" name="action" value="save" class="btn btn-success custom-btn">Save to Database</button>

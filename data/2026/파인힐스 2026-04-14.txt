@@ -1,0 +1,98 @@
+2026-04-14 13:30
+파인힐스
+조인
+
+1 p4
+d b c 
+i8 c b
+p b b 6 ok
+2 p5
+d c b
+uw b b
+48 b b 
+p b b 7 ok
+3 p3
+i8 b c
+56 b b 25
+p b b 8 ok
+4 p4
+d c c b
+i9 c b
+52 b c 40
+56 c c 13
+p c c 10
+p b b 2
+5 p5
+d b b
+uw b b
+i5 cc
+48 cc
+56 b c 30
+p b c 8
+p b b 10 ok
+6 p4
+d c b
+i9 a b
+p c c 7
+p c c 1.5 ok
+7 p4
+d b b
+56 c c 
+56 bc 50
+p b b 20
+p c c 2 ok
+8 p3
+i8 a b
+p b b 7 ok
+9 p4
+d cb
+i8 b b
+p b b 10 ok
+10 p4
+d c c
+i6 c 
+p a b 20 ok
+11 p5
+d b c h
+i7 b b 110
+48 c c 75
+52 c c 16
+p b c 13
+p b b 2.5
+12 p3
+i9 b b 
+p c c 15
+p c b 15
+p c c 2 ok
+13 p4
+d c c h
+i8 c b
+p c c 15
+p bb 5 ok
+14 p4
+d b c b 
+56 b c b 45
+56 b b 20
+p c c 9
+p cc 2 ok
+15 p5
+d b b 
+uw c c h
+i5 c b
+48 b b 70
+p c c 6 
+p b b 9 ok
+16 p3
+i5 cb
+p bb 13
+p b b 1.5
+17 p4
+d b c
+56 c c 50
+52 b b 30
+p c c 3 ok
+18 p4
+d c c h
+i9 b b 
+p b b 6 ok
+ 

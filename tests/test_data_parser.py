@@ -23,7 +23,7 @@ def sample_data_path():
     return file_path
 
 def test_parse_file(sample_data_path):
-    parsed_data, _ = parse_file(sample_data_path)
+    _, parsed_data, _ = parse_file(sample_data_path)
 
     assert parsed_data['file_name'] == sample_data_path
     assert parsed_data['tee_off_time'] == "2024-07-13 08:00"
@@ -114,7 +114,7 @@ def robust_sample_data_path():
     return file_path
 
 def test_parse_file_robustness(robust_sample_data_path):
-    parsed_data, _ = parse_file(robust_sample_data_path)
+    _, parsed_data, _ = parse_file(robust_sample_data_path)
 
     assert parsed_data['file_name'] == robust_sample_data_path
     assert parsed_data['tee_off_time'] == "2024-07-13 09:00"
@@ -179,7 +179,7 @@ def sample_data_with_unparsed_lines_path():
     return file_path
 
 def test_parse_file_unparsed_lines(sample_data_with_unparsed_lines_path):
-    parsed_data, _ = parse_file(sample_data_with_unparsed_lines_path)
+    _, parsed_data, _ = parse_file(sample_data_with_unparsed_lines_path)
 
     assert parsed_data['file_name'] == sample_data_with_unparsed_lines_path
     assert parsed_data['tee_off_time'] == "2024-07-13 10:00"
@@ -211,7 +211,7 @@ def sample_27_hole_data_path():
     return 'tests/data/test_27.txt'
 
 def test_parse_27_hole_file(sample_27_hole_data_path):
-    parsed_data, _ = parse_file(sample_27_hole_data_path)
+    _, parsed_data, _ = parse_file(sample_27_hole_data_path)
 
     assert parsed_data['file_name'] == sample_27_hole_data_path
     assert parsed_data['tee_off_time'] == "2020-07-21 06:38"
@@ -230,4 +230,3 @@ def test_parse_27_hole_file(sample_27_hole_data_path):
     assert last_hole['hole_num'] == 27
     assert last_hole['par'] == 5
     assert len(last_hole['shots']) == 5
-

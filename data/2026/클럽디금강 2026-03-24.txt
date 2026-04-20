@@ -1,0 +1,95 @@
+2026-03-24 12:23
+클럽디금강
+홍성걸 성걸친척
+
+1P5
+D C C
+uw c b
+i7 cb
+p c c 15
+p b c 10
+p c c 2.5 ok
+2 P4
+D C B
+I6 B B
+PBB 20
+P C B 3 OK
+3 P4
+D B B
+I6 B C B
+56 B B 20
+P B B 8 OK
+4 P4
+D C B
+U3 B C B
+56 B B 20
+P C C 7
+P B C 3 OK
+5 P3
+I7 C C
+56 C B 14 OK
+6 P4
+D B B
+48 B B
+P C C 12
+P CC 4
+P C C 4 OK
+7 P4
+D B B
+IP B c
+p b b  20
+p b b 3 ok
+8 p3
+i8 a  b
+p c b 7 ok
+9p5
+d b b
+uw b c
+ip c c 75
+p b b 8 ok
+10 p4
+d b b
+ip b b
+p c c 8
+p b b 4 ok
+11 p4
+d b b 
+i8  c c b
+56 a a 30
+p b b 8
+p c c 2 ok
+12 p5
+d a b 
+uw c c h
+52 a a 80
+p b b 2
+13 p3
+i8 b c
+p b b 12
+p b b 8 ok
+14 p4
+d b b
+i8 b b
+p b b 5
+p c c 3 ok
+15 p4
+d b b 
+i5 c c b
+56 b b 30
+p b b 9 ok
+16 p4
+d bb
+uw a b
+p c c 12
+p b b 3.5 ok
+17 p3
+ip b c b
+56 b b 20
+p a b 4 ok
+18 p5
+d c c 
+i7 c c
+i7 b b
+i7 b b 120
+p c c 15
+p b b 3.5 ok

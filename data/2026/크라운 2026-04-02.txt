@@ -1,0 +1,97 @@
+2026-04-02 12:27
+크라운
+늘동산과 친구들
+
+1 p4
+d c c h
+uw b b
+52 c c
+52 b b 22
+p b b 7
+p b b 2
+2 p4
+d c c
+i7 b b 
+48 b b 
+p b b 10
+p c c 2 ok
+3 p3
+ip b b 
+p b a 7
+4 p4
+d a b
+i6 b c
+p b b 20
+p b b 2.5 ok
+5 p4
+d b c
+ip b c
+p c c 23
+p c c 6
+p c c 1.5 ok
+6 p4
+d b b 
+i9 c c
+56 a a 13 ok
+7 p3
+i6 c c
+56 c c 22
+56 b b 15
+p b b 8 ok
+8 p4
+d c c 
+i5 c b 
+48 c b 77
+p b b 17 ok
+9 p5
+d c c h
+uw c b
+52 c b
+p b b 15
+p b c 3 ok
+10 p4
+d a b
+52 b b 
+p b c 4.5 ok
+11 p3
+u3 c c
+56 a b 30
+p b b 3
+12 p5
+d c c h
+uw c c 
+uw a a
+p b b 4 ok
+13 p5
+u b c un
+i7 b b 
+52 c c 
+56 a b 15
+p b b 2.5
+14 p4
+d c c h
+52 c c 60
+52 b b 40
+p b b 10
+p b b 4.5 ok
+15 p4
+d b c 
+52 c b 65
+p b b 20
+p c c 3 ok
+16 p3
+i8 c b
+p c b 7
+p b b 1.5
+17 p4
+ d c c 
+i7 b c h
+52 b c
+p b b 15 
+p c c 2 ok
+18 p4
+d b b 
+i8 c c 
+56 b b 20
+p b b 5 ok
+
