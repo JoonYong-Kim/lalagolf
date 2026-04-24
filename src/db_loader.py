@@ -1,10 +1,21 @@
 
 import mysql.connector
 from mysql.connector import pooling
+import re
 from typing import Dict, List, Optional
 
 # Global connection pool
 connection_pool = None
+
+def _split_companions(coplayers: Optional[str]) -> List[str]:
+    if not coplayers:
+        return []
+    return [token.strip() for token in re.split(r"[\s,]+", coplayers) if token.strip()]
+
+def _has_companion(coplayers: Optional[str], companion: str) -> bool:
+    if companion == 'all':
+        return True
+    return companion in _split_companions(coplayers)
 
 def init_connection_pool(config: Dict[str, str]):
     global connection_pool
@@ -36,10 +47,6 @@ def get_filtered_rounds(year: str = 'all', golf_course: str = 'all', companion: 
         query += " AND gcname = %s"
         params.append(golf_course)
 
-    if companion != 'all':
-        query += " AND coplayers LIKE %s"
-        params.append(f'%{companion}%')
-
     if search_query:
         search_term = f'%{search_query}%'
         query += " AND (gcname LIKE %s OR coplayers LIKE %s)"
@@ -59,6 +66,8 @@ def get_filtered_rounds(year: str = 'all', golf_course: str = 'all', companion: 
 
     cursor.execute(query, params)
     rounds = cursor.fetchall()
+    if companion != 'all':
+        rounds = [row for row in rounds if _has_companion(row.get('coplayers'), companion)]
 
     cursor.close()
     conn.close()
@@ -72,10 +81,6 @@ def _append_round_filters(query_parts, params, year='all', golf_course='all', co
     if golf_course != 'all':
         query_parts.append("AND r.gcname = %s")
         params.append(golf_course)
-
-    if companion != 'all':
-        query_parts.append("AND r.coplayers LIKE %s")
-        params.append(f'%{companion}%')
 
     if round_ids:
         placeholders = ", ".join(["%s"] * len(round_ids))
@@ -107,7 +112,7 @@ def get_unique_companions():
     all_coplayers = []
     for row in cursor.fetchall():
         if row['coplayers']:
-            all_coplayers.extend([c.strip() for c in row['coplayers'].split(',')])
+            all_coplayers.extend(_split_companions(row['coplayers']))
     unique_companions = sorted(list(set(all_coplayers)))
     cursor.close()
     conn.close()
@@ -320,6 +325,7 @@ def get_rounds_for_trend_analysis(year: str = 'all', golf_course: str = 'all', c
             r.score AS round_score,
             r.gir AS round_gir,
             r.gcname,
+            r.coplayers,
             r.playdate,
             h.holenum,
             h.par AS hole_par,
@@ -344,6 +350,8 @@ def get_rounds_for_trend_analysis(year: str = 'all', golf_course: str = 'all', c
     query = "\n".join(query_parts)
     cursor.execute(query, params)
     data = cursor.fetchall()
+    if companion != 'all':
+        data = [row for row in data if _has_companion(row.get('coplayers'), companion)]
     cursor.close()
     conn.close()
     return data
