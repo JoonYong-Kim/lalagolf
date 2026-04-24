@@ -7,9 +7,19 @@ from src.analytics_config import (
     TEE_STRATEGY_MIN_SAMPLES,
 )
 from src.webapp import app
-from src.db_loader import get_db_connection, save_round_data, delete_round_data, init_connection_pool, get_filtered_rounds, get_yearly_round_statistics
+from src.db_loader import (
+    delete_round_data,
+    get_db_connection,
+    get_filtered_rounds,
+    get_rounds_for_trend_analysis,
+    get_unique_companions,
+    get_unique_golf_courses,
+    get_unique_years,
+    get_yearly_round_statistics,
+    init_connection_pool,
+    save_round_data,
+)
 from src.data_parser import parse_file, parse_content, analyze_shots_and_stats # Import analyze_shots_and_stats
-from src.db_loader import get_all_rounds_for_trend_analysis
 from src.metrics import (
     build_birdie_follow_up_summary,
     build_closing_stretch_summary,
@@ -71,116 +81,171 @@ def before_request():
     if 'DB_CONFIG' in current_app.config:
         init_connection_pool(current_app.config['DB_CONFIG'])
 
-@app.route('/')
-def home():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
+def _parse_analysis_window(value, default='all'):
+    if value is None:
+        return default
+    if value == 'all':
+        return 'all'
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    if parsed <= 0:
+        return default
+    return str(parsed)
 
-    selected_year = request.args.get('year', 'all')
+def _parse_round_ids(values):
+    round_ids = []
+    for value in values or []:
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            continue
+        if parsed <= 0 or parsed in round_ids:
+            continue
+        round_ids.append(parsed)
+    return round_ids
 
-    query = "SELECT *, gir FROM rounds WHERE score IS NOT NULL"
-    params = []
+def _resolve_window_size(selected_window, round_count):
+    if selected_window == 'all':
+        return round_count
+    return min(int(selected_window), round_count) if round_count else int(selected_window)
 
-    if selected_year != 'all':
-        query += " AND YEAR(playdate) = %s"
-        params.append(selected_year)
-    
-    query += " ORDER BY playdate ASC"
+def _build_analysis_scope(selected_year, selected_window, round_count, selected_golf_course='all', selected_companion='all', selected_round_ids=None):
+    scope_parts = []
+    selected_round_ids = selected_round_ids or []
 
-    cursor.execute(query, params)
-    rounds = cursor.fetchall()
+    if selected_round_ids:
+        scope_parts.append(f"선택 라운드 {len(selected_round_ids)}개")
+    elif selected_year != 'all':
+        scope_parts.append(f"{selected_year}년")
+    else:
+        scope_parts.append("전체 연도")
 
-    labels = [r['playdate'].strftime('%Y-%m-%d') for r in rounds]
-    data = [r['score'] for r in rounds]
+    if selected_golf_course != 'all':
+        scope_parts.append(selected_golf_course)
+    if selected_companion != 'all':
+        scope_parts.append(f"동반자 {selected_companion}")
 
-    cursor.execute("SELECT DISTINCT YEAR(playdate) AS year FROM rounds ORDER BY year DESC")
-    unique_years = [row['year'] for row in cursor.fetchall()]
+    if selected_window == 'all':
+        window_label = "선택 범위 전체"
+    else:
+        window_label = f"최근 {selected_window}라운드"
+    scope_parts.append(window_label)
 
-    cursor.close() 
-    conn.close()  
+    return {
+        "label": " / ".join(scope_parts),
+        "round_count": round_count,
+        "selected_window": selected_window,
+        "window_label": window_label,
+        "is_filtered": bool(selected_round_ids) or any(value != 'all' for value in (selected_year, selected_golf_course, selected_companion)) or selected_window != 'all',
+    }
 
-    yearly_stats = get_yearly_round_statistics()
-    raw_trend_data = get_all_rounds_for_trend_analysis()
-    recent_summary = build_recent_summary(raw_trend_data, window=10)
+def _build_analysis_context(selected_year='all', selected_window='all', selected_golf_course='all', selected_companion='all', selected_round_ids=None):
+    selected_round_ids = selected_round_ids or []
+    raw_trend_data = get_rounds_for_trend_analysis(
+        year=selected_year,
+        golf_course=selected_golf_course,
+        companion=selected_companion,
+        round_ids=selected_round_ids or None,
+    )
+    round_ids = {
+        row["round_id"]
+        for row in raw_trend_data
+        if row.get("round_id") is not None
+    }
+    round_count = len(round_ids)
+    window_size = _resolve_window_size(selected_window, round_count)
+    recent_summary = build_recent_summary(raw_trend_data, window=window_size)
     historical_shot_facts = build_historical_shot_facts(raw_trend_data)
     round_weights = build_round_recency_weights(raw_trend_data)
-    expected_score_table = build_expected_score_table(historical_shot_facts) if historical_shot_facts else {}
-    if historical_shot_facts:
-        expected_score_table = build_expected_score_table(historical_shot_facts, round_weights=round_weights)
+    expected_score_table = build_expected_score_table(
+        historical_shot_facts,
+        round_weights=round_weights,
+    ) if historical_shot_facts else {}
     valued_historical_shots = build_shot_values(
         historical_shot_facts,
         expected_score_table,
         min_samples=EXPECTED_SCORE_MIN_SAMPLES if len(historical_shot_facts) > 1 else 1,
     ) if historical_shot_facts else []
-    shot_value_by_round = summarize_shot_values_by_round(valued_historical_shots)
-    recent_shot_value_window = build_recent_shot_value_window(raw_trend_data, shot_value_by_round, window=10)
+    shot_value_by_round = summarize_shot_values_by_round(valued_historical_shots) if valued_historical_shots else {}
+    recent_shot_value_window = build_recent_shot_value_window(raw_trend_data, shot_value_by_round, window=window_size)
     recommendations = build_recommendations(recent_summary, recent_shot_value_window)
     trend_action_cards = build_trend_action_cards(recent_summary, recent_shot_value_window)
+
+    return {
+        "raw_trend_data": raw_trend_data,
+        "round_count": round_count,
+        "recent_summary": recent_summary,
+        "recommendations": recommendations,
+        "trend_action_cards": trend_action_cards,
+        "analysis_scope": _build_analysis_scope(
+            selected_year,
+            selected_window,
+            round_count,
+            selected_golf_course=selected_golf_course,
+            selected_companion=selected_companion,
+            selected_round_ids=selected_round_ids,
+        ),
+    }
+
+@app.route('/')
+def home():
+    selected_year = request.args.get('year', 'all')
+    selected_window = _parse_analysis_window(request.args.get('analysis_window'), default='all')
+    rounds = get_filtered_rounds(year=selected_year, sort_by='playdate', sort_order='ASC')
+    labels = [r['playdate'].strftime('%Y-%m-%d') for r in rounds]
+    data = [r['score'] for r in rounds]
+
+    unique_years = get_unique_years()
+    yearly_stats = get_yearly_round_statistics()
+    analysis_context = _build_analysis_context(
+        selected_year=selected_year,
+        selected_window=selected_window,
+    )
 
     return render_template('index.html', 
                            rounds=rounds, 
                            labels=labels, 
                            data=data, 
                            selected_year=selected_year,
+                           selected_analysis_window=selected_window,
                            unique_years=unique_years,
                            yearly_stats=yearly_stats,
-                           recent_summary=recent_summary,
-                           recommendations=recommendations,
-                           trend_action_cards=trend_action_cards)
+                           recent_summary=analysis_context['recent_summary'],
+                           recommendations=analysis_context['recommendations'],
+                           trend_action_cards=analysis_context['trend_action_cards'],
+                           analysis_scope=analysis_context['analysis_scope'])
 
 @app.route('/rounds')
 def list_rounds():
-    db_config = current_app.config['DB_CONFIG']
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-
     current_year = datetime.now().year
     selected_year = request.args.get('year', 'all')
     selected_golf_course = request.args.get('golf_course', 'all')
     selected_companion = request.args.get('companion', 'all')
+    selected_window = _parse_analysis_window(request.args.get('analysis_window'), default='all')
+    selected_round_ids = _parse_round_ids(request.args.getlist('round_ids'))
     sort_by = request.args.get('sort_by', 'playdate')
     sort_order = request.args.get('sort_order', 'ASC')
     search_query = request.args.get('search_query')
 
     rounds = get_filtered_rounds(year=selected_year, golf_course=selected_golf_course, companion=selected_companion, sort_by=sort_by, sort_order=sort_order, search_query=search_query)
-
-    # Get all unique years from the database
-    cursor.execute("SELECT DISTINCT YEAR(playdate) AS year FROM rounds ORDER BY year DESC")
-    unique_years = [row['year'] for row in cursor.fetchall()]
-
-    # Get all unique golf courses from the database
-    cursor.execute("SELECT DISTINCT gcname FROM rounds ORDER BY gcname ASC")
-    unique_golf_courses = [row['gcname'] for row in cursor.fetchall()]
-
-    # Get all unique companions from the database (assuming comma-separated)
-    cursor.execute("SELECT DISTINCT coplayers FROM rounds")
-    all_coplayers = []
-    for row in cursor.fetchall():
-        if row['coplayers']:
-            all_coplayers.extend([c.strip() for c in row['coplayers'].split(',')])
-    unique_companions = sorted(list(set(all_coplayers)))
-
-    cursor.close() 
-    conn.close()  
-    raw_trend_data = get_all_rounds_for_trend_analysis()
-    recent_summary = build_recent_summary(raw_trend_data, window=10)
-    historical_shot_facts = build_historical_shot_facts(raw_trend_data)
-    round_weights = build_round_recency_weights(raw_trend_data)
-    expected_score_table = build_expected_score_table(historical_shot_facts, round_weights=round_weights) if historical_shot_facts else {}
-    valued_historical_shots = build_shot_values(
-        historical_shot_facts,
-        expected_score_table,
-        min_samples=EXPECTED_SCORE_MIN_SAMPLES if len(historical_shot_facts) > 1 else 1,
-    ) if historical_shot_facts else []
-    shot_value_by_round = summarize_shot_values_by_round(valued_historical_shots)
-    recent_shot_value_window = build_recent_shot_value_window(raw_trend_data, shot_value_by_round, window=10)
-    recommendations = build_recommendations(recent_summary, recent_shot_value_window)
-    trend_action_cards = build_trend_action_cards(recent_summary, recent_shot_value_window)
+    unique_years = get_unique_years()
+    unique_golf_courses = get_unique_golf_courses()
+    unique_companions = get_unique_companions()
+    analysis_context = _build_analysis_context(
+        selected_year=selected_year,
+        selected_window=selected_window,
+        selected_golf_course=selected_golf_course,
+        selected_companion=selected_companion,
+        selected_round_ids=selected_round_ids,
+    )
 
     return render_template('rounds.html', 
                            rounds=rounds, 
                            current_year=current_year,
                            selected_year=selected_year,
+                           selected_analysis_window=selected_window,
                            unique_years=unique_years,
                            selected_golf_course=selected_golf_course,
                            unique_golf_courses=unique_golf_courses,
@@ -189,9 +254,11 @@ def list_rounds():
                            sort_by=sort_by,
                            sort_order=sort_order,
                            search_query=search_query,
-                           recent_summary=recent_summary,
-                           recommendations=recommendations,
-                           trend_action_cards=trend_action_cards)
+                           selected_round_ids=selected_round_ids,
+                           recent_summary=analysis_context['recent_summary'],
+                           recommendations=analysis_context['recommendations'],
+                           trend_action_cards=analysis_context['trend_action_cards'],
+                           analysis_scope=analysis_context['analysis_scope'])
 
 @app.route('/delete_round/<int:round_id>', methods=['POST'])
 @login_required
@@ -295,7 +362,7 @@ def round_detail(round_id):
     detailed_shot_stats = analyze_shots_and_stats(processed_shots)
     round_metrics = build_round_metrics(round_info, [hole for segment in holes_info for hole in segment], processed_shots)
     shot_facts = normalize_shot_states(round_info, [hole for segment in holes_info for hole in segment], processed_shots)
-    raw_trend_data = get_all_rounds_for_trend_analysis()
+    raw_trend_data = get_rounds_for_trend_analysis()
     historical_shot_facts = build_historical_shot_facts(raw_trend_data)
     expected_score_table = build_expected_score_table(
         historical_shot_facts,

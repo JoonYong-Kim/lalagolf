@@ -10,7 +10,26 @@
 	<div class="container">
 	    <h1 class="my-4">Welcome to LaLaGolf!</h1>
 
-        <h2 class="mb-3">Recent {{ recent_summary.window }} Rounds</h2>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="mb-0">Analysis Summary</h2>
+            <form id="analysisFilterForm" class="d-flex align-items-center flex-wrap gap-2" method="GET" action="{{ url_for('home') }}">
+                <label for="yearFilter" class="visually-hidden">Filter by Year</label>
+                <select class="form-select form-select-sm" id="yearFilter" name="year" onchange="document.getElementById('analysisFilterForm').submit();">
+                    <option value="all" {% if selected_year == 'all' %}selected{% endif %}>All Years</option>
+                    {% for year in unique_years %}
+                        <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+                <label for="analysisWindow" class="visually-hidden">Analysis Window</label>
+                <select class="form-select form-select-sm" id="analysisWindow" name="analysis_window" onchange="document.getElementById('analysisFilterForm').submit();">
+                    <option value="all" {% if selected_analysis_window == 'all' %}selected{% endif %}>Selected Range</option>
+                    <option value="5" {% if selected_analysis_window == '5' %}selected{% endif %}>Recent 5</option>
+                    <option value="10" {% if selected_analysis_window == '10' %}selected{% endif %}>Recent 10</option>
+                    <option value="20" {% if selected_analysis_window == '20' %}selected{% endif %}>Recent 20</option>
+                </select>
+            </form>
+        </div>
+        <p class="text-muted mb-3">현재 분석 범위: {{ analysis_scope.label }} ({{ analysis_scope.round_count }}라운드)</p>
         <div class="row mb-4">
             <div class="col-md-2 col-sm-6 mb-3">
                 <div class="card h-100"><div class="card-body"><h6>Avg Score</h6><div>{{ "%.1f" % recent_summary.avg_score if recent_summary.avg_score is not none else '-' }}</div></div></div>
@@ -157,15 +176,16 @@
 
 	    <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">Golf Rounds Chart</h2>
-        <form id="yearFilterForm" class="d-flex align-items-center flex-nowrap" method="GET" action="{{ url_for('home') }}">
+        <form id="chartFilterForm" class="d-flex align-items-center flex-nowrap" method="GET" action="{{ url_for('home') }}">
             <div class="mb-0 me-2">
-                <label for="yearFilter" class="visually-hidden">Filter by Year</label>
-                <select class="form-select form-select-sm" id="yearFilter" name="year" onchange="document.getElementById('yearFilterForm').submit();">
+                <label for="chartYearFilter" class="visually-hidden">Filter by Year</label>
+                <select class="form-select form-select-sm" id="chartYearFilter" name="year" onchange="document.getElementById('chartFilterForm').submit();">
                     <option value="all" {% if selected_year == 'all' %}selected{% endif %}>All Years</option>
                     {% for year in unique_years %}
                         <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}</option>
                     {% endfor %}
                 </select>
+                <input type="hidden" name="analysis_window" value="{{ selected_analysis_window }}">
             </div>
             <div class="mb-0">
                 <div class="form-check form-check-inline">

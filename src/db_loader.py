@@ -1,7 +1,7 @@
 
 import mysql.connector
 from mysql.connector import pooling
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 # Global connection pool
 connection_pool = None
@@ -63,6 +63,24 @@ def get_filtered_rounds(year: str = 'all', golf_course: str = 'all', companion: 
     cursor.close()
     conn.close()
     return rounds
+
+def _append_round_filters(query_parts, params, year='all', golf_course='all', companion='all', round_ids: Optional[List[int]] = None):
+    if year != 'all':
+        query_parts.append("AND YEAR(r.playdate) = %s")
+        params.append(year)
+
+    if golf_course != 'all':
+        query_parts.append("AND r.gcname = %s")
+        params.append(golf_course)
+
+    if companion != 'all':
+        query_parts.append("AND r.coplayers LIKE %s")
+        params.append(f'%{companion}%')
+
+    if round_ids:
+        placeholders = ", ".join(["%s"] * len(round_ids))
+        query_parts.append(f"AND r.id IN ({placeholders})")
+        params.extend(round_ids)
 
 def get_unique_years():
     conn = get_db_connection()
@@ -293,10 +311,10 @@ def delete_round_data(round_id: int, conn=None):
         if _close_conn:
             conn.close()
 
-def get_all_rounds_for_trend_analysis():
+def get_rounds_for_trend_analysis(year: str = 'all', golf_course: str = 'all', companion: str = 'all', round_ids: Optional[List[int]] = None):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
-    query = """
+    query_parts = ["""
         SELECT
             r.id AS round_id,
             r.score AS round_score,
@@ -318,10 +336,17 @@ def get_all_rounds_for_trend_analysis():
         FROM rounds r
         LEFT JOIN holes h ON r.id = h.roundid
         LEFT JOIN shots s ON r.id = s.roundid AND h.holenum = s.holenum
-        ORDER BY r.playdate ASC, h.holenum ASC, s.id ASC
-    """
-    cursor.execute(query)
+        WHERE r.score IS NOT NULL
+    """]
+    params = []
+    _append_round_filters(query_parts, params, year=year, golf_course=golf_course, companion=companion, round_ids=round_ids)
+    query_parts.append("ORDER BY r.playdate ASC, h.holenum ASC, s.id ASC")
+    query = "\n".join(query_parts)
+    cursor.execute(query, params)
     data = cursor.fetchall()
     cursor.close()
     conn.close()
     return data
+
+def get_all_rounds_for_trend_analysis():
+    return get_rounds_for_trend_analysis()
