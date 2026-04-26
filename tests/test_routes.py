@@ -79,7 +79,7 @@ def test_home_uses_selected_year_and_analysis_window(monkeypatch):
     assert "현재 분석 범위: 2025년 / 최근 5라운드 (2라운드)" in response.get_data(as_text=True)
 
 
-def test_rounds_uses_list_filters_for_analysis(monkeypatch):
+def test_analysis_uses_list_filters_for_analysis(monkeypatch):
     captured = {}
 
     monkeypatch.setattr(routes, "init_connection_pool", lambda config: None)
@@ -112,7 +112,7 @@ def test_rounds_uses_list_filters_for_analysis(monkeypatch):
     monkeypatch.setattr(routes, "_build_analysis_context", fake_build_analysis_context)
 
     with app.test_client() as client:
-        response = client.get("/rounds?year=2025&golf_course=Sky72&companion=Kim&analysis_window=10")
+        response = client.get("/analysis?year=2025&golf_course=Sky72&companion=Kim&analysis_window=10")
 
     assert response.status_code == 200
     assert captured == {
@@ -127,7 +127,7 @@ def test_rounds_uses_list_filters_for_analysis(monkeypatch):
     assert "analysis_window=10" in body
 
 
-def test_rounds_uses_selected_round_ids_for_analysis(monkeypatch):
+def test_analysis_uses_selected_round_ids_for_analysis(monkeypatch):
     captured = {}
 
     monkeypatch.setattr(routes, "init_connection_pool", lambda config: None)
@@ -168,7 +168,7 @@ def test_rounds_uses_selected_round_ids_for_analysis(monkeypatch):
     monkeypatch.setattr(routes, "_build_analysis_context", fake_build_analysis_context)
 
     with app.test_client() as client:
-        response = client.get("/rounds?analysis_window=5&round_ids=7&round_ids=9")
+        response = client.get("/analysis?analysis_window=5&round_ids=7&round_ids=9")
 
     assert response.status_code == 200
     assert captured == {
@@ -182,3 +182,32 @@ def test_rounds_uses_selected_round_ids_for_analysis(monkeypatch):
     assert "현재 분석 범위: 선택 라운드 2개 / 최근 5라운드 (2라운드)" in body
     assert 'value="7"' in body
     assert 'value="9"' in body
+
+
+def test_rounds_page_links_to_analysis(monkeypatch):
+    monkeypatch.setattr(routes, "init_connection_pool", lambda config: None)
+    monkeypatch.setattr(
+        routes,
+        "get_filtered_rounds",
+        lambda **kwargs: [
+            {
+                "id": 7,
+                "playdate": datetime(2025, 3, 1),
+                "gcname": "Sky72",
+                "coplayers": "Kim",
+                "score": 82,
+                "gir": 47.1,
+            }
+        ],
+    )
+    monkeypatch.setattr(routes, "get_unique_years", lambda: [2025, 2024])
+    monkeypatch.setattr(routes, "get_unique_golf_courses", lambda: ["Sky72"])
+    monkeypatch.setattr(routes, "get_unique_companions", lambda: ["Kim"])
+
+    with app.test_client() as client:
+        response = client.get("/rounds?year=2025&golf_course=Sky72&companion=Kim")
+
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    assert "분석으로 이동" in body
+    assert "/analysis?year=2025&amp;golf_course=Sky72&amp;companion=Kim" in body

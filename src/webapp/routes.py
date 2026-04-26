@@ -223,13 +223,47 @@ def list_rounds():
     selected_year = request.args.get('year', 'all')
     selected_golf_course = request.args.get('golf_course', 'all')
     selected_companion = request.args.get('companion', 'all')
+    sort_by = request.args.get('sort_by', 'playdate')
+    sort_order = request.args.get('sort_order', 'ASC')
+    search_query = request.args.get('search_query')
+
+    rounds = get_filtered_rounds(year=selected_year, golf_course=selected_golf_course, companion=selected_companion, sort_by=sort_by, sort_order=sort_order, search_query=search_query)
+    unique_years = get_unique_years()
+    unique_golf_courses = get_unique_golf_courses()
+    unique_companions = get_unique_companions()
+
+    return render_template('rounds.html', 
+                           rounds=rounds, 
+                           current_year=current_year,
+                           selected_year=selected_year,
+                           unique_years=unique_years,
+                           selected_golf_course=selected_golf_course,
+                           unique_golf_courses=unique_golf_courses,
+                           selected_companion=selected_companion,
+                           unique_companions=unique_companions,
+                           sort_by=sort_by,
+                           sort_order=sort_order,
+                           search_query=search_query)
+
+@app.route('/analysis')
+def analysis_dashboard():
+    selected_year = request.args.get('year', 'all')
+    selected_golf_course = request.args.get('golf_course', 'all')
+    selected_companion = request.args.get('companion', 'all')
     selected_window = _parse_analysis_window(request.args.get('analysis_window'), default='all')
     selected_round_ids = _parse_round_ids(request.args.getlist('round_ids'))
     sort_by = request.args.get('sort_by', 'playdate')
     sort_order = request.args.get('sort_order', 'ASC')
     search_query = request.args.get('search_query')
 
-    rounds = get_filtered_rounds(year=selected_year, golf_course=selected_golf_course, companion=selected_companion, sort_by=sort_by, sort_order=sort_order, search_query=search_query)
+    rounds = get_filtered_rounds(
+        year=selected_year,
+        golf_course=selected_golf_course,
+        companion=selected_companion,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        search_query=search_query,
+    )
     unique_years = get_unique_years()
     unique_golf_courses = get_unique_golf_courses()
     unique_companions = get_unique_companions()
@@ -241,24 +275,25 @@ def list_rounds():
         selected_round_ids=selected_round_ids,
     )
 
-    return render_template('rounds.html', 
-                           rounds=rounds, 
-                           current_year=current_year,
-                           selected_year=selected_year,
-                           selected_analysis_window=selected_window,
-                           unique_years=unique_years,
-                           selected_golf_course=selected_golf_course,
-                           unique_golf_courses=unique_golf_courses,
-                           selected_companion=selected_companion,
-                           unique_companions=unique_companions,
-                           sort_by=sort_by,
-                           sort_order=sort_order,
-                           search_query=search_query,
-                           selected_round_ids=selected_round_ids,
-                           recent_summary=analysis_context['recent_summary'],
-                           recommendations=analysis_context['recommendations'],
-                           trend_action_cards=analysis_context['trend_action_cards'],
-                           analysis_scope=analysis_context['analysis_scope'])
+    return render_template(
+        'analysis.html',
+        rounds=rounds,
+        selected_year=selected_year,
+        selected_analysis_window=selected_window,
+        unique_years=unique_years,
+        selected_golf_course=selected_golf_course,
+        unique_golf_courses=unique_golf_courses,
+        selected_companion=selected_companion,
+        unique_companions=unique_companions,
+        sort_by=sort_by,
+        sort_order=sort_order,
+        search_query=search_query,
+        selected_round_ids=selected_round_ids,
+        recent_summary=analysis_context['recent_summary'],
+        recommendations=analysis_context['recommendations'],
+        trend_action_cards=analysis_context['trend_action_cards'],
+        analysis_scope=analysis_context['analysis_scope'],
+    )
 
 @app.route('/delete_round/<int:round_id>', methods=['POST'])
 @login_required

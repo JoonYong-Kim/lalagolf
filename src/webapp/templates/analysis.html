@@ -1,0 +1,286 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis{% endblock %}
+
+{% block head %}{% endblock %}
+
+{% block content %}
+    <div id="analysisSummary" class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Analysis Summary</h2>
+        <form id="analysisFilterForm" class="d-flex align-items-center flex-wrap gap-2" method="GET" action="{{ url_for('analysis_dashboard') }}">
+            <label for="yearFilterTop" class="visually-hidden">Filter by Year</label>
+            <select class="form-select form-select-sm" id="yearFilterTop" name="year" onchange="document.getElementById('analysisFilterForm').submit();">
+                <option value="all" {% if selected_year == 'all' %}selected{% endif %}>All Years</option>
+                {% for year in unique_years %}
+                    <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}</option>
+                {% endfor %}
+            </select>
+            <label for="analysisWindowTop" class="visually-hidden">Analysis Window</label>
+            <select class="form-select form-select-sm" id="analysisWindowTop" name="analysis_window" onchange="document.getElementById('analysisFilterForm').submit();">
+                <option value="all" {% if selected_analysis_window == 'all' %}selected{% endif %}>Selected Range</option>
+                <option value="5" {% if selected_analysis_window == '5' %}selected{% endif %}>Recent 5</option>
+                <option value="10" {% if selected_analysis_window == '10' %}selected{% endif %}>Recent 10</option>
+                <option value="20" {% if selected_analysis_window == '20' %}selected{% endif %}>Recent 20</option>
+            </select>
+            <label for="golfCourseFilterTop" class="visually-hidden">Filter by Golf Course</label>
+            <select class="form-select form-select-sm" id="golfCourseFilterTop" name="golf_course" onchange="document.getElementById('analysisFilterForm').submit();">
+                <option value="all" {% if selected_golf_course == 'all' %}selected{% endif %}>All Courses</option>
+                {% for course in unique_golf_courses %}
+                    <option value="{{ course }}" {% if selected_golf_course == course %}selected{% endif %}>{{ course }}</option>
+                {% endfor %}
+            </select>
+            <label for="companionFilterTop" class="visually-hidden">Filter by Companion</label>
+            <select class="form-select form-select-sm" id="companionFilterTop" name="companion" onchange="document.getElementById('analysisFilterForm').submit();">
+                <option value="all" {% if selected_companion == 'all' %}selected{% endif %}>All Companions</option>
+                {% for companion in unique_companions %}
+                    <option value="{{ companion }}" {% if selected_companion == companion %}selected{% endif %}>{{ companion }}</option>
+                {% endfor %}
+            </select>
+            {% for round_id in selected_round_ids %}
+            <input type="hidden" name="round_ids" value="{{ round_id }}">
+            {% endfor %}
+            {% if search_query %}
+            <input type="hidden" name="search_query" value="{{ search_query }}">
+            {% endif %}
+        </form>
+    </div>
+    <p class="text-muted mb-3">현재 분석 범위: {{ analysis_scope.label }} ({{ analysis_scope.round_count }}라운드)</p>
+    <p class="small text-muted mb-4">연도별 분석과 임의 라운드 분석은 이 페이지에서 확인합니다. 아래 표에서 라운드를 체크한 뒤 `선택 라운드로 분석`을 누르면 선택 집합 기준으로 다시 계산됩니다.</p>
+
+    <div class="row mb-4">
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card h-100"><div class="card-body"><h6>Recent Avg Score</h6><div>{{ "%.1f" % recent_summary.avg_score if recent_summary.avg_score is not none else '-' }}</div></div></div>
+        </div>
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card h-100"><div class="card-body"><h6>Recent GIR</h6><div>{{ "%.1f" % recent_summary.avg_gir if recent_summary.avg_gir is not none else '-' }}%</div></div></div>
+        </div>
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card h-100"><div class="card-body"><h6>Recent Putts</h6><div>{{ "%.2f" % recent_summary.avg_putts if recent_summary.avg_putts is not none else '-' }}</div></div></div>
+        </div>
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card h-100"><div class="card-body"><h6>3-Putt Rate</h6><div>{{ "%.1f" % (recent_summary.avg_three_putt_rate * 100) if recent_summary.avg_three_putt_rate is not none else '-' }}%</div></div></div>
+        </div>
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card h-100"><div class="card-body"><h6>Scrambling</h6><div>{{ "%.1f" % (recent_summary.avg_scrambling_rate * 100) if recent_summary.avg_scrambling_rate is not none else '-' }}%</div></div></div>
+        </div>
+        <div class="col-md-2 col-sm-6 mb-3">
+            <div class="card h-100"><div class="card-body"><h6>Tee Shot Penalty</h6><div>{{ "%.1f" % (recent_summary.avg_tee_shot_penalty_rate * 100) if recent_summary.avg_tee_shot_penalty_rate is not none else '-' }}%</div></div></div>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card h-100"><div class="card-body"><h6>Up-and-Down</h6><div>{{ "%.1f" % (recent_summary.avg_up_and_down_rate * 100) if recent_summary.avg_up_and_down_rate is not none else '-' }}%</div></div></div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card h-100"><div class="card-body"><h6>Driver Penalty</h6><div>{{ "%.1f" % (recent_summary.avg_driver_penalty_rate * 100) if recent_summary.avg_driver_penalty_rate is not none else '-' }}%</div></div></div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card h-100"><div class="card-body"><h6>Driver Result C</h6><div>{{ "%.1f" % (recent_summary.avg_driver_result_c_rate * 100) if recent_summary.avg_driver_result_c_rate is not none else '-' }}%</div></div></div>
+        </div>
+        <div class="col-md-3 col-sm-6 mb-3">
+            <div class="card h-100"><div class="card-body"><h6>GIR from &lt;160m</h6><div>{{ "%.1f" % (recent_summary.avg_gir_from_under_160_rate * 100) if recent_summary.avg_gir_from_under_160_rate is not none else '-' }}%</div></div></div>
+        </div>
+    </div>
+
+    {% if recent_summary.insights %}
+    <div class="alert alert-secondary">
+        <strong>Recent Focus:</strong>
+        <ul class="mb-0 mt-2">
+            {% for insight in recent_summary.insights %}
+            <li>{{ insight }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {% if trend_action_cards %}
+    <div class="alert alert-info border">
+        <strong>Top Recurring Priorities:</strong>
+        {% for card in trend_action_cards %}
+        <div class="mt-2">
+            <div><strong>{{ card.title }}</strong> - {{ card.summary }}</div>
+            {% if card.context_subtype %}
+            <div class="small mt-1"><strong>Loss Type:</strong> {{ card.context_subtype }}</div>
+            {% endif %}
+            <div class="small mt-1"><strong>Priority:</strong> {{ card.urgency_label }} / {{ card.trend_label }} ({% if card.trend_delta >= 0 %}+{% endif %}{{ "%.2f" % card.trend_delta }})</div>
+            <div class="small text-muted mt-1"><strong>Why:</strong> {{ card.priority_reason }}</div>
+            {% if card.context_note %}
+            <div class="small text-muted mt-1">{{ card.context_note }}</div>
+            {% endif %}
+            <div class="small mt-1"><strong>This Week:</strong> {{ card.priority_action }}</div>
+            {% if card.menu_name %}
+            <div class="small mt-1"><strong>Drill:</strong> {{ card.menu_name }} - {{ card.menu_detail }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if recommendations.practice_priorities or recommendations.strategy_notes or recommendations.strategy_cards %}
+    <div class="alert alert-light border">
+        <strong>Practice Priorities:</strong>
+        {% if recommendations.sample_note %}
+        <div class="text-muted mt-1">{{ recommendations.sample_note }}</div>
+        {% endif %}
+        {% if recommendations.interpretation_guide %}
+        <div class="small text-muted mt-1">{{ recommendations.interpretation_guide }}</div>
+        {% endif %}
+        {% if recommendations.practice_priorities %}
+        <ul class="mb-2 mt-2">
+            {% for item in recommendations.practice_priorities %}
+            <li>
+                <strong>{{ item.label }}</strong>: {{ item.message }}
+                {% if item.context_subtype %}
+                <div class="small mt-1"><strong>Loss Type:</strong> {{ item.context_subtype }}</div>
+                {% endif %}
+                <div class="small mt-1"><strong>Priority:</strong> {{ item.urgency_label }}</div>
+                <div class="small text-muted mt-1"><strong>Why:</strong> {{ item.priority_reason }}</div>
+                {% if item.context_note %}
+                <div class="small text-muted mt-1">{{ item.context_note }}</div>
+                {% endif %}
+                <div class="small mt-1"><strong>This Week:</strong> {{ item.priority_action }}</div>
+                {% if item.sample %}
+                <div class="small mt-1"><strong>{{ item.sample.label }}</strong> - {{ item.sample.message }}</div>
+                {% endif %}
+                {% if item.reasons %}
+                <div class="small text-muted mt-1">
+                    {% for reason in item.reasons %}
+                    <div>{{ reason }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                {% if item.menu %}
+                <div class="small text-muted mt-1"><strong>Drill:</strong> {{ item.menu[0].name }} - {{ item.menu[0].detail }}</div>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% if recommendations.strategy_cards %}
+        <strong>Strategy Cards:</strong>
+        <div class="row mt-2 mb-2">
+            {% for card in recommendations.strategy_cards %}
+            <div class="col-md-6 mb-2">
+                <div class="border rounded p-2 bg-white">
+                    <div><strong>{{ card.title }}</strong></div>
+                    <div class="small text-muted">{{ card.trigger }}</div>
+                    <div class="small mt-1">{{ card.decision }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% if recommendations.strategy_notes %}
+        <strong>Strategy Notes:</strong>
+        <ul class="mb-0 mt-2">
+            {% for note in recommendations.strategy_notes %}
+            <li>{{ note }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Analysis Round Set</h2>
+        <form id="filterForm" class="d-flex align-items-center flex-nowrap" method="GET" action="{{ url_for('analysis_dashboard') }}">
+            <div class="mb-0 me-2">
+                <label for="yearFilterList" class="visually-hidden">Filter by Year</label>
+                <select class="form-select form-select-sm" id="yearFilterList" name="year" onchange="document.getElementById('filterForm').submit();">
+                    <option value="all" {% if selected_year == 'all' %}selected{% endif %}>All Years</option>
+                    {% for year in unique_years %}
+                        <option value="{{ year }}" {% if selected_year == year|string %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-0 me-2">
+                <label for="golfCourseFilter" class="visually-hidden">Filter by Golf Course</label>
+                <select class="form-select form-select-sm" id="golfCourseFilter" name="golf_course" onchange="document.getElementById('filterForm').submit();">
+                    <option value="all" {% if selected_golf_course == 'all' %}selected{% endif %}>All Courses</option>
+                    {% for course in unique_golf_courses %}
+                        <option value="{{ course }}" {% if selected_golf_course == course %}selected{% endif %}>{{ course }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-0 me-2">
+                <label for="companionFilter" class="visually-hidden">Filter by Companion</label>
+                <select class="form-select form-select-sm" id="companionFilter" name="companion" onchange="document.getElementById('filterForm').submit();">
+                    <option value="all" {% if selected_companion == 'all' %}selected{% endif %}>All Companions</option>
+                    {% for companion in unique_companions %}
+                        <option value="{{ companion }}" {% if selected_companion == companion %}selected{% endif %}>{{ companion }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <input type="hidden" name="analysis_window" value="{{ selected_analysis_window }}">
+            {% for round_id in selected_round_ids %}
+            <input type="hidden" name="round_ids" value="{{ round_id }}">
+            {% endfor %}
+        </form>
+    </div>
+
+    <div class="mb-3">
+        <input type="text" class="form-control" id="searchInput" placeholder="Search by golf course or companion..." value="{{ search_query if search_query is not none else '' }}">
+    </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <form id="selectedRoundsForm" method="GET" action="{{ url_for('analysis_dashboard') }}" class="d-flex align-items-center gap-2">
+            <input type="hidden" name="year" value="{{ selected_year }}">
+            <input type="hidden" name="golf_course" value="{{ selected_golf_course }}">
+            <input type="hidden" name="companion" value="{{ selected_companion }}">
+            <input type="hidden" name="analysis_window" value="{{ selected_analysis_window }}">
+            <input type="hidden" name="sort_by" value="{{ sort_by }}">
+            <input type="hidden" name="sort_order" value="{{ sort_order }}">
+            {% if search_query %}
+            <input type="hidden" name="search_query" value="{{ search_query }}">
+            {% endif %}
+            <button type="submit" class="btn btn-primary btn-sm">선택 라운드로 분석</button>
+            <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('analysis_dashboard', year=selected_year, golf_course=selected_golf_course, companion=selected_companion, analysis_window=selected_analysis_window, sort_by=sort_by, sort_order=sort_order, search_query=search_query) }}">선택 해제</a>
+        </form>
+        <div class="small text-muted">현재 선택: {{ selected_round_ids|length }}개</div>
+    </div>
+
+    <table class="table table-striped table-hover table-responsive">
+        <thead>
+            <tr>
+                <th><input type="checkbox" id="toggleAllRounds"></th>
+                <th><a href="{{ url_for('analysis_dashboard', year=selected_year, golf_course=selected_golf_course, companion=selected_companion, analysis_window=selected_analysis_window, round_ids=selected_round_ids, sort_by='playdate', sort_order='DESC' if sort_by == 'playdate' and sort_order == 'ASC' else 'ASC', search_query=search_query) }}">Playdate {% if sort_by == 'playdate' %}{% if sort_order == 'ASC' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                <th><a href="{{ url_for('analysis_dashboard', year=selected_year, golf_course=selected_golf_course, companion=selected_companion, analysis_window=selected_analysis_window, round_ids=selected_round_ids, sort_by='gcname', sort_order='DESC' if sort_by == 'gcname' and sort_order == 'ASC' else 'ASC', search_query=search_query) }}">Golf Course {% if sort_by == 'gcname' %}{% if sort_order == 'ASC' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                <th><a href="{{ url_for('analysis_dashboard', year=selected_year, golf_course=selected_golf_course, companion=selected_companion, analysis_window=selected_analysis_window, round_ids=selected_round_ids, sort_by='coplayers', sort_order='DESC' if sort_by == 'coplayers' and sort_order == 'ASC' else 'ASC', search_query=search_query) }}">Companions {% if sort_by == 'coplayers' %}{% if sort_order == 'ASC' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                <th><a href="{{ url_for('analysis_dashboard', year=selected_year, golf_course=selected_golf_course, companion=selected_companion, analysis_window=selected_analysis_window, round_ids=selected_round_ids, sort_by='score', sort_order='DESC' if sort_by == 'score' and sort_order == 'ASC' else 'ASC', search_query=search_query) }}">Score {% if sort_by == 'score' %}{% if sort_order == 'ASC' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+                <th><a href="{{ url_for('analysis_dashboard', year=selected_year, golf_course=selected_golf_course, companion=selected_companion, analysis_window=selected_analysis_window, round_ids=selected_round_ids, sort_by='gir', sort_order='DESC' if sort_by == 'gir' and sort_order == 'ASC' else 'ASC', search_query=search_query) }}">GIR (%) {% if sort_by == 'gir' %}{% if sort_order == 'ASC' %}▲{% else %}▼{% endif %}{% endif %}</a></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for round in rounds %}
+            <tr>
+                <td>
+                    <input class="round-selector" type="checkbox" name="round_ids" value="{{ round.id }}" form="selectedRoundsForm" {% if round.id in selected_round_ids %}checked{% endif %}>
+                </td>
+                <td><a href="{{ url_for('round_detail', round_id=round.id) }}">{{ round.playdate.strftime('%Y-%m-%d') }}</a></td>
+                <td>{{ round.gcname }}</td>
+                <td>{{ round.coplayers }}</td>
+                <td>{{ round.score }}</td>
+                <td>{{ "%.1f"|format(round.gir) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        document.getElementById('searchInput').addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                const searchValue = this.value;
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('search_query', searchValue);
+                window.location.href = currentUrl.toString();
+            }
+        });
+
+        document.getElementById('toggleAllRounds').addEventListener('change', function(event) {
+            document.querySelectorAll('.round-selector').forEach(function(checkbox) {
+                checkbox.checked = event.target.checked;
+            });
+        });
+    </script>
+{% endblock %}
