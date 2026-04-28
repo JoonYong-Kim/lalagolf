@@ -1,0 +1,716 @@
+# LalaGolf v2 API Proposal
+
+## 1. API Goals
+
+- Next.js frontend이 사용할 안정적인 JSON API를 제공한다.
+- 모든 private resource는 현재 사용자 scope를 강제한다.
+- 라운드 업로드, 분석 조회, 공유, LLM 질의를 분리된 endpoint로 제공한다.
+- 비용이 큰 분석/embedding 작업은 background job으로 처리한다.
+- public/link-only 응답은 private 응답과 serializer를 분리한다.
+
+## 2. Conventions
+
+- Base path: `/api/v1`
+- Content type: `application/json`
+- Auth: secure httpOnly cookie session 또는 bearer token. 최종 선택 전까지 문서에서는 `Authorization` 또는 cookie를 모두 허용 가능한 것으로 둔다.
+- IDs: UUID string.
+- Date: ISO 8601.
+- Pagination: cursor-based.
+- Error envelope:
+
+```json
+{
+  "error": {
+    "code": "round_not_found",
+    "message": "Round not found",
+    "details": {}
+  }
+}
+```
+
+- Success response envelope:
+
+```json
+{
+  "data": {},
+  "meta": {}
+}
+```
+
+List response:
+
+```json
+{
+  "data": [],
+  "meta": {
+    "next_cursor": "cursor-value",
+    "has_more": true
+  }
+}
+```
+
+## 3. Auth
+
+### POST /auth/register
+
+Creates a user account.
+
+Request:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "secret",
+  "display_name": "Lala Golfer"
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "user": {
+      "id": "uuid",
+      "email": "user@example.com",
+      "display_name": "Lala Golfer",
+      "role": "user"
+    }
+  }
+}
+```
+
+### POST /auth/login
+
+Request:
+
+```json
+{
+  "email": "user@example.com",
+  "password": "secret"
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "user": {
+      "id": "uuid",
+      "email": "user@example.com",
+      "display_name": "Lala Golfer",
+      "role": "user"
+    }
+  }
+}
+```
+
+### POST /auth/logout
+
+Invalidates current session.
+
+### GET /me
+
+Returns current user and profile.
+
+### PATCH /me/profile
+
+Updates profile defaults.
+
+Request:
+
+```json
+{
+  "display_name": "Lala",
+  "handle": "lala",
+  "bio": "Weekend golfer",
+  "privacy_default": "private",
+  "share_course_by_default": false,
+  "share_exact_date_by_default": false
+}
+```
+
+## 4. Public Home
+
+### GET /public/home
+
+Returns data for logged-out home.
+
+Response:
+
+```json
+{
+  "data": {
+    "sample_dashboard": {
+      "score_trend": [],
+      "insights": [],
+      "recent_rounds": []
+    },
+    "public_rounds": []
+  }
+}
+```
+
+### GET /sample-analysis
+
+Returns static or seeded sample analysis.
+
+### GET /public/rounds
+
+Returns public-safe round cards.
+
+Query:
+
+- `cursor`
+- `limit`
+
+## 5. Uploads
+
+### POST /uploads/round-file
+
+Uploads a text round file. This endpoint uses multipart form data.
+
+Request fields:
+
+- `file`
+
+Response:
+
+```json
+{
+  "data": {
+    "source_file_id": "uuid",
+    "upload_review_id": "uuid",
+    "status": "pending",
+    "job_id": "uuid"
+  }
+}
+```
+
+### GET /uploads/{upload_review_id}/review
+
+Returns parsed preview and warnings.
+
+Response:
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "status": "needs_review",
+    "parsed_round": {
+      "play_date": "2026-04-10",
+      "course_name": "Sky72",
+      "holes": [],
+      "shots": []
+    },
+    "warnings": [
+      {
+        "code": "unknown_club",
+        "message": "Unknown club value",
+        "path": "holes[3].shots[1].club"
+      }
+    ],
+    "user_edits": {}
+  }
+}
+```
+
+### PATCH /uploads/{upload_review_id}/review
+
+Saves user edits before commit.
+
+Request:
+
+```json
+{
+  "user_edits": {
+    "holes.3.shots.1.club": "7I"
+  }
+}
+```
+
+### POST /uploads/{upload_review_id}/commit
+
+Commits parsed data into rounds/holes/shots.
+
+Request:
+
+```json
+{
+  "visibility": "private",
+  "share_course": false,
+  "share_exact_date": false
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "round_id": "uuid",
+    "analysis_job_id": "uuid"
+  }
+}
+```
+
+## 6. Jobs
+
+### GET /jobs/{job_id}
+
+Returns background job status.
+
+Response:
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "type": "recalculate_round_metrics",
+    "status": "running",
+    "progress": 0.6,
+    "error": null
+  }
+}
+```
+
+Statuses:
+
+- `queued`
+- `running`
+- `succeeded`
+- `failed`
+- `cancelled`
+
+## 7. Rounds
+
+### GET /rounds
+
+Returns private round list for current user.
+
+Query:
+
+- `cursor`
+- `limit`
+- `year`
+- `course`
+- `companion`
+- `visibility`
+- `sort`, default `play_date_desc`
+
+Response:
+
+```json
+{
+  "data": [
+    {
+      "id": "uuid",
+      "play_date": "2026-04-10",
+      "course_name": "Sky72",
+      "total_score": 82,
+      "score_to_par": 10,
+      "gir_rate": 0.44,
+      "putts": 32,
+      "penalty_strokes": 2,
+      "visibility": "private"
+    }
+  ],
+  "meta": {
+    "next_cursor": null,
+    "has_more": false
+  }
+}
+```
+
+### POST /rounds
+
+Creates a round manually. MVP can delay this if upload-only is enough.
+
+### GET /rounds/{round_id}
+
+Returns round detail for owner.
+
+Response includes:
+
+- round summary
+- holes
+- shots
+- metrics
+- shot_values
+- insights
+
+### PATCH /rounds/{round_id}
+
+Updates metadata and privacy fields.
+
+Request:
+
+```json
+{
+  "course_name": "Sky72",
+  "play_date": "2026-04-10",
+  "visibility": "link_only",
+  "share_course": true,
+  "share_exact_date": false,
+  "notes_private": "Driver felt unstable"
+}
+```
+
+### DELETE /rounds/{round_id}
+
+Soft-deletes a round.
+
+### POST /rounds/{round_id}/recalculate
+
+Queues analytics recalculation.
+
+Response:
+
+```json
+{
+  "data": {
+    "job_id": "uuid"
+  }
+}
+```
+
+## 8. Holes & Shots
+
+### GET /rounds/{round_id}/holes
+
+Returns hole list.
+
+### PATCH /holes/{hole_id}
+
+Updates hole-level fields.
+
+### GET /rounds/{round_id}/shots
+
+Returns all shots in a round.
+
+### PATCH /shots/{shot_id}
+
+Updates shot-level fields and marks analytics stale.
+
+Request:
+
+```json
+{
+  "club": "D",
+  "distance": 220,
+  "start_lie": "tee",
+  "end_lie": "rough",
+  "result_grade": "C",
+  "penalty_type": "OB"
+}
+```
+
+## 9. Analytics
+
+### GET /analytics/summary
+
+Returns dashboard summary.
+
+Query:
+
+- `window`, e.g. `last_5`, `last_10`, `all`
+
+Response:
+
+```json
+{
+  "data": {
+    "kpis": {
+      "avg_score": 82.4,
+      "avg_gir": 0.42,
+      "avg_putts": 32.1,
+      "avg_penalty_strokes": 1.8
+    },
+    "score_trend": [],
+    "priority_insights": []
+  }
+}
+```
+
+### GET /analytics/trends
+
+Returns analysis workspace data.
+
+Query:
+
+- `year`
+- `window`
+- `course`
+- `companion`
+- `round_ids`
+- `tab`: `score`, `tee`, `approach`, `short_game`, `putting`
+
+### GET /analytics/rounds/{round_id}
+
+Returns detailed analytics for one round.
+
+### GET /analytics/compare
+
+Compares selected rounds or windows.
+
+Query:
+
+- `left_round_ids`
+- `right_round_ids`
+- `left_window`
+- `right_window`
+
+## 10. Insights
+
+### GET /insights
+
+Returns deduplicated insights.
+
+Query:
+
+- `scope_type`
+- `scope_id`
+- `category`
+- `status`
+- `limit`
+
+### PATCH /insights/{insight_id}
+
+Updates insight status.
+
+Request:
+
+```json
+{
+  "status": "dismissed"
+}
+```
+
+## 11. Sharing
+
+### POST /shares
+
+Creates or returns a link-only share.
+
+Request:
+
+```json
+{
+  "resource_type": "round",
+  "resource_id": "uuid",
+  "expires_at": null
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "share_id": "uuid",
+    "token": "opaque-token",
+    "url": "https://example.com/s/opaque-token"
+  }
+}
+```
+
+### PATCH /shares/{share_id}
+
+Revokes or updates share.
+
+### GET /shares
+
+Lists current user's shares.
+
+### GET /s/{token}
+
+Public route, not under `/api/v1` if rendered by Next.js. API equivalent can be:
+
+`GET /api/v1/shared/{token}`
+
+Returns public-safe serialized resource.
+
+## 12. Social
+
+MVP can limit this to public profiles and public rounds.
+
+### GET /users/{handle}
+
+Returns public-safe profile.
+
+### GET /users/{handle}/rounds
+
+Returns public rounds for a user.
+
+### GET /feed
+
+Returns public or following feed. MVP 이후 가능.
+
+### POST /follow
+
+MVP 이후 가능.
+
+Request:
+
+```json
+{
+  "user_id": "uuid"
+}
+```
+
+## 13. Ask LalaGolf
+
+### POST /chat/threads
+
+Creates a chat thread.
+
+Request:
+
+```json
+{
+  "title": "Driver analysis"
+}
+```
+
+### GET /chat/threads
+
+Lists current user's chat threads.
+
+### GET /chat/threads/{thread_id}
+
+Returns messages.
+
+### POST /chat/threads/{thread_id}/messages
+
+Asks a question.
+
+Request:
+
+```json
+{
+  "message": "최근 10라운드에서 드라이버가 스코어에 얼마나 영향을 줬어?",
+  "filters": {
+    "window": "last_10"
+  },
+  "stream": false
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "message_id": "uuid",
+    "content": "최근 10라운드에서 드라이버 관련 페널티가...",
+    "citations": [
+      {
+        "type": "round",
+        "id": "uuid",
+        "label": "2026-04-10 Sky72",
+        "metric": "driver_penalty_rate"
+      }
+    ],
+    "evidence": {
+      "round_count": 10,
+      "shot_count": 42,
+      "filters": {
+        "window": "last_10"
+      }
+    }
+  }
+}
+```
+
+### POST /chat/query-plan
+
+Optional debug/admin endpoint. Returns interpreted filters and planned data sources.
+
+## 14. Profile & Settings
+
+### GET /settings/privacy
+
+Returns privacy settings.
+
+### PATCH /settings/privacy
+
+Updates defaults.
+
+Request:
+
+```json
+{
+  "privacy_default": "private",
+  "share_course_by_default": false,
+  "share_exact_date_by_default": false
+}
+```
+
+### POST /account/delete
+
+Starts account deletion flow.
+
+## 15. Admin
+
+All admin endpoints require admin role.
+
+### GET /admin/users
+
+### GET /admin/uploads/errors
+
+### GET /admin/reports
+
+### PATCH /admin/reports/{report_id}
+
+### GET /admin/jobs
+
+### GET /admin/llm/errors
+
+## 16. Common Error Codes
+
+- `unauthorized`
+- `forbidden`
+- `validation_error`
+- `not_found`
+- `round_not_found`
+- `upload_not_found`
+- `upload_not_ready`
+- `parse_failed`
+- `analysis_not_ready`
+- `job_not_found`
+- `share_not_found`
+- `share_revoked`
+- `llm_unavailable`
+- `llm_timeout`
+- `rate_limited`
+
+## 17. Authorization Matrix
+
+| Resource | Owner | Link token | Public | Other logged-in user | Admin |
+| --- | --- | --- | --- | --- | --- |
+| private round | read/write | no | no | no | audited read |
+| link-only round | read/write | public-safe read | no feed | no | audited read |
+| public round | read/write | read | public-safe read | public-safe read | audited read |
+| source file | read/write | no | no | no | audited read |
+| private chat | read/write | no | no | no | audited read only if needed |
+| public profile | write own | read | read | read | audited read/write moderation |
+
+## 18. Rate Limits
+
+Suggested initial limits:
+
+- login: strict per IP/email.
+- upload: per user per hour.
+- chat: per user per minute and per day.
+- public feed: per IP.
+- share token access: per IP/token.
+
+## 19. Open Decisions
+
+- Final auth mechanism: cookie session vs JWT.
+- Whether chat supports streaming in MVP.
+- Whether manual round creation is MVP or upload-only.
+- Whether public feed endpoints ship in MVP.
+- Whether API response envelope should be used for all responses including file upload.
