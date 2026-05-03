@@ -110,6 +110,31 @@ pip install -e .
 WORKER_USE_RQ=true python -m app.main
 ```
 
+Install v2 as systemd services:
+
+```bash
+cd v2
+sudo bash scripts/install_systemd.sh
+```
+
+This installs three services:
+
+- `lalagolf-v2-api.service`
+- `lalagolf-v2-worker.service`
+- `lalagolf-v2-web.service`
+
+The installer writes `/etc/lalagolf-v2/lalagolf-v2.env`, installs application files under
+`/opt/lalagolf-v2`, stores uploads under `/var/lib/lalagolf-v2/uploads`, builds the web app, and
+runs Alembic migrations. Set `SKIP_DB_MIGRATION=true` when running the installer if PostgreSQL is
+not ready yet.
+
+Uninstall the systemd deployment:
+
+```bash
+cd v2
+sudo bash scripts/uninstall_systemd.sh
+```
+
 Run API tests:
 
 ```bash

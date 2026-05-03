@@ -12,6 +12,45 @@
 - Keep `OLLAMA_ENABLED=false` unless a reachable Ollama host and timeout are configured.
 - Run `npm run security-check`, API tests, frontend build, and migration dry-run report before release.
 
+## Systemd Deployment
+
+The MVP systemd installer lives at `v2/scripts/install_systemd.sh`.
+
+```bash
+cd v2
+sudo bash scripts/install_systemd.sh
+```
+
+It creates:
+
+- `/opt/lalagolf-v2`
+- `/etc/lalagolf-v2/lalagolf-v2.env`
+- `/var/lib/lalagolf-v2/uploads`
+- `lalagolf-v2-api.service`
+- `lalagolf-v2-worker.service`
+- `lalagolf-v2-web.service`
+
+The script installs Python dependencies into per-service virtualenvs, runs `npm ci` and
+`npm run build`, writes systemd units, and starts the services. It also runs `alembic upgrade head`
+unless `SKIP_DB_MIGRATION=true` is set for the installer process.
+
+Before running it, make sure PostgreSQL and Redis are reachable from the values in
+`/etc/lalagolf-v2/lalagolf-v2.env` or edit that file after the first run and restart services:
+
+```bash
+sudo systemctl restart lalagolf-v2-api.service lalagolf-v2-worker.service lalagolf-v2-web.service
+```
+
+Uninstall:
+
+```bash
+cd v2
+sudo bash scripts/uninstall_systemd.sh
+```
+
+The uninstall script stops and removes the three units and deletes `/opt/lalagolf-v2`,
+`/etc/lalagolf-v2`, and `/var/lib/lalagolf-v2`.
+
 ## Backup
 
 Back up PostgreSQL and uploaded source files together. The database contains metadata and

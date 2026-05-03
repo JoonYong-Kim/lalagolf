@@ -11,7 +11,7 @@ Date: 2026-05-03
 - Frontend build: `cd v2/web && npm run build` -> passed.
 - Frontend smoke: `cd v2/web && npm run smoke` -> 10 routes checked.
 - Mobile guardrails: `cd v2/web && npm run mobile-check` -> 9 core pages checked.
-- Secret scan: `cd v2/web && npm run security-check` -> 163 files checked.
+- Secret scan: `cd v2/web && npm run security-check` -> 165 files checked.
 
 ## MVP Release Criteria Mapping
 

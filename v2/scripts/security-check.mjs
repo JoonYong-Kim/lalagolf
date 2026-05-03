@@ -56,7 +56,11 @@ function checkLine(file, lineNumber, line) {
   }
 
   const secretKey = line.match(/^\s*SECRET_KEY\s*[:=]\s*["']?([^"'\s#]+)["']?/);
-  if (secretKey && !["change-me", "change-me-in-local-env"].includes(secretKey[1])) {
+  if (
+    secretKey &&
+    !secretKey[1].startsWith("${") &&
+    !["change-me", "change-me-in-local-env"].includes(secretKey[1])
+  ) {
     add(file, lineNumber, "non-placeholder SECRET_KEY");
   }
 
