@@ -4,8 +4,8 @@
 
 - Next.js frontend이 사용할 안정적인 JSON API를 제공한다.
 - 모든 private resource는 현재 사용자 scope를 강제한다.
-- 라운드 업로드, 분석 조회, 공유, LLM 질의를 분리된 endpoint로 제공한다.
-- 비용이 큰 분석/embedding 작업은 background job으로 처리한다.
+- 라운드 업로드, 분석 조회, 공유, Ask 질의를 분리된 endpoint로 제공한다.
+- 비용이 큰 분석 작업은 background job으로 처리한다. embedding 작업은 post-MVP RAG에서 추가한다.
 - public/link-only 응답은 private 응답과 serializer를 분리한다.
 
 ## 2. Conventions
@@ -131,9 +131,13 @@ Request:
 }
 ```
 
-## 4. Public Home
+## 4. Logged-out Entry
+
+MVP logged-out entry can be rendered by Next.js without a dedicated API. Full public home, sample analysis, and public round lists are post-MVP.
 
 ### GET /public/home
+
+Post-MVP. Returns data for logged-out public home.
 
 Returns data for logged-out home.
 
@@ -154,9 +158,13 @@ Response:
 
 ### GET /sample-analysis
 
+Post-MVP.
+
 Returns static or seeded sample analysis.
 
 ### GET /public/rounds
+
+Post-MVP.
 
 Returns public-safe round cards.
 
@@ -530,11 +538,41 @@ Public route, not under `/api/v1` if rendered by Next.js. API equivalent can be:
 
 `GET /api/v1/shared/{token}`
 
-Returns public-safe serialized resource.
+Returns public-safe serialized resource. For shared scorecards, `insights` contains at most one
+public-safe top issue for that round.
+
+Response excerpt:
+
+```json
+{
+  "data": {
+    "title": "Weekend round",
+    "round": {
+      "course_name": "Shared course",
+      "play_date": null,
+      "play_month": "2026-04",
+      "total_score": 91
+    },
+    "holes": [],
+    "metrics": {},
+    "insights": [
+      {
+        "category": "penalty_impact",
+        "problem": "페널티가 이 라운드의 최우선 이슈입니다.",
+        "evidence": "스코어카드에 페널티가 총 2타 기록됐습니다.",
+        "impact": "페널티는 즉시 1타 이상을 더하고 다음 샷 선택까지 어렵게 만듭니다.",
+        "next_action": "공유된 라운드의 페널티 홀부터 티샷 목표와 세이프 클럽을 다시 정하세요.",
+        "confidence": "medium",
+        "priority_score": 2.0
+      }
+    ]
+  }
+}
+```
 
 ## 12. Social
 
-MVP can limit this to public profiles and public rounds.
+Post-MVP. Public profiles, public rounds, feed, follows, comments, and likes are not part of the MVP.
 
 ### GET /users/{handle}
 
@@ -546,7 +584,7 @@ Returns public rounds for a user.
 
 ### GET /feed
 
-Returns public or following feed. MVP 이후 가능.
+Returns public or following feed.
 
 ### POST /follow
 
@@ -561,6 +599,8 @@ Request:
 ```
 
 ## 13. Ask LalaGolf
+
+MVP Ask uses structured SQL/metric retrieval plus deterministic answer templates. Ollama may be used only to improve wording. Embedding/RAG retrieval is post-MVP.
 
 ### POST /chat/threads
 
@@ -692,10 +732,10 @@ All admin endpoints require admin role.
 | --- | --- | --- | --- | --- | --- |
 | private round | read/write | no | no | no | audited read |
 | link-only round | read/write | public-safe read | no feed | no | audited read |
-| public round | read/write | read | public-safe read | public-safe read | audited read |
+| public round | post-MVP | post-MVP | post-MVP | post-MVP | audited read |
 | source file | read/write | no | no | no | audited read |
 | private chat | read/write | no | no | no | audited read only if needed |
-| public profile | write own | read | read | read | audited read/write moderation |
+| public profile | post-MVP | post-MVP | post-MVP | post-MVP | audited read/write moderation |
 
 ## 18. Rate Limits
 
@@ -704,13 +744,12 @@ Suggested initial limits:
 - login: strict per IP/email.
 - upload: per user per hour.
 - chat: per user per minute and per day.
-- public feed: per IP.
+- public feed: post-MVP, per IP.
 - share token access: per IP/token.
 
 ## 19. Open Decisions
 
 - Final auth mechanism: cookie session vs JWT.
-- Whether chat supports streaming in MVP.
+- Supported MVP Ask question set.
 - Whether manual round creation is MVP or upload-only.
-- Whether public feed endpoints ship in MVP.
 - Whether API response envelope should be used for all responses including file upload.

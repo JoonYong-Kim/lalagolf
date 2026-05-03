@@ -1,11 +1,15 @@
 
 import os
 import json
+from pathlib import Path
 from src.data_parser import parse_file
 from src.db_loader import save_round_data, init_connection_pool
 
 # --- CONFIGURATION LOADING ---
-CONFIG_FILE = 'conf/lalagolf.conf'
+V1_ROOT = Path(__file__).resolve().parent
+REPO_ROOT = V1_ROOT.parent
+CONFIG_FILE = V1_ROOT / 'conf' / 'lalagolf.conf'
+DATA_DIR = REPO_ROOT / 'data'
 
 def load_config():
     if not os.path.exists(CONFIG_FILE):
@@ -25,7 +29,9 @@ except (FileNotFoundError, json.JSONDecodeError, ValueError) as e:
 
 def main():
     init_connection_pool(DB_CONFIG)
-    data_dir = 'data'
+    data_dir = DATA_DIR
+    if not data_dir.exists():
+        raise FileNotFoundError(f"Data directory not found: {data_dir}")
     for year_dir in os.listdir(data_dir):
         year_path = os.path.join(data_dir, year_dir)
         if os.path.isdir(year_path):

@@ -13,7 +13,7 @@ This project is a Flask-based web application for tracking and analyzing persona
 ## Project Architecture
 
 - **`conf/`**: Contains configuration files. `lalagolf.conf` holds database credentials and web app user info.
-- **`data/`**: Stores raw golf round data as `.txt` files, organized by year.
+- **repo-root `data/`**: Stores raw golf round data as `.txt` files, organized by year.
 - **`scripts/`**: Contains database schema definitions (`schema.sql`).
 - **`src/`**: The main source code directory.
   - **`data_parser.py`**: Logic for parsing the raw `.txt` data files.
@@ -56,7 +56,7 @@ This project is a Flask-based web application for tracking and analyzing persona
 ### Modifying the Data Parser
 
 - When changing `src/data_parser.py`, you **must** update the corresponding tests in `tests/test_data_parser.py`.
-- Ensure that any changes are backward-compatible with existing data files in the `data/` directory. If not, a migration plan is needed.
+- Ensure that any changes are backward-compatible with existing data files in the repo-root `data/` directory. If not, a migration plan is needed.
 
 ## Framework/Plugin/Third-party Library Usage Standards
 
@@ -76,7 +76,7 @@ This project is a Flask-based web application for tracking and analyzing persona
 
 - **`data_parser.py` and `db_loader.py`**: `data_parser.py` is responsible for reading and parsing text files. The parsed data structure is then passed to `db_loader.py` to be persisted in the database. Any change in the data structure returned by `parse_file` will likely require changes in `save_round_data`.
 - **`routes.py` and `templates/`**: `routes.py` contains the view logic that renders the HTML templates. Data is passed from Python to the templates.
-- **`load_data.py`**: This script uses `data_parser.py` and `db_loader.py` to bulk-load data from the `data/` directory.
+- **`load_data.py`**: This script uses `data_parser.py` and `db_loader.py` to bulk-load data from the repo-root `data/` directory.
 
 ## AI Decision-making Standards
 

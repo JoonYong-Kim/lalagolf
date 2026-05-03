@@ -1,0 +1,13 @@
+[project]
+name = "lalagolf-worker"
+version = "0.1.0"
+description = "Background worker skeleton for LalaGolf v2"
+requires-python = ">=3.12"
+dependencies = [
+  "redis==5.2.1",
+  "rq==2.1.0"
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

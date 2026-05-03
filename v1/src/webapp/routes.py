@@ -1,4 +1,6 @@
 
+from pathlib import Path
+
 from flask import render_template, current_app, jsonify, request, session, redirect, url_for, flash
 from src.analytics_config import (
     APPROACH_STRATEGY_MIN_SAMPLES,
@@ -42,6 +44,9 @@ from src.recommendations import (
     build_round_next_action_card,
     build_trend_action_cards,
 )
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+ROUND_DATA_DIR = REPO_ROOT / 'data'
 from src.strokes_gained import (
     summarize_approach_strategy_comparison,
     build_historical_shot_facts,
@@ -575,10 +580,10 @@ def review_round():
                 year_dir = tee_off_datetime.strftime('%Y')
                 file_name = tee_off_datetime.strftime('%Y%m%d.txt')
                 
-                save_dir = os.path.join('data', year_dir)
-                os.makedirs(save_dir, exist_ok=True)
+                save_dir = ROUND_DATA_DIR / year_dir
+                save_dir.mkdir(parents=True, exist_ok=True)
                 
-                final_file_path = os.path.join(save_dir, file_name)
+                final_file_path = save_dir / file_name
                 with open(final_file_path, 'w') as f:
                     f.write(raw_data_content)
 

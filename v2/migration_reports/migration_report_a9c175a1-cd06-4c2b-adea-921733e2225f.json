@@ -1,0 +1,43 @@
+{
+  "migration_run": {
+    "id": "a9c175a1-cd06-4c2b-adea-921733e2225f",
+    "label": "p8-dry-run-isolated",
+    "status": "compared",
+    "summary": {
+      "score_matches": 20,
+      "compared_rounds": 20,
+      "imported_rounds": 20,
+      "recalculated_rounds": 20
+    }
+  },
+  "schema_inventory": [
+    "holes",
+    "rounds",
+    "shots",
+    "source_files",
+    "upload_reviews"
+  ],
+  "row_counts": {
+    "rounds": 20,
+    "holes": 360,
+    "shots": 1425,
+    "source_files": 20,
+    "upload_reviews": 20
+  },
+  "privacy": {
+    "private_rounds": 20,
+    "imported_round_count": 20,
+    "all_imported_rounds_private": true
+  },
+  "ownership": {
+    "owner_id": "98ca92b5-f7d0-45be-88bf-53faadc2703d",
+    "ownerless_counts": {
+      "rounds": 0,
+      "holes": 0,
+      "shots": 0
+    },
+    "all_imported_rows_have_owner": true
+  },
+  "id_map_count": 20,
+  "issues": []
+}

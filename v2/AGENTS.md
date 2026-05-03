@@ -83,7 +83,7 @@ Before considering a feature complete, run the relevant backend/frontend tests a
 
 ## Migration Guidelines
 
-- v1 MySQL data and `../v1/data/<year>` files are migration sources.
+- v1 MySQL data and repo-root `../data/<year>` files are migration sources.
 - Maintain a source-to-target id mapping for imports.
 - Record skipped or suspicious rows as migration issues.
 - Imported data must default to private.

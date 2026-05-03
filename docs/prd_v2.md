@@ -2,14 +2,16 @@
 
 ## 1. Product Summary
 
-LalaGolf v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고, 자신의 기록을 기반으로 질의할 수 있는 멀티 유저 골프 분석 서비스다. v1의 라운드 파싱, 지표 계산, strokes gained 유사 분석, 추천 로직을 제품 코어로 유지하되, UI/UX, 계정 모델, 데이터 권한, 공유 경험, LLM 질의 기능을 새 프로젝트 구조에서 재설계한다.
+LalaGolf v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고, 자신의 기록을 기반으로 질의할 수 있는 멀티 유저 골프 분석 서비스다. v1의 라운드 파싱, 지표 계산, strokes gained 유사 분석, 추천 로직을 제품 코어로 유지하되, UI/UX, 계정 모델, 데이터 권한, 공유 경험, 자연어 질의 기능을 새 프로젝트 구조에서 재설계한다.
+
+MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, embedding 기반 RAG, social graph는 핵심 분석 경험과 link-only 공유가 검증된 뒤 단계적으로 확장한다.
 
 ## 2. Goals
 
 - 라운드 기록을 개인별로 안전하게 관리하고, 사용자가 공개 범위를 선택해 공유할 수 있다.
 - 중복된 코멘트와 유사 분석 카드를 줄이고, 한 화면에서 우선순위가 명확한 인사이트를 제공한다.
 - 모바일과 데스크톱 모두에서 라운드 업로드, 리뷰, 분석, 공유가 자연스럽게 동작한다.
-- Ollama 기반 로컬 LLM으로 사용자의 라운드 기록, 샷 데이터, 추천 결과를 질의할 수 있다.
+- 구조화된 metric retrieval과 선택적 Ollama 보조 응답으로 사용자의 라운드 기록, 샷 데이터, 추천 결과를 질의할 수 있다.
 - v1의 검증된 분석 로직을 재사용하되, API와 UI는 분리된 현대적 웹 아키텍처로 전환한다.
 
 ## 3. Non-Goals
@@ -30,7 +32,7 @@ LalaGolf v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고
 - 사용자는 이메일/소셜 로그인으로 가입하고 자신의 라운드 기록만 기본적으로 볼 수 있다.
 - 사용자는 기존 텍스트 라운드 파일을 업로드하고, 파싱 결과를 저장 전에 검토/수정할 수 있다.
 - 사용자는 대시보드에서 최근 성과, 주요 약점, 개선 추세, 다음 연습 과제를 확인한다.
-- 사용자는 라운드를 private, link-only, followers/public 중 하나로 공유한다.
+- 사용자는 라운드를 private 또는 link-only로 공유한다. followers/public은 MVP 이후 도입한다.
 - 사용자는 “최근 10라운드에서 드라이버가 스코어에 얼마나 영향을 줬어?”처럼 자연어로 질문한다.
 - 사용자는 특정 라운드, 기간, 골프장, 동반자, 클럽, 샷 유형을 필터링해 분석한다.
 - 운영자는 비정상 업로드, 신고된 공개 기록, LLM 오류 로그를 점검한다.
@@ -40,7 +42,7 @@ LalaGolf v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고
 ### 6.1 Account & Identity
 
 - 회원가입, 로그인, 로그아웃, 비밀번호 재설정.
-- 사용자 프로필: 표시 이름, 프로필 이미지, 자기소개, 평균 스코어, 공개 여부.
+- 사용자 프로필: 표시 이름, 프로필 이미지, 자기소개, 평균 스코어, 기본 공개 범위. 공개 프로필은 MVP 이후 도입한다.
 - 역할: user, admin.
 - 데이터 소유권: 모든 라운드, 홀, 샷, 메모, LLM 대화는 user_id에 귀속된다.
 - 계정 삭제: 개인 데이터 삭제 또는 익명화 정책 제공.
@@ -64,6 +66,7 @@ LalaGolf v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고
   - 같은 근거에서 나온 코멘트는 한 번만 표시하고, 상세 펼침으로 보조 설명을 제공한다.
   - 추천 우선순위는 최대 3개만 기본 노출한다.
 - 신뢰도 표시: 샘플 수, expected lookup level, 데이터 부족 경고.
+- cold-start 정책: 사용자 샘플이 부족하면 global 또는 운영자가 승인한 baseline expected table로 fallback하고, confidence와 lookup level에 이를 표시한다.
 
 ### 6.4 Dashboard & UI
 
@@ -107,20 +110,31 @@ LalaGolf v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고
 - Ask LalaGolf 구성:
   - 좌측 또는 중앙에 채팅 UI를 둔다.
   - 우측 또는 하단에 근거 데이터 패널을 제공한다.
-  - LLM 답변과 원본 수치 근거를 시각적으로 분리한다.
+  - 자연어 답변과 원본 수치 근거를 시각적으로 분리한다.
   - 근거 패널에는 기간, 라운드 수, 샷 수, 필터 조건, 참조 라운드 링크를 표시한다.
+
+### 6.4.1 UI Review Gate
+
+- Dashboard, Round Detail, Analysis는 구현 전에 저충실도 와이어프레임 또는 클릭 가능한 mock을 만든다.
+- 각 화면은 desktop/mobile variant를 함께 확인한다.
+- 사용자 확인 후 결정사항을 `docs/ui_review_v2.md`에 기록하고, 구현은 그 문서를 기준으로 진행한다.
+- UI 확인 범위:
+  - Dashboard: 첫 화면 정보 우선순위, top-3 insight, 최근 라운드/연습 과제 배치.
+  - Round Detail: 스코어카드, 홀 선택, 샷 타임라인, 라운드 내 손실/개선 샷 배치.
+  - Analysis: 필터, 탭, 차트/테이블 밀도, insight unit 노출 방식.
+- 주요 UI 방향이 바뀌면 구현 전에 `docs/ui_review_v2.md`를 갱신한다.
 
 ### 6.5 Public Home / Logged-out Experience
 
-- 로그인하지 않은 사용자가 `/`에 접근하면 공개 홈을 보여준다.
-- 공개 홈의 목적은 서비스 설명보다 “가입하면 어떤 분석을 볼 수 있는지”를 실제 제품 화면처럼 보여주는 것이다.
+- MVP에서 로그인하지 않은 사용자가 `/`에 접근하면 최소 진입 화면을 보여준다.
+- 공개 홈의 목적은 서비스 설명보다 “가입하면 어떤 분석을 볼 수 있는지”를 실제 제품 화면처럼 보여주는 것이지만, full public home은 v2.1 이후로 미룬다.
 - 첫 화면 구성:
   - Hero: LalaGolf 이름과 한 문장 설명.
   - Primary CTA: 시작하기.
   - Secondary CTA: 샘플 분석 보기, 로그인.
   - 샘플 대시보드 프리뷰: 평균 스코어 추세, 최근 라운드, 핵심 인사이트 2~3개를 샘플 데이터로 표시.
 - 공개 콘텐츠:
-  - 사용자가 public으로 공개한 라운드 또는 프로필 일부를 노출할 수 있다.
+  - MVP 이후 사용자가 public으로 공개한 라운드 또는 프로필 일부를 노출할 수 있다.
   - 공개 콘텐츠는 샘플 분석보다 낮은 우선순위로 배치한다.
   - 권장 비중은 샘플 분석 60%, 공개 피드 30%, CTA/신뢰 정보 10%다.
 - 공개 라운드 노출 허용 정보:
@@ -181,7 +195,8 @@ LalaGolf v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고
   - 근거 데이터 패널은 답변 하단의 “근거 보기” sheet로 제공한다.
   - 긴 답변은 요약을 먼저 보여주고, 근거 라운드/샷 링크를 뒤에 둔다.
 - 모바일 Public Home:
-  - Hero는 한 화면을 모두 차지하지 않게 하고, 첫 viewport 하단에 샘플 대시보드 일부가 보이게 한다.
+  - MVP의 logged-out entry는 한 화면을 모두 차지하지 않게 하고, 로그인/가입 CTA를 명확히 둔다.
+  - v2.1 public home에서는 첫 viewport 하단에 샘플 대시보드 일부가 보이게 한다.
   - 공개 라운드 피드는 1열 리스트로 표시한다.
   - CTA는 상단 또는 하단 sticky 영역에 하나만 유지한다.
 - 터치/접근성 기준:
@@ -203,16 +218,21 @@ LalaGolf v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고
 
 ### 6.8 LLM / Ollama
 
-- Ollama 로컬 서버를 통해 chat API와 embeddings API를 사용한다.
+- MVP Ask는 deterministic structured retrieval과 템플릿 답변을 기본으로 한다.
+- Ollama 로컬 서버는 답변 문장화 보조로 선택적으로 사용한다.
+- embeddings API와 RAG는 MVP 이후 도입한다.
 - 질문 범위:
   - 내 라운드 데이터 요약.
   - 특정 기간/골프장/클럽/샷 유형 분석.
   - 추천 근거 설명.
   - 다음 라운드 전략 제안.
-- RAG 구조:
+- MVP retrieval 구조:
   - 정형 SQL 조회: 점수, 라운드, 샷, 지표, 추천.
+  - query planner: 기간, 골프장, 클럽, 샷 유형, 최근 N라운드 같은 제한된 필터를 해석한다.
+  - 응답 생성: 조회 결과와 근거 데이터를 템플릿으로 답변하고, Ollama가 사용 가능하면 wording만 보조한다.
+- Post-MVP RAG 구조:
   - 벡터 검색: 라운드 메모, 자동 요약, 인사이트 설명, 업로드 원문.
-  - 응답 생성: 조회 결과와 근거 데이터를 함께 프롬프트에 제공.
+  - citation framework: 근거 문서와 정형 지표를 함께 제공한다.
 - Guardrails:
   - 사용자의 권한 밖 데이터는 검색/응답에 포함하지 않는다.
   - 샘플 수 부족 시 단정 표현 금지.
@@ -226,7 +246,7 @@ LalaGolf v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고
 - Backend API: FastAPI 또는 Django REST. v1 분석 파이썬 코어 재사용을 고려하면 Python backend가 적합하다.
 - Database: PostgreSQL. 벡터 검색은 pgvector 또는 별도 vector DB.
 - Auth: 자체 이메일 로그인 + OAuth 확장 가능 구조.
-- Jobs: RQ/Celery/Arq 중 하나로 업로드 파싱, 분석 재계산, embedding 생성 비동기화.
+- Jobs: RQ/Celery/Arq 중 하나로 업로드 파싱, 분석 재계산을 비동기화한다. embedding 생성 job은 post-MVP.
 - LLM Service: Ollama adapter를 별도 모듈로 두고 모델명, timeout, context window, streaming 여부를 환경변수화.
 - Deployment: web, api, worker, db, ollama를 분리 가능한 Docker Compose 우선.
 
@@ -244,7 +264,7 @@ LalaGolf v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고
 - follows: follower_id, following_id, status.
 - llm_threads: id, user_id, title, created_at.
 - llm_messages: id, thread_id, role, content, citations_json, created_at.
-- embeddings: id, owner_id, source_type, source_id, content_hash, vector, metadata_json.
+- embeddings: post-MVP. id, owner_id, source_type, source_id, content_hash, vector, metadata_json.
 
 ## 9. API Scope
 
@@ -254,8 +274,8 @@ LalaGolf v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고
 - Analytics: GET /analytics/summary, GET /analytics/trends, GET /analytics/rounds/{id}.
 - Insights: GET /insights, PATCH /insights/{id}/dismiss.
 - Sharing: POST /shares, PATCH /shares/{id}, GET /s/{token}.
-- Public: GET /, GET /public/rounds, GET /sample-analysis.
-- Social: GET /feed, GET /users/{handle}, POST /follow.
+- Public: GET /.
+- Social: post-MVP.
 - LLM: POST /chat/threads, POST /chat/threads/{id}/messages, GET /chat/threads/{id}.
 - Admin: GET /admin/uploads/errors, GET /admin/reports.
 
@@ -267,15 +287,18 @@ MVP에 반드시 포함:
 - v1 라운드 텍스트 업로드, 리뷰, 저장.
 - 개인 대시보드, 라운드 목록, 라운드 상세, 기간 분석.
 - 모바일 반응형 Dashboard, Round Detail, Upload Review, Ask 화면.
-- 로그인 전 공개 홈과 샘플 분석 프리뷰.
+- 로그인 전 최소 진입 화면.
 - 중복 제거된 추천/인사이트 UI.
 - private/link-only 공유.
-- Ollama 기반 자연어 질의: 사용자 본인 데이터만 대상으로 한 SQL/RAG 혼합 답변.
+- Ask LalaGolf 1차 버전: 사용자 본인 데이터만 대상으로 한 structured SQL/metric 답변과 근거 표시.
 - 기본 관리자 화면: 사용자 목록, 업로드 오류 로그.
+- Dashboard, Round Detail, Analysis UI 와이어프레임 확인.
 
 MVP 이후:
 
+- full public home과 sample analysis preview.
 - public feed, followers, comments, likes.
+- embedding/RAG/citation framework.
 - 코치/그룹 기능.
 - 자동 라운드 요약 이미지 생성.
 - 모바일 앱 또는 PWA 오프라인 입력.
@@ -286,7 +309,7 @@ MVP 이후:
 - 업로드 후 저장 완료율: 80% 이상.
 - 핵심 대시보드 로딩: p95 2초 이하.
 - 모바일 핵심 화면의 Lighthouse 접근성/성능 점수 90 이상.
-- LLM 질의 응답: p95 10초 이하, timeout/error 5% 이하.
+- Ask 질의 응답: supported structured question p95 3초 이하. Ollama wording 사용 시 p95 10초 이하, timeout/error 5% 이하.
 - 사용자가 한 달에 2회 이상 라운드/분석을 다시 보는 비율.
 - 중복 인사이트 신고/숨김 비율 감소.
 - 공유 링크 생성 후 외부 조회율.
@@ -297,21 +320,24 @@ MVP 이후:
 - Phase 2: v2 PostgreSQL 스키마 설계 및 v1 MySQL 데이터 변환 스크립트 작성.
 - Phase 3: 파서/분석 로직을 독립 Python package로 분리.
 - Phase 4: API 서버에서 분석 package 호출.
-- Phase 5: Next.js UI 구현.
-- Phase 6: Ollama adapter, embeddings job, chat UI 구현.
-- Phase 7: 기존 data/<year> 라운드 파일 import 검증.
-- Phase 8: v1/v2 결과 비교 테스트. score, GIR, penalty, shot_value, recommendation priority 차이를 리포트한다.
+- Phase 5: early migration import로 실제 v1 데이터를 v2 개발 DB 또는 fixture에 적재.
+- Phase 6: Dashboard/Round Detail/Analysis 와이어프레임 작성 및 사용자 확인.
+- Phase 7: Next.js UI 구현.
+- Phase 8: Ask structured retrieval, optional Ollama adapter, chat UI 구현.
+- Phase 9: 기존 repo-root data/<year> 라운드 파일 import 검증.
+- Phase 10: v1/v2 결과 비교 테스트. score, GIR, penalty, shot_value, recommendation priority 차이를 리포트한다.
 
 ## 13. Risks & Open Questions
 
 - 기존 추천 문구의 중복 원인이 데이터 레벨인지 UI 조합 레벨인지 추가 분석이 필요하다.
 - 공개 공유 시 동반자명과 라운드 메모가 개인정보가 될 수 있으므로 기본 비공개가 안전하다.
-- Ollama 모델 성능은 로컬 하드웨어에 크게 의존한다. 응답 지연, context window, 한국어 품질을 별도 검증해야 한다.
+- Ollama 모델 성능은 로컬 하드웨어에 크게 의존한다. MVP 기능은 Ollama 없이도 structured 답변으로 동작해야 한다.
 - expected score와 shot_value는 개인 데이터가 적을수록 불안정하므로, 신뢰도 UI가 필수다.
+- 핵심 화면 UI가 카드 중심으로 흐르면 v2의 분석 개선 목표가 약해진다. 구현 전 UI review gate가 필요하다.
 - v1 MySQL 유지 여부와 v2 PostgreSQL 전환 시점 결정이 필요하다.
 
 ## 14. Technical References
 
 - React docs report latest major documentation as React 19.2 as of the checked React versions page.
 - Next.js App Router supports React Server Components, Suspense, and Server Functions.
-- Ollama provides local `/api/chat` for chat and `/api/embed` for embeddings, suitable for the planned local LLM/RAG flow.
+- Ollama provides local `/api/chat` for optional wording support in MVP and `/api/embed` for post-MVP RAG.

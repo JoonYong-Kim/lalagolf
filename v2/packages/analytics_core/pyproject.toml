@@ -1,0 +1,17 @@
+[project]
+name = "lalagolf-analytics-core"
+version = "0.1.0"
+description = "Framework-independent parser and analytics core for LalaGolf v2"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

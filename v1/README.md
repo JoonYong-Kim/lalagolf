@@ -105,7 +105,7 @@ python -m py_compile src/recommendations.py src/webapp/routes.py
 
 ## Data Format
 
-한 파일은 한 라운드를 의미하며, 파일은 `data/<year>/` 아래에 둡니다.  
+한 파일은 한 라운드를 의미하며, 파일은 repo-root `data/<year>/` 아래에 둡니다.  
 각 줄은 홀 정보 또는 샷 정보입니다.
 
 - 홀 정보: `1P4`, `2 P5`

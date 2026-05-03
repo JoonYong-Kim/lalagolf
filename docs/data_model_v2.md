@@ -6,7 +6,7 @@
 - 라운드, 홀, 샷 원본 데이터와 계산된 분석 결과를 구분한다.
 - 분석 결과는 재계산 가능하게 유지하고, 원본 데이터는 보존한다.
 - 공유/공개 화면에서 민감 정보가 노출되지 않도록 visibility와 serializer 기준을 명확히 한다.
-- LLM/RAG를 위해 정형 데이터와 embedding 문서를 함께 관리한다.
+- MVP Ask를 위해 정형 질의와 메시지를 관리하고, post-MVP RAG를 위해 embedding 문서를 확장 가능하게 둔다.
 
 ## 2. Conventions
 
@@ -38,7 +38,7 @@ users
   ├─ shares
   ├─ llm_threads
   │    └─ llm_messages
-  └─ embeddings
+  └─ post-MVP embeddings
 ```
 
 ## 4. Core Tables
@@ -51,9 +51,9 @@ Stores account identity.
 | --- | --- | --- |
 | id | uuid pk | |
 | email | citext unique not null | case-insensitive |
-| password_hash | text nullable | nullable if OAuth-only |
+| password_hash | text not null | OAuth is post-MVP |
 | display_name | text not null | |
-| handle | citext unique nullable | public profile URL |
+| handle | citext unique nullable | post-MVP public profile URL |
 | avatar_url | text nullable | |
 | role | text not null | `user`, `admin` |
 | status | text not null | `active`, `disabled`, `deleted` |
@@ -302,7 +302,7 @@ Stores generated expected value table versions.
 | --- | --- | --- |
 | id | uuid pk | |
 | user_id | uuid fk users.id not null | |
-| scope_type | text not null | `user`, `global`, `cohort` |
+| scope_type | text not null | `user`, `global`, `baseline`, `cohort` |
 | version | integer not null | |
 | min_samples | integer not null | |
 | table_json | jsonb not null | expected score lookup |
@@ -317,6 +317,15 @@ Constraints:
 Indexes:
 
 - `(user_id, computed_at desc)`
+
+Cold-start and fallback policy:
+
+- Primary lookup checks `scope_type = user` first when the user table has enough samples for the requested lookup level.
+- If user samples are below `min_samples`, MVP checks `scope_type = global`, then an operator-approved `baseline` table.
+- Lookup order is level-first, then scope: `full` user/global/baseline, then `no_par` user/global/baseline, then coarser levels. This keeps a high-sample global exact bucket ahead of a very coarse user-only bucket for new users.
+- `scope_type = cohort` is post-MVP unless a clear cohort definition is approved.
+- Consumers must persist and expose `expected_lookup_level`, `expected_sample_count`, `expected_source_scope`, and `expected_confidence` so low-confidence shot values are visible in UI and Ask answers.
+- Insights generated from fallback-heavy data should usually use `confidence = low` or `medium`, not `high`.
 
 ### 6.3 shot_values
 
@@ -376,6 +385,14 @@ Indexes:
 - `(user_id, scope_type, scope_id)`
 - `(user_id, status, priority_score desc)`
 - `(user_id, category)`
+
+MVP dedupe policy:
+
+- Dedupe is deterministic and rule-based.
+- Candidate insights should include a stable dedupe key derived from category, root cause, and primary evidence metric.
+- Dashboard default selection is max 3 active insights ordered by `priority_score`, with duplicate evidence suppressed.
+- Advanced semantic clustering or LLM-based dedupe is post-MVP.
+- Concrete examples and key rules live in `docs/insight_dedupe_v2.md`.
 
 ### 6.5 analysis_snapshots
 
@@ -440,7 +457,7 @@ Constraints:
 
 ### 7.3 public_feed_items
 
-Optional materialized feed table.
+Post-MVP optional materialized feed table.
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -459,7 +476,7 @@ Indexes:
 - `(published_at desc)` where hidden_at is null
 - `(owner_id, published_at desc)`
 
-## 8. LLM & Embedding Tables
+## 8. Ask, LLM & Embedding Tables
 
 ### 8.1 llm_threads
 
@@ -500,7 +517,7 @@ Indexes:
 
 ### 8.3 embedding_documents
 
-Stores text chunks to embed.
+Post-MVP. Stores text chunks to embed.
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -523,7 +540,7 @@ Indexes:
 
 ### 8.4 embeddings
 
-Requires pgvector extension.
+Post-MVP. Requires pgvector extension.
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -657,25 +674,26 @@ Migration notes:
 - v1 has no true multi-user ownership. Initial import must assign all records to a selected owner user.
 - Existing companion strings should be split into `round_companions`.
 - v1 computed data should be recalculated in v2 rather than blindly copied.
-- Original text files in `data/<year>` should be re-imported as validation fixtures where possible.
+- Original text files in repo-root `data/<year>` should be re-imported as validation fixtures where possible.
 
 ## 13. Suggested Initial Alembic Order
 
-1. extensions: `uuid-ossp` or app-generated UUID, `citext`, `vector`.
+1. extensions: `uuid-ossp` or app-generated UUID, `citext`. Add `vector` only when post-MVP RAG starts.
 2. users, user_profiles.
 3. source_files, upload_reviews.
 4. courses, rounds, round_companions.
 5. holes, shots.
 6. round_metrics, expected_score_tables, shot_values, insights, analysis_snapshots.
-7. shares, follows, public_feed_items.
-8. llm_threads, llm_messages, embedding_documents, embeddings.
-9. audit_logs, reports.
+7. shares.
+8. llm_threads, llm_messages.
+9. post-MVP: follows, public_feed_items, embedding_documents, embeddings.
+10. audit_logs, reports.
 
 ## 14. Open Decisions
 
 - UUID generation in application vs PostgreSQL.
 - Whether `course_name` remains denormalized only for MVP.
 - Whether `round_metrics` should store all metrics row-wise or selected metrics in typed columns.
-- Exact pgvector dimension, determined by the embedding model.
 - Whether soft delete should be universal or limited to user-facing entities.
 - Whether private LLM messages should be included in account export/delete workflows.
+- Exact pgvector dimension, determined by the post-MVP embedding model.
