@@ -3,16 +3,18 @@ import { once } from "node:events";
 import { createServer } from "node:net";
 
 const routes = [
-  { path: "/", text: "LalaGolf" },
-  { path: "/dashboard", text: "Dashboard" },
-  { path: "/rounds", text: "Rounds" },
-  { path: "/analysis", text: "Analysis" },
-  { path: "/ask", text: "Ask" },
-  { path: "/upload", text: "Round Upload" },
-  { path: "/admin/uploads/errors", text: "Upload Errors" },
-  { path: "/rounds/smoke-round", text: "Round" },
-  { path: "/upload/smoke-review/review", text: "Loading upload review" },
-  { path: "/s/smoke-token", text: "Shared round" },
+  { path: "/", text: "GolfRaiders" },
+  { path: "/dashboard", text: "대시보드" },
+  { path: "/rounds", text: "라운드" },
+  { path: "/analysis", text: "분석" },
+  { path: "/practice", text: "연습 계획" },
+  { path: "/goals", text: "다음 라운드 목표" },
+  { path: "/ask", text: "질문" },
+  { path: "/upload", text: "라운드 업로드" },
+  { path: "/admin/uploads/errors", text: "업로드 오류" },
+  { path: "/rounds/smoke-round", text: "라운드" },
+  { path: "/upload/smoke-review/review", text: "업로드 검토" },
+  { path: "/s/smoke-token", text: "공유 라운드" },
 ];
 
 const port = await getOpenPort();

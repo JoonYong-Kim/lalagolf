@@ -1,4 +1,4 @@
-# LalaGolf v2 MVP Release Check
+# GolfRaiders v2 MVP Release Check
 
 Date: 2026-05-03
 
@@ -20,6 +20,8 @@ Date: 2026-05-03
 | New user can register, upload, review, commit, and see analysis | Satisfied | `test_auth.py`, `test_uploads_api.py`, `test_rounds_api.py`, `test_analytics_api.py` |
 | Returning user can view dashboard, round detail, analysis tabs, and priority insights | Satisfied | API tests plus `npm run smoke` routes for `/dashboard`, `/rounds/[id]`, `/analysis` |
 | User can create and revoke link-only share with a top public-safe round issue | Satisfied | `test_shares_api.py` |
+| User can convert an insight suggestion into a practice plan or next-round goal | Satisfied | Practice/goal API tests plus Analysis UI plan/goal actions |
+| User can record date-scoped practice diary entries | Satisfied | Practice diary API tests plus `/practice` calendar/diary widget |
 | Logged-out visitor can reach private-first entry page | Satisfied | `npm run smoke` route `/` |
 | Ask can answer structured-data questions for current user | Satisfied | `test_chat_api.py`, `test_operations.py` |
 | Imported v1 data can be dry-run migrated and compared | Satisfied | migration reports in `v2/migration_reports/`, `test_migration_service.py` |
@@ -51,6 +53,9 @@ metrics, and at most one public-safe top issue for the shared round. Tests asser
 names, private notes, source file ids, storage keys, and LLM message tables are absent. All private
 API routes require authenticated owner-scoped access; cross-user round, upload, analytics, chat,
 and share management tests return 404 or 401/403 as appropriate.
+
+The public shared scorecard uses the same score outcome visualization as the private round detail
+scorecard, but still serializes only public-safe hole rows and aggregate metrics.
 
 No known private-data exposure path remains open after the current automated checks.
 

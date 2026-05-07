@@ -42,7 +42,8 @@ def test_categorize_shot():
     assert categorize_shot({"club": "P", "on": "G", "distance": 4}) == "putting"
     assert categorize_shot({"club": "52", "on": "F", "distance": 25}) == "short_game"
     assert categorize_shot({"club": "I7", "on": "R", "distance": 110}) == "recovery"
-    assert categorize_shot({"club": "I7", "on": "F", "distance": 145}) == "approach"
+    assert categorize_shot({"club": "52", "on": "F", "distance": 65}) == "control_shot"
+    assert categorize_shot({"club": "I7", "on": "F", "distance": 145}) == "iron_shot"
 
 
 def test_normalize_shot_states_creates_fact_rows():
@@ -84,7 +85,7 @@ def test_build_shot_state_summary():
     assert summary["recovery_shots"] == 1
     assert summary["penalty_shots"] == 1
     assert summary["by_category"]["off_the_tee"] == 2
-    assert summary["by_category"]["approach"] == 1
+    assert summary["by_category"]["iron_shot"] == 1
     assert summary["by_category"]["short_game"] == 1
     assert summary["by_category"]["putting"] == 2
     assert summary["by_start_state"]["tee"] == 2

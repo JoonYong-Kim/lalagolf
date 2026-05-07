@@ -1,0 +1,96 @@
+2026-04-24 08:10
+세종레이캐슬
+서해근 친구들
+
+1P4
+d c c h
+i9 b c
+p b c 20
+p b b 5 ok
+2p4
+d b b 
+i9 b c 94
+p c b 13
+p b b 3 ok
+3 p3
+i7 a b
+p b b 4
+4 p5
+d c c
+uw b c h
+ip b b 80
+i6 c c 
+56 b b 30
+p b b 11 ok
+5 p4
+uw b b 
+52 c c 60
+p c c 25
+p b b 8 ok
+6 p3
+ip b c 
+p c c 13
+p c c 10
+p c b 6 ok
+7 p4
+d b c
+52 c b 40
+p c c 10
+p b a 3
+8 p4
+d c b
+i7 c c
+p c b 10
+p c c 1.5 ok
+9 p5
+d b b
+uw b b
+ip c b
+p c c 20
+p b b 5 ok
+10 p4
+d c c
+i9 c c 
+52 b b 15
+p c c 20
+p b b 8 ok
+11 p5
+d b b
+i5 b c h
+i6 c c 
+p b b 30
+p b a 3
+12 p3
+i6 c c 
+56 b b 20
+p b c 3.5 ok
+13 p4
+d b b
+i5 c c 
+56 b c 30
+p b b 6
+p c c 2 ok
+14 p5
+d c c h
+i8 b b 
+uw b b
+ip b b
+p b a 7
+15 p4
+d c b
+i8 b c 
+56 a b 10
+p b c 2 ok
+16 p4
+d b b
+i9 c c 
+52 b b 40
+p b b 4 ok
+17 p3
+i7 c a
+p b b 2
+18 p4
+d b b
+i7 c b 
+p b b 17
+p b b 3 

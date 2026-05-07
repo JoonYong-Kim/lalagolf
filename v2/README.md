@@ -1,6 +1,6 @@
-# LalaGolf v2
+# GolfRaiders v2
 
-LalaGolf v2 is the next version of LalaGolf: a private-first multi-user golf performance analysis service with modern web UI, PostgreSQL-backed analytics, safe link sharing, and structured question answering.
+GolfRaiders v2 is the next version of the LalaGolf codebase: a private-first multi-user golf performance analysis service with modern web UI, PostgreSQL-backed analytics, safe link sharing, and structured question answering.
 
 This directory is intentionally separate from `../v1`. The v1 app remains the reference implementation and migration source. New development should happen under `v2/`.
 
@@ -58,9 +58,10 @@ Use these documents as the source of truth until implementation-specific docs ar
 7. Round list, round detail, and dashboard
 8. Analysis and insight deduplication
 9. Logged-out entry and link-only sharing
-10. Ask LalaGolf structured retrieval
-11. v1 migration dry run
-12. MVP hardening
+10. Practice plans, diary, and next-round goals
+11. Ask GolfRaiders structured retrieval
+12. v1 migration dry run
+13. MVP hardening
 
 See `../docs/mvp_plan_v2.md` for acceptance criteria.
 
@@ -89,7 +90,7 @@ python -m venv .venv
 . .venv/bin/activate
 pip install -e ../packages/analytics_core
 pip install -e ".[dev]"
-uvicorn app.main:app --reload
+uvicorn app.main:app --reload --port 2324
 ```
 
 Start the web app:
@@ -97,8 +98,40 @@ Start the web app:
 ```bash
 cd v2/web
 npm install
-npm run dev
+npm run dev -- --hostname 0.0.0.0 --port 2323
 ```
+
+Default local URLs:
+
+- Web: `http://localhost:2323`
+- API: `http://localhost:2324/api/v1`
+
+For Google sign-in, set these API environment variables before starting the API:
+
+- `GOOGLE_OAUTH_CLIENT_ID`
+- `GOOGLE_OAUTH_CLIENT_SECRET`
+- `GOOGLE_OAUTH_REDIRECT_URI`, default `http://localhost:2324/api/v1/auth/google/callback`
+- `WEB_BASE_URL`, default `http://localhost:2323`
+
+The web app uses `NEXT_PUBLIC_API_BASE_URL`, defaulting locally to
+`http://localhost:2324/api/v1`.
+
+The frontend supports Korean and English UI text. Dashboard, analysis, and shared-round insight
+content passes `locale=ko|en` to the API; persisted insight text remains Korean by default and is
+rendered into English at the API response boundary for supported MVP insight templates.
+
+Current UI behavior:
+
+- Dashboard score trend renders as a compact chart with axis labels, average line, point labels, and
+  recent-round score/to-par details.
+- Round detail and shared-round scorecards use equal-width hole columns and visual score badges for
+  eagle-or-better, birdie, par, bogey, and double-bogey-or-worse.
+- Analysis shows deduplicated insights one at a time in a switchable insight widget. Each suggested
+  routine exposes same-level actions for selecting a practice plan or selecting a next-round goal.
+- Practice combines calendar and diary in one toggle widget; diary entries are date-scoped and can
+  be linked to an insight-derived practice plan.
+- The entry/login UI keeps `Get started` on registration and opens the header `Login` action directly
+  in login mode. Google sign-in is shown only when OAuth is configured.
 
 Start the worker skeleton:
 
@@ -172,6 +205,7 @@ python ../scripts/import_v1_raw_files.py \
 ```
 
 The default local import owner is `owner@example.com` with password `password`.
+Admin access is role-based; promote a local user by setting `users.role = 'admin'` in the database.
 
 Operational notes for production environment variables, backups, restore, logs, and admin upload
 errors are in `../docs/operations_v2.md`.

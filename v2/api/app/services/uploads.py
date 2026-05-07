@@ -136,6 +136,20 @@ def get_upload_review(db: Session, *, owner: User, upload_review_id: UUID) -> Up
     return review
 
 
+def get_upload_review_raw_content(
+    review: UploadReview,
+    *,
+    settings: Settings,
+) -> str | None:
+    source_file = review.source_file
+    if source_file is None or not source_file.storage_key:
+        return None
+    storage_path = Path(settings.upload_storage_dir) / source_file.storage_key
+    if not storage_path.exists():
+        return None
+    return storage_path.read_text(encoding="utf-8")
+
+
 def update_upload_review_edits(
     db: Session,
     *,
@@ -146,6 +160,43 @@ def update_upload_review_edits(
     review = get_upload_review(db, owner=owner, upload_review_id=upload_review_id)
     review.user_edits = user_edits
     review.parsed_round = _apply_review_edits(review.parsed_round, user_edits)
+    db.commit()
+    db.refresh(review)
+    return review
+
+
+def update_upload_review_raw_content(
+    db: Session,
+    *,
+    owner: User,
+    upload_review_id: UUID,
+    raw_content: str,
+    settings: Settings,
+) -> UploadReview:
+    review = get_upload_review(db, owner=owner, upload_review_id=upload_review_id)
+    source_file = review.source_file
+    if source_file is None:
+        raise UploadNotFoundError
+
+    encoded = raw_content.encode("utf-8")
+    if len(encoded) > settings.upload_max_bytes:
+        raise UploadError("Uploaded file is too large")
+
+    storage_path = Path(settings.upload_storage_dir) / source_file.storage_key
+    storage_path.parent.mkdir(parents=True, exist_ok=True)
+    storage_path.write_bytes(encoded)
+
+    source_file.file_size = len(encoded)
+    source_file.content_hash = hashlib.sha256(encoded).hexdigest()
+    source_file.status = SOURCE_FILE_STATUS_PARSED
+    source_file.parse_error = None
+
+    parse_result = parse_upload_preview(raw_content, file_name=source_file.filename)
+    warnings = parse_result["warnings"]
+    review.parsed_round = parse_result["parsed_round"]
+    review.warnings = warnings
+    review.user_edits = {}
+    review.status = UPLOAD_REVIEW_STATUS_NEEDS_REVIEW if warnings else UPLOAD_REVIEW_STATUS_READY
     db.commit()
     db.refresh(review)
     return review
@@ -180,21 +231,59 @@ def commit_upload_review(
     if not holes:
         raise UploadNotReadyError
 
-    round_ = Round(
-        user_id=owner.id,
-        source_file_id=review.source_file_id,
-        course_name=_required_text(parsed_round.get("course_name"), "course_name"),
-        play_date=_required_play_date(parsed_round),
-        total_score=parsed_round.get("total_score"),
-        total_par=parsed_round.get("total_par"),
-        score_to_par=parsed_round.get("score_to_par"),
-        hole_count=parsed_round.get("hole_count") or len(holes),
+    round_ = db.get(Round, review.committed_round_id) if review.committed_round_id else None
+    if round_ is None:
+        round_ = Round(user_id=owner.id, source_file_id=review.source_file_id)
+        db.add(round_)
+    elif round_.user_id != owner.id:
+        raise UploadNotFoundError
+    else:
+        _clear_round_children(db, round_)
+
+    _apply_parsed_round_to_round(
+        db,
+        owner=owner,
+        round_=round_,
+        parsed_round=parsed_round,
         visibility=visibility,
         share_course=share_course,
         share_exact_date=share_exact_date,
-        computed_status=COMPUTED_STATUS_PENDING,
     )
-    db.add(round_)
+
+    review.status = UPLOAD_REVIEW_STATUS_COMMITTED
+    review.committed_round_id = round_.id
+    source_file = db.get(SourceFile, review.source_file_id)
+    if source_file is not None:
+        source_file.status = SOURCE_FILE_STATUS_COMMITTED
+
+    build_shot_facts_from_upload_preview(parsed_round, round_ref=str(round_.id))
+    db.commit()
+    db.refresh(round_)
+    return round_
+
+
+def _apply_parsed_round_to_round(
+    db: Session,
+    *,
+    owner: User,
+    round_: Round,
+    parsed_round: dict[str, Any],
+    visibility: str,
+    share_course: bool,
+    share_exact_date: bool,
+) -> None:
+    holes = parsed_round.get("holes") or []
+    round_.source_file_id = round_.source_file_id
+    round_.course_name = _required_text(parsed_round.get("course_name"), "course_name")
+    round_.play_date = _required_play_date(parsed_round)
+    round_.total_score = parsed_round.get("total_score")
+    round_.total_par = parsed_round.get("total_par")
+    round_.score_to_par = parsed_round.get("score_to_par")
+    round_.hole_count = parsed_round.get("hole_count") or len(holes)
+    round_.visibility = visibility
+    round_.share_course = share_course
+    round_.share_exact_date = share_exact_date
+    round_.computed_status = COMPUTED_STATUS_PENDING
     db.flush()
 
     for companion_name in parsed_round.get("companions", []):
@@ -235,16 +324,13 @@ def commit_upload_review(
                 )
             )
 
-    review.status = UPLOAD_REVIEW_STATUS_COMMITTED
-    review.committed_round_id = round_.id
-    source_file = db.get(SourceFile, review.source_file_id)
-    if source_file is not None:
-        source_file.status = SOURCE_FILE_STATUS_COMMITTED
 
-    build_shot_facts_from_upload_preview(parsed_round, round_ref=str(round_.id))
-    db.commit()
-    db.refresh(round_)
-    return round_
+def _clear_round_children(db: Session, round_: Round) -> None:
+    for companion in db.scalars(select(RoundCompanion).where(RoundCompanion.round_id == round_.id)):
+        db.delete(companion)
+    for hole in db.scalars(select(Hole).where(Hole.round_id == round_.id)):
+        db.delete(hole)
+    db.flush()
 
 
 def get_upload_job(db: Session, *, owner: User, job_id: UUID) -> dict[str, Any]:

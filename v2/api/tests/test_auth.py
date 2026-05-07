@@ -6,6 +6,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.core.config import get_settings
 from app.core.security import hash_password
 from app.db.base import Base
 from app.db.session import get_db
@@ -119,6 +120,68 @@ def test_login_and_logout_revokes_session(client: TestClient, db_session: Sessio
     assert logout_response.status_code == 200
     assert client.get("/api/v1/me").status_code == 401
     assert db_session.query(UserSession).filter(UserSession.revoked_at.is_not(None)).count() == 1
+
+
+def test_google_start_requires_oauth_configuration(client: TestClient) -> None:
+    settings = get_settings()
+    previous_client_id = settings.google_oauth_client_id
+    previous_client_secret = settings.google_oauth_client_secret
+    settings.google_oauth_client_id = None
+    settings.google_oauth_client_secret = None
+    try:
+        response = client.get("/api/v1/auth/google/start", follow_redirects=False)
+    finally:
+        settings.google_oauth_client_id = previous_client_id
+        settings.google_oauth_client_secret = previous_client_secret
+
+    assert response.status_code == 503
+
+
+def test_google_oauth_callback_creates_session(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    settings = get_settings()
+    previous_client_id = settings.google_oauth_client_id
+    previous_client_secret = settings.google_oauth_client_secret
+    previous_redirect_uri = settings.google_oauth_redirect_uri
+    previous_web_base_url = settings.web_base_url
+    settings.google_oauth_client_id = "google-client"
+    settings.google_oauth_client_secret = "google-secret"
+    settings.google_oauth_redirect_uri = "http://testserver/api/v1/auth/google/callback"
+    settings.web_base_url = "http://localhost:2323"
+
+    def fake_google_userinfo(*, code: str, settings: object) -> dict[str, object]:
+        assert code == "oauth-code"
+        return {
+            "email": "google@example.com",
+            "email_verified": True,
+            "name": "Google Golfer",
+            "picture": "https://example.com/avatar.png",
+        }
+
+    monkeypatch.setattr("app.api.v1.auth.fetch_google_userinfo", fake_google_userinfo)
+
+    try:
+        start_response = client.get("/api/v1/auth/google/start", follow_redirects=False)
+        state = start_response.cookies.get(settings.google_oauth_state_cookie_name)
+        assert start_response.status_code == 307
+        assert state
+
+        callback_response = client.get(
+            f"/api/v1/auth/google/callback?code=oauth-code&state={state}",
+            follow_redirects=False,
+        )
+    finally:
+        settings.google_oauth_client_id = previous_client_id
+        settings.google_oauth_client_secret = previous_client_secret
+        settings.google_oauth_redirect_uri = previous_redirect_uri
+        settings.web_base_url = previous_web_base_url
+
+    assert callback_response.status_code == 307
+    assert callback_response.headers["location"] == "http://localhost:2323/upload"
+    assert callback_response.cookies.get("lalagolf_session")
+    assert client.get("/api/v1/me").json()["data"]["user"]["email"] == "google@example.com"
 
 
 def test_update_profile_requires_auth_and_updates_profile(client: TestClient) -> None:

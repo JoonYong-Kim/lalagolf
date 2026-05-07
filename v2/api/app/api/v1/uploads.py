@@ -9,6 +9,7 @@ from app.schemas.upload import (
     JobResponse,
     UploadCommitRequest,
     UploadCommitResponse,
+    UploadReviewRawUpdateRequest,
     UploadReviewResponse,
     UploadReviewUpdateRequest,
     UploadRoundFileResponse,
@@ -21,7 +22,9 @@ from app.services.uploads import (
     create_round_file_upload,
     get_upload_job,
     get_upload_review,
+    get_upload_review_raw_content,
     update_upload_review_edits,
+    update_upload_review_raw_content,
 )
 
 router = APIRouter(tags=["uploads"])
@@ -74,6 +77,7 @@ def read_upload_review(
     upload_review_id: UUID,
     db: DbSession,
     current_user: CurrentUser,
+    settings: AppSettings,
 ) -> dict[str, UploadReviewResponse]:
     try:
         review = get_upload_review(db, owner=current_user, upload_review_id=upload_review_id)
@@ -83,7 +87,7 @@ def read_upload_review(
             detail="Upload not found",
         ) from exc
 
-    return {"data": _review_response(review)}
+    return {"data": _review_response(review, settings=settings)}
 
 
 @router.patch("/uploads/{upload_review_id}/review")
@@ -92,6 +96,7 @@ def update_upload_review(
     payload: UploadReviewUpdateRequest,
     db: DbSession,
     current_user: CurrentUser,
+    settings: AppSettings,
 ) -> dict[str, UploadReviewResponse]:
     try:
         review = update_upload_review_edits(
@@ -106,7 +111,34 @@ def update_upload_review(
             detail="Upload not found",
         ) from exc
 
-    return {"data": _review_response(review)}
+    return {"data": _review_response(review, settings=settings)}
+
+
+@router.patch("/uploads/{upload_review_id}/review/raw")
+def update_upload_review_raw(
+    upload_review_id: UUID,
+    payload: UploadReviewRawUpdateRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+    settings: AppSettings,
+) -> dict[str, UploadReviewResponse]:
+    try:
+        review = update_upload_review_raw_content(
+            db,
+            owner=current_user,
+            upload_review_id=upload_review_id,
+            raw_content=payload.raw_content,
+            settings=settings,
+        )
+    except UploadNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Upload not found",
+        ) from exc
+    except UploadError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+    return {"data": _review_response(review, settings=settings)}
 
 
 @router.post("/uploads/{upload_review_id}/commit")
@@ -170,7 +202,7 @@ def read_job(
     return {"data": JobResponse(**job)}
 
 
-def _review_response(review) -> UploadReviewResponse:
+def _review_response(review, *, settings: AppSettings) -> UploadReviewResponse:
     return UploadReviewResponse(
         id=review.id,
         status=review.status,
@@ -178,4 +210,5 @@ def _review_response(review) -> UploadReviewResponse:
         warnings=review.warnings,
         user_edits=review.user_edits,
         committed_round_id=review.committed_round_id,
+        raw_content=get_upload_review_raw_content(review, settings=settings),
     )

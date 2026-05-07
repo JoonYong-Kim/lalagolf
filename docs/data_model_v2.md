@@ -1,4 +1,4 @@
-# LalaGolf v2 Data Model Proposal
+# GolfRaiders v2 Data Model Proposal
 
 ## 1. Data Model Goals
 
@@ -35,6 +35,10 @@ users
   │    ├─ round_metrics
   │    ├─ shot_values
   │    └─ insights
+  ├─ practice_plans
+  │    └─ practice_diary_entries
+  ├─ round_goals
+  │    └─ goal_evaluations
   ├─ shares
   ├─ llm_threads
   │    └─ llm_messages
@@ -51,7 +55,7 @@ Stores account identity.
 | --- | --- | --- |
 | id | uuid pk | |
 | email | citext unique not null | case-insensitive |
-| password_hash | text not null | OAuth is post-MVP |
+| password_hash | text not null | email/password hash; Google OAuth users receive an opaque generated password hash |
 | display_name | text not null | |
 | handle | citext unique nullable | post-MVP public profile URL |
 | avatar_url | text nullable | |
@@ -365,24 +369,27 @@ Stores deduplicated recommendation and explanation units.
 | --- | --- | --- |
 | id | uuid pk | |
 | user_id | uuid fk users.id not null | |
+| round_id | uuid nullable | source round when insight is round-specific |
 | scope_type | text not null | `round`, `window`, `user` |
-| scope_id | uuid nullable | round id or snapshot id |
-| insight_type | text not null | `weakness`, `strength`, `practice`, `warning` |
-| category | text nullable | tee/approach/short_game/putting |
-| title | text not null | |
-| summary | text not null | |
-| impact | text nullable | |
-| next_action | text nullable | |
-| priority_score | numeric nullable | |
+| scope_key | text not null | stable scope key such as `all` or `last_10` |
+| category | text not null | `score`, `off_the_tee`, `approach`, `short_game`, `putting`, `penalty_impact` |
+| root_cause | text not null | deterministic cause label |
+| primary_evidence_metric | text not null | metric used for dedupe and dashboard suppression |
+| dedupe_key | text not null | stable unique key per user |
+| problem | text not null | display text; generated in Korean by default |
+| evidence | text not null | display text; generated in Korean by default |
+| impact | text not null | display text; generated in Korean by default |
+| next_action | text not null | display text; generated in Korean by default |
 | confidence | text not null | `low`, `medium`, `high` |
-| evidence | jsonb not null | metric references |
 | status | text not null | `active`, `dismissed`, `stale` |
+| priority_score | numeric not null | |
+| dismissed_at | timestamptz nullable | |
 | created_at | timestamptz not null | |
 | updated_at | timestamptz not null | |
 
 Indexes:
 
-- `(user_id, scope_type, scope_id)`
+- unique `(user_id, dedupe_key)`
 - `(user_id, status, priority_score desc)`
 - `(user_id, category)`
 
@@ -392,6 +399,9 @@ MVP dedupe policy:
 - Candidate insights should include a stable dedupe key derived from category, root cause, and primary evidence metric.
 - Dashboard default selection is max 3 active insights ordered by `priority_score`, with duplicate evidence suppressed.
 - Advanced semantic clustering or LLM-based dedupe is post-MVP.
+- MVP Korean insight text is stored as generated display text. English is supported at selected API
+  response boundaries by rendering deterministic templates from structured insight fields; this does
+  not require duplicate stored rows.
 - Concrete examples and key rules live in `docs/insight_dedupe_v2.md`.
 
 ### 6.5 analysis_snapshots
@@ -415,9 +425,142 @@ Indexes:
 - `(user_id, created_at desc)`
 - `(visibility, created_at desc)` where visibility = `public`
 
-## 7. Sharing & Social Tables
+## 7. Practice & Goal Tables
 
-### 7.1 shares
+Practice and goals convert analysis into an action loop:
+
+1. Insight identifies a problem and next action.
+2. Practice plan turns the next action into scheduled work.
+3. Practice diary records what the user discovered while practicing.
+4. Round goal defines a measurable target for the next round.
+5. Goal evaluation compares the target with the next round's actual data.
+
+All records are private by default and scoped by `user_id`.
+
+### 7.1 practice_plans
+
+Stores planned practice work derived from insights or created manually.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| id | uuid pk | |
+| user_id | uuid fk users.id not null | owner |
+| source_insight_id | uuid fk insights.id nullable | insight that suggested the plan |
+| title | text not null | short display title |
+| purpose | text nullable | why this practice exists |
+| category | text not null | `score`, `off_the_tee`, `approach`, `short_game`, `putting`, `penalty_impact`, `mental`, `fitness` |
+| root_cause | text nullable | copied from insight when available |
+| drill_json | jsonb not null | recommended drills, quantities, notes |
+| target_json | jsonb not null | planned duration/reps/sessions |
+| scheduled_for | date nullable | planned date or week start |
+| status | text not null | `planned`, `in_progress`, `done`, `skipped` |
+| completed_at | timestamptz nullable | |
+| created_at | timestamptz not null | |
+| updated_at | timestamptz not null | |
+
+Indexes:
+
+- `(user_id, status, scheduled_for)`
+- `(user_id, category)`
+- `(source_insight_id)`
+
+### 7.2 practice_diary_entries
+
+Stores practice reflections and discoveries. Entries may be linked to a plan, insight, or round, but
+can also be standalone.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| id | uuid pk | |
+| user_id | uuid fk users.id not null | owner |
+| practice_plan_id | uuid fk practice_plans.id nullable | |
+| source_insight_id | uuid fk insights.id nullable | |
+| round_id | uuid fk rounds.id nullable | related round if any |
+| entry_date | date not null | |
+| title | text not null | |
+| body | text not null | private diary text |
+| category | text nullable | same category set as plans |
+| tags | jsonb not null | user tags |
+| confidence | text nullable | user-reported `low`, `medium`, `high` |
+| mood | text nullable | optional practice context |
+| created_at | timestamptz not null | |
+| updated_at | timestamptz not null | |
+
+Indexes:
+
+- `(user_id, entry_date desc)`
+- `(user_id, category)`
+- `(practice_plan_id)`
+
+### 7.3 round_goals
+
+Stores measurable targets for future rounds. Goals should prefer structured metric rules so they can
+be evaluated automatically after a round is committed or recalculated.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| id | uuid pk | |
+| user_id | uuid fk users.id not null | owner |
+| source_insight_id | uuid fk insights.id nullable | |
+| practice_plan_id | uuid fk practice_plans.id nullable | |
+| title | text not null | |
+| description | text nullable | |
+| category | text not null | same category set as plans |
+| metric_key | text not null | e.g. `tee_penalties`, `three_putt_holes`, `score_to_par`, `putts_total` |
+| target_operator | text not null | `<=`, `<`, `>=`, `>`, `=`, `between` |
+| target_value | numeric nullable | primary threshold |
+| target_value_max | numeric nullable | upper bound for `between` |
+| target_json | jsonb not null | extensible rule payload |
+| applies_to | text not null | `next_round`, `date_range`, `course`, `any_round` |
+| due_round_id | uuid fk rounds.id nullable | explicit round target when known |
+| due_date | date nullable | |
+| status | text not null | `active`, `achieved`, `missed`, `partial`, `not_evaluable`, `cancelled` |
+| created_at | timestamptz not null | |
+| updated_at | timestamptz not null | |
+| closed_at | timestamptz nullable | |
+
+Indexes:
+
+- `(user_id, status, due_date)`
+- `(user_id, category)`
+- `(source_insight_id)`
+- `(practice_plan_id)`
+
+### 7.4 goal_evaluations
+
+Stores the result of comparing a goal with a round.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| id | uuid pk | |
+| user_id | uuid fk users.id not null | owner |
+| goal_id | uuid fk round_goals.id not null | |
+| round_id | uuid fk rounds.id nullable | evaluated round |
+| evaluation_status | text not null | `achieved`, `missed`, `partial`, `not_evaluable` |
+| actual_value | numeric nullable | value read from the round |
+| actual_json | jsonb not null | supporting metrics and evidence |
+| evaluated_by | text not null | `system`, `user` |
+| note | text nullable | |
+| evaluated_at | timestamptz not null | |
+| created_at | timestamptz not null | |
+
+Indexes:
+
+- `(user_id, evaluated_at desc)`
+- `(goal_id, round_id)`
+- `(round_id)`
+
+Goal evaluation rules:
+
+- Automatic evaluation should only run for goals with a supported `metric_key`.
+- Unsupported or ambiguous goals return `not_evaluable` and can be manually evaluated by the user.
+- Evaluations must use the owner-scoped round data and never inspect another user's rounds.
+- A goal can have multiple evaluations if the user intentionally checks it against multiple rounds,
+  but `applies_to = next_round` should close after the first eligible evaluation.
+
+## 8. Sharing & Social Tables
+
+### 8.1 shares
 
 Stores link-only share tokens.
 
@@ -439,7 +582,7 @@ Indexes:
 - `(owner_id, created_at desc)`
 - unique `(token)`
 
-### 7.2 follows
+### 8.2 follows
 
 MVP 이후 도입 가능.
 
@@ -455,7 +598,7 @@ Constraints:
 
 - primary key `(follower_id, following_id)`
 
-### 7.3 public_feed_items
+### 8.3 public_feed_items
 
 Post-MVP optional materialized feed table.
 
@@ -476,9 +619,9 @@ Indexes:
 - `(published_at desc)` where hidden_at is null
 - `(owner_id, published_at desc)`
 
-## 8. Ask, LLM & Embedding Tables
+## 9. Ask, LLM & Embedding Tables
 
-### 8.1 llm_threads
+### 9.1 llm_threads
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -493,7 +636,7 @@ Indexes:
 
 - `(user_id, updated_at desc)`
 
-### 8.2 llm_messages
+### 9.2 llm_messages
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -515,7 +658,7 @@ Indexes:
 - `(thread_id, created_at)`
 - `(user_id, created_at desc)`
 
-### 8.3 embedding_documents
+### 9.3 embedding_documents
 
 Post-MVP. Stores text chunks to embed.
 
@@ -538,7 +681,7 @@ Indexes:
 - `(owner_id, content_hash)`
 - `(visibility)`
 
-### 8.4 embeddings
+### 9.4 embeddings
 
 Post-MVP. Requires pgvector extension.
 
@@ -561,9 +704,9 @@ Indexes:
 - `(owner_id, model)`
 - vector index on `vector` using ivfflat or hnsw after dimension is fixed.
 
-## 9. Admin & Audit Tables
+## 10. Admin & Audit Tables
 
-### 9.1 audit_logs
+### 10.1 audit_logs
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -582,7 +725,7 @@ Indexes:
 - `(actor_user_id, created_at desc)`
 - `(resource_type, resource_id)`
 
-### 9.2 reports
+### 10.2 reports
 
 For public content reports.
 
@@ -603,33 +746,33 @@ Indexes:
 - `(status, created_at desc)`
 - `(resource_type, resource_id)`
 
-## 10. Visibility Rules
+## 11. Visibility Rules
 
-### 10.1 Private
+### 11.1 Private
 
 - Only owner and admin can access.
 - Admin access must be logged.
 - LLM can use data only for the owner.
 
-### 10.2 Link-only
+### 11.2 Link-only
 
 - Resource can be read via valid share token.
 - Search engines should not index link-only pages.
 - Link-only pages use public-safe serializer.
 - LLM access through shared resource is read-only and limited to the shared scope if implemented.
 
-### 10.3 Public
+### 11.3 Public
 
 - Resource can appear on public profile/feed.
 - Public-safe serializer removes private fields.
 - Public resource may generate `public_feed_items`.
 
-### 10.4 Followers
+### 11.4 Followers
 
 - MVP 이후.
 - Requires accepted follow relationship.
 
-## 11. Public-Safe Serialization
+## 12. Public-Safe Serialization
 
 Never expose:
 
@@ -640,6 +783,8 @@ Never expose:
 - exact tee time
 - private upload warnings containing raw private text
 - private LLM messages
+- practice diary entries
+- private practice plans and goals
 
 Expose only if allowed:
 
@@ -655,7 +800,7 @@ Always safe to expose for public rounds:
 - public insight title/summary
 - anonymized shot category counts
 
-## 12. v1 to v2 Mapping
+## 13. v1 to v2 Mapping
 
 Expected v1 source concepts:
 
@@ -676,7 +821,7 @@ Migration notes:
 - v1 computed data should be recalculated in v2 rather than blindly copied.
 - Original text files in repo-root `data/<year>` should be re-imported as validation fixtures where possible.
 
-## 13. Suggested Initial Alembic Order
+## 14. Suggested Initial Alembic Order
 
 1. extensions: `uuid-ossp` or app-generated UUID, `citext`. Add `vector` only when post-MVP RAG starts.
 2. users, user_profiles.
@@ -684,16 +829,19 @@ Migration notes:
 4. courses, rounds, round_companions.
 5. holes, shots.
 6. round_metrics, expected_score_tables, shot_values, insights, analysis_snapshots.
-7. shares.
-8. llm_threads, llm_messages.
-9. post-MVP: follows, public_feed_items, embedding_documents, embeddings.
-10. audit_logs, reports.
+7. practice_plans, practice_diary_entries, round_goals, goal_evaluations.
+8. shares.
+9. llm_threads, llm_messages.
+10. post-MVP: follows, public_feed_items, embedding_documents, embeddings.
+11. audit_logs, reports.
 
-## 14. Open Decisions
+## 15. Open Decisions
 
 - UUID generation in application vs PostgreSQL.
 - Whether `course_name` remains denormalized only for MVP.
 - Whether `round_metrics` should store all metrics row-wise or selected metrics in typed columns.
 - Whether soft delete should be universal or limited to user-facing entities.
 - Whether private LLM messages should be included in account export/delete workflows.
+- Which goal metric keys are supported in the first automatic evaluator.
+- Whether practice diary entries should be included in Ask context by default or behind a setting.
 - Exact pgvector dimension, determined by the post-MVP embedding model.

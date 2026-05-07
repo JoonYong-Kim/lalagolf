@@ -195,6 +195,36 @@ def test_update_review_and_commit_creates_private_round_rows(
     assert review.status == "committed"
 
 
+def test_update_review_raw_content_reparses_source_file(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    register(client)
+    data = upload_round(client)
+
+    review_response = client.get(f"/api/v1/uploads/{data['upload_review_id']}/review")
+    assert review_response.status_code == 200
+    raw_content = review_response.json()["data"]["raw_content"]
+    assert "베르힐 영종" in raw_content
+
+    edited_raw = raw_content.replace("베르힐 영종", "Edited Raw CC")
+    patch_response = client.patch(
+        f"/api/v1/uploads/{data['upload_review_id']}/review/raw",
+        json={"raw_content": edited_raw},
+    )
+
+    assert patch_response.status_code == 200
+    payload = patch_response.json()["data"]
+    assert payload["parsed_round"]["course_name"] == "Edited Raw CC"
+    assert payload["raw_content"] == edited_raw
+    assert payload["user_edits"] == {}
+
+    source_file = db_session.get(SourceFile, UUID(data["source_file_id"]))
+    assert source_file is not None
+    stored_raw = (Path(get_settings().upload_storage_dir) / source_file.storage_key).read_text()
+    assert stored_raw == edited_raw
+
+
 def test_upload_rejects_non_private_commit(client: TestClient) -> None:
     register(client)
     data = upload_round(client)

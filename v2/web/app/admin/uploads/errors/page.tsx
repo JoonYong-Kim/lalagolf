@@ -4,25 +4,27 @@ import { useEffect, useState } from "react";
 
 import { AppShell } from "@/app/components/AppShell";
 import { getAdminUploadErrors, type AdminUploadError } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 
 export default function AdminUploadErrorsPage() {
   const [items, setItems] = useState<AdminUploadError[] | null>(null);
   const [error, setError] = useState("");
+  const { t } = useI18n();
 
   useEffect(() => {
     getAdminUploadErrors()
       .then(setItems)
       .catch((uploadError) => {
-        setError(uploadError instanceof Error ? uploadError.message : "Upload errors load failed");
+        setError(uploadError instanceof Error ? uploadError.message : t("loadingUploadErrors"));
       });
   }, []);
 
   return (
-    <AppShell eyebrow="Admin" title="Upload Errors">
+    <AppShell eyebrow={t("admin")} title={t("uploadErrors")}>
       <div className="mt-5 space-y-4 sm:space-y-5">
         {!items && !error && (
           <div className="rounded-md border border-line bg-white p-3 text-sm text-muted">
-            Loading upload errors...
+            {t("loadingUploadErrors")}
           </div>
         )}
         {error && (
@@ -33,16 +35,16 @@ export default function AdminUploadErrorsPage() {
 
         <section className="rounded-md border border-line bg-white">
           <div className="border-b border-line px-4 py-3 text-sm text-muted">
-            {items ? `${items.length} failed uploads` : "Failed uploads"}
+            {items ? `${items.length} ${t("failedUploads")}` : t("failedUploads")}
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left text-sm">
               <thead className="bg-surface text-muted">
                 <tr>
-                  <th className="px-4 py-2 font-medium">Created</th>
-                  <th className="px-4 py-2 font-medium">File</th>
-                  <th className="px-4 py-2 font-medium">Status</th>
-                  <th className="px-4 py-2 font-medium">Warnings</th>
+                  <th className="px-4 py-2 font-medium">{t("created")}</th>
+                  <th className="px-4 py-2 font-medium">{t("file")}</th>
+                  <th className="px-4 py-2 font-medium">{t("status")}</th>
+                  <th className="px-4 py-2 font-medium">{t("warnings")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -59,7 +61,7 @@ export default function AdminUploadErrorsPage() {
                 {items && items.length === 0 && (
                   <tr>
                     <td className="px-4 py-6 text-muted" colSpan={4}>
-                      No failed uploads.
+                      {t("noFailedUploads")}
                     </td>
                   </tr>
                 )}

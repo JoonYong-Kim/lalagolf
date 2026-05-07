@@ -2,15 +2,19 @@
 
 import { use, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
+import Link from "next/link";
 
+import { AppShell } from "@/app/components/AppShell";
 import {
   commitUploadReview,
   getUploadReview,
+  updateUploadReviewRawContent,
   updateUploadReview,
   type ParsedRound,
   type ParsedHole,
   type UploadReview,
 } from "@/lib/api";
+import { useI18n } from "@/lib/i18n";
 
 type PageParams = {
   params: Promise<{ id: string }>;
@@ -23,19 +27,23 @@ export default function UploadReviewPage({ params }: PageParams) {
   const [playDate, setPlayDate] = useState("");
   const [companions, setCompanions] = useState("");
   const [editableHoles, setEditableHoles] = useState<ParsedHole[]>([]);
+  const [rawContent, setRawContent] = useState("");
+  const [showRawContent, setShowRawContent] = useState(false);
   const [selectedHole, setSelectedHole] = useState<number | null>(null);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [committedRoundId, setCommittedRoundId] = useState<string | null>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     getUploadReview(id)
       .then((loadedReview) => {
         setReview(loadedReview);
         hydrateForm(loadedReview.parsed_round);
+        setRawContent(loadedReview.raw_content ?? "");
       })
       .catch((loadError) => {
-        setError(loadError instanceof Error ? loadError.message : "Failed to load review");
+        setError(loadError instanceof Error ? loadError.message : t("loadingUploadErrors"));
       });
   }, [id]);
 
@@ -51,7 +59,7 @@ export default function UploadReviewPage({ params }: PageParams) {
   }, [holes, selectedHole]);
 
   async function saveEdits() {
-    setStatus("Saving edits...");
+    setStatus(t("savingEdits"));
     setError("");
     try {
       const updated = await updateUploadReview(id, {
@@ -65,25 +73,43 @@ export default function UploadReviewPage({ params }: PageParams) {
       });
       setReview(updated);
       hydrateForm(updated.parsed_round);
-      setStatus("Edits saved.");
+      setRawContent(updated.raw_content ?? rawContent);
+      setStatus(t("editsSaved"));
     } catch (saveError) {
       setStatus("");
-      setError(saveError instanceof Error ? saveError.message : "Failed to save edits");
+      setError(saveError instanceof Error ? saveError.message : t("savingEdits"));
+    }
+  }
+
+  async function reparseRawContent() {
+    if (!rawContent.trim()) return;
+    setStatus(t("reparsingRawText"));
+    setError("");
+    try {
+      const updated = await updateUploadReviewRawContent(id, rawContent);
+      setReview(updated);
+      hydrateForm(updated.parsed_round);
+      setRawContent(updated.raw_content ?? rawContent);
+      setSelectedHole(null);
+      setStatus(t("rawTextReparsed"));
+    } catch (rawError) {
+      setStatus("");
+      setError(rawError instanceof Error ? rawError.message : t("reparsingRawText"));
     }
   }
 
   async function commitReview() {
-    setStatus("Committing private round...");
+    setStatus(t("committingPrivateRound"));
     setError("");
     try {
       const committed = await commitUploadReview(id);
       setCommittedRoundId(committed.round_id);
-      setStatus(`Committed. Analytics status: ${committed.computed_status}`);
+      setStatus(`${t("committed")}. ${t("analyticsStatus")}: ${committed.computed_status}`);
       const updated = await getUploadReview(id);
       setReview(updated);
     } catch (commitError) {
       setStatus("");
-      setError(commitError instanceof Error ? commitError.message : "Failed to commit upload");
+      setError(commitError instanceof Error ? commitError.message : t("committingPrivateRound"));
     }
   }
 
@@ -134,68 +160,113 @@ export default function UploadReviewPage({ params }: PageParams) {
 
   if (error && !review) {
     return (
-      <main className="min-h-screen bg-surface p-5 text-ink">
+      <AppShell eyebrow={t("uploadReview")} title={t("uploadReview")}>
         <section className="mx-auto max-w-3xl rounded-md border border-[#e4c0bd] bg-[#fff2f0] p-4 text-[#a34242]">
           {error}
         </section>
-      </main>
+      </AppShell>
     );
   }
 
   if (!review || !parsedRound) {
     return (
-      <main className="min-h-screen bg-surface p-5 text-ink">
-        <section className="mx-auto max-w-5xl rounded-md border border-line bg-white p-5">
-          Loading upload review...
+      <AppShell eyebrow={t("uploadReview")} title={t("uploadReview")}>
+        <section className="rounded-md border border-line bg-white p-5">
+          {t("loadingUploadErrors")}
         </section>
-      </main>
+      </AppShell>
     );
   }
 
   return (
-    <main className="min-h-screen bg-surface p-5 text-ink">
-      <section className="mx-auto max-w-6xl">
-        <div className="mb-5 border-b border-line pb-4">
-          <p className="text-sm font-medium text-green-700">Upload Review</p>
-          <h1 className="mt-2 text-3xl font-semibold">{courseName || "Parsed round"}</h1>
-          <p className="mt-2 text-sm text-muted">
-            Review parsed metadata, warnings, holes, and shots before committing a private round.
-          </p>
-        </div>
+    <AppShell eyebrow={t("uploadReview")} title={courseName || t("parsedRound")}>
+      <div className="mt-5 space-y-5">
+        <p className="text-sm text-muted">{t("uploadReviewIntro")}</p>
 
         <div className="mb-4 grid gap-3 md:grid-cols-5">
-          <SummaryCell label="Status" value={review.status} />
-          <SummaryCell label="Score" value={summary.score} />
-          <SummaryCell label="Holes" value={summary.holes} />
-          <SummaryCell label="Shots" value={summary.shots} />
-          <SummaryCell label="Warnings" value={String(review.warnings.length)} />
+          <SummaryCell label={t("status")} value={review.status} />
+          <SummaryCell label={t("score")} value={summary.score} />
+          <SummaryCell label={t("holes")} value={summary.holes} />
+          <SummaryCell label={t("shots")} value={summary.shots} />
+          <SummaryCell label={t("warnings")} value={String(review.warnings.length)} />
         </div>
+
+        <section className="rounded-md border border-line bg-white">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+            <div>
+              <h2 className="font-semibold">{t("rawUploadText")}</h2>
+              <p className="mt-1 text-sm text-muted">{t("rawUploadTextHelp")}</p>
+            </div>
+            <button
+              className="rounded-md border border-line px-4 py-2 text-sm font-semibold"
+              onClick={() => setShowRawContent((current) => !current)}
+            >
+              {showRawContent ? t("hideRawUploadText") : t("showRawUploadText")}
+            </button>
+          </div>
+          {showRawContent && (
+            <div className="border-t border-line p-4">
+              <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
+                <div className="space-y-3">
+                  <textarea
+                    className="min-h-[560px] w-full rounded-md border border-line px-4 py-3 font-mono text-sm leading-6"
+                    value={rawContent}
+                    onChange={(event) => setRawContent(event.target.value)}
+                    spellCheck={false}
+                  />
+                </div>
+                <aside className="space-y-3">
+                  <button className="w-full rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white" onClick={reparseRawContent}>
+                    {t("reparseRawText")}
+                  </button>
+                  <div className="rounded-md border border-line bg-surface p-3">
+                    <h3 className="text-sm font-semibold">{t("warnings")}</h3>
+                    {review.warnings.length === 0 ? (
+                      <p className="mt-2 text-sm text-muted">{t("noParserWarnings")}</p>
+                    ) : (
+                      <div className="mt-3 max-h-[500px] space-y-2 overflow-y-auto">
+                        {review.warnings.map((warning) => (
+                          <div className="rounded-md border border-[#e8d2a5] bg-[#fff8e8] p-3 text-sm" key={`${warning.code}-${warning.path}`}>
+                            <p className="font-semibold text-[#7a4c00]">{warning.code}</p>
+                            <p className="mt-1 text-[#59451c]">{warning.message}</p>
+                            <p className="mt-1 text-xs text-muted">{warning.path}</p>
+                            {warning.raw_text && <p className="mt-2 font-mono text-xs text-[#59451c]">{warning.raw_text}</p>}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </aside>
+              </div>
+            </div>
+          )}
+        </section>
 
         <div className="grid gap-4 lg:grid-cols-[0.85fr_1.15fr]">
           <section className="space-y-4">
-            <Panel title="Round metadata">
+            <Panel title={t("roundMetadata")}>
               <div className="space-y-3">
                 <label className="block text-sm font-medium">
-                  Course
+                  {t("course")}
                   <input className={inputClass} value={courseName} onChange={(event) => setCourseName(event.target.value)} />
                 </label>
                 <label className="block text-sm font-medium">
-                  Play date
+                  {t("playDate")}
                   <input className={inputClass} type="date" value={playDate} onChange={(event) => setPlayDate(event.target.value)} />
                 </label>
                 <label className="block text-sm font-medium">
-                  Companions
+                  {t("companions")}
                   <input className={inputClass} value={companions} onChange={(event) => setCompanions(event.target.value)} />
                 </label>
                 <button className="rounded-md border border-line px-4 py-2 text-sm font-semibold" onClick={saveEdits}>
-                  Save edits
+                  {t("saveEdits")}
                 </button>
               </div>
             </Panel>
 
-            <Panel title="Warnings">
+            <Panel title={t("warnings")}>
               {review.warnings.length === 0 ? (
-                <p className="text-sm text-muted">No parser warnings.</p>
+                <p className="text-sm text-muted">{t("noParserWarnings")}</p>
               ) : (
                 <div className="space-y-2">
                   {review.warnings.map((warning) => (
@@ -211,7 +282,7 @@ export default function UploadReviewPage({ params }: PageParams) {
           </section>
 
           <section className="space-y-4">
-            <Panel title="Hole and shot review">
+            <Panel title={t("holeShotReview")}>
               <div className="mb-3 flex gap-2 overflow-x-auto pb-1">
                 {holes.map((hole) => (
                   <button
@@ -231,17 +302,17 @@ export default function UploadReviewPage({ params }: PageParams) {
                 <div className="grid gap-3 xl:grid-cols-[0.8fr_1.2fr]">
                   <div className="rounded-md border border-line bg-surface p-3 text-sm">
                     <p className="font-semibold">
-                      Hole {activeHole.hole_number} · Par {activeHole.par} · Score {activeHole.score}
+                      {t("hole")} {activeHole.hole_number} · {t("par")} {activeHole.par} · {t("score")} {activeHole.score}
                     </p>
                     <dl className="mt-3 grid grid-cols-2 gap-2">
-                      <Metric label="Putts" value={activeHole.putts} />
-                      <Metric label="Penalties" value={activeHole.penalties} />
-                      <Metric label="GIR" value={activeHole.gir ? "Yes" : "No"} />
-                      <Metric label="Shots" value={activeHole.shots.length} />
+                      <Metric label={t("putts")} value={activeHole.putts} />
+                      <Metric label={t("penalties")} value={activeHole.penalties} />
+                      <Metric label="GIR" value={activeHole.gir ? t("yes") : t("no")} />
+                      <Metric label={t("shots")} value={activeHole.shots.length} />
                     </dl>
                     <div className="mt-4 grid grid-cols-3 gap-2">
                       <label className="text-xs font-medium text-muted">
-                        Par
+                        {t("par")}
                         <input
                           className={smallInputClass}
                           type="number"
@@ -250,7 +321,7 @@ export default function UploadReviewPage({ params }: PageParams) {
                         />
                       </label>
                       <label className="text-xs font-medium text-muted">
-                        Score
+                        {t("score")}
                         <input
                           className={smallInputClass}
                           type="number"
@@ -259,7 +330,7 @@ export default function UploadReviewPage({ params }: PageParams) {
                         />
                       </label>
                       <label className="text-xs font-medium text-muted">
-                        Putts
+                        {t("putts")}
                         <input
                           className={smallInputClass}
                           type="number"
@@ -274,11 +345,11 @@ export default function UploadReviewPage({ params }: PageParams) {
                       <thead className="bg-[#eef3f0] text-muted">
                         <tr>
                           <th className="px-3 py-2">#</th>
-                          <th className="px-3 py-2">Club</th>
-                          <th className="px-3 py-2">Dist</th>
-                          <th className="px-3 py-2">Lie</th>
-                          <th className="px-3 py-2">Result</th>
-                          <th className="px-3 py-2">Penalty</th>
+                          <th className="px-3 py-2">{t("club")}</th>
+                          <th className="px-3 py-2">{t("distance")}</th>
+                          <th className="px-3 py-2">{t("lie")}</th>
+                          <th className="px-3 py-2">{t("result")}</th>
+                          <th className="px-3 py-2">{t("penalty")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -300,7 +371,7 @@ export default function UploadReviewPage({ params }: PageParams) {
                                 onChange={(event) => updateShot(shot.shot_number, "distance", event.target.value)}
                               />
                             </td>
-                            <td className="px-3 py-2">{shot.start_lie} to {shot.end_lie}</td>
+                            <td className="px-3 py-2">{shot.start_lie} → {shot.end_lie}</td>
                             <td className="px-3 py-2">{shot.result_grade}</td>
                             <td className="px-3 py-2">
                               <select
@@ -326,12 +397,20 @@ export default function UploadReviewPage({ params }: PageParams) {
             <div className="rounded-md border border-line bg-white p-4">
               <div className="flex flex-wrap items-center gap-3">
                 <button className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white" onClick={commitReview}>
-                  Commit private round
+                  {t("commitPrivateRound")}
                 </button>
                 {status && <span className="text-sm text-muted">{status}</span>}
               </div>
               {committedRoundId && (
-                <p className="mt-3 text-sm text-green-700">Round committed: {committedRoundId}</p>
+                <div className="mt-3 flex flex-wrap items-center gap-3">
+                  <span className="text-sm text-green-700">{t("roundCommitted")}: {committedRoundId}</span>
+                  <Link className="rounded-md border border-line px-3 py-2 text-sm font-semibold" href="/dashboard">
+                    {t("goToDashboard")}
+                  </Link>
+                  <Link className="rounded-md bg-green-700 px-3 py-2 text-sm font-semibold text-white" href={`/rounds/${committedRoundId}`}>
+                    {t("goToRoundDetail")}
+                  </Link>
+                </div>
               )}
               {error && (
                 <div className="mt-3 rounded-md border border-[#e4c0bd] bg-[#fff2f0] p-3 text-sm text-[#a34242]">
@@ -341,8 +420,8 @@ export default function UploadReviewPage({ params }: PageParams) {
             </div>
           </section>
         </div>
-      </section>
-    </main>
+      </div>
+    </AppShell>
   );
 }
 

@@ -14,6 +14,7 @@ from app.schemas.chat import (
 from app.services.chat import (
     ChatNotFoundError,
     add_message,
+    chat_status,
     create_thread,
     get_thread,
     list_threads,
@@ -22,6 +23,11 @@ from app.services.chat import (
 )
 
 router = APIRouter(prefix="/chat", tags=["chat"])
+
+
+@router.get("/status")
+def read_chat_status(settings: AppSettings) -> dict[str, dict]:
+    return {"data": chat_status(settings)}
 
 
 @router.post("/threads", status_code=status.HTTP_201_CREATED)

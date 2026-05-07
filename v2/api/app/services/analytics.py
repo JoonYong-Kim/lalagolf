@@ -25,6 +25,7 @@ from app.models import (
     User,
 )
 from app.models.constants import COMPUTED_STATUS_FAILED, COMPUTED_STATUS_READY
+from app.services.insight_i18n import render_insight_payload
 
 
 def parse_upload_preview(raw_content: str, *, file_name: str) -> dict[str, Any]:
@@ -102,7 +103,7 @@ def generate_insights(db: Session, *, owner: User) -> list[Insight]:
     return insights
 
 
-def get_trends(db: Session, *, owner: User) -> dict[str, Any]:
+def get_trends(db: Session, *, owner: User, locale: str | None = None) -> dict[str, Any]:
     rounds = _owned_rounds(db, owner)
     insights = _active_insights(db, owner)
     shot_values = db.scalars(select(ShotValue).where(ShotValue.user_id == owner.id)).all()
@@ -132,11 +133,17 @@ def get_trends(db: Session, *, owner: User) -> dict[str, Any]:
         "kpis": _kpis(rounds),
         "score_trend": _score_trend(rounds),
         "category_summary": category_summary,
-        "insights": [_insight_response(insight) for insight in insights],
+        "insights": [_insight_response(insight, locale=locale) for insight in insights],
     }
 
 
-def get_round_analytics(db: Session, *, owner: User, round_id: uuid.UUID) -> dict[str, Any]:
+def get_round_analytics(
+    db: Session,
+    *,
+    owner: User,
+    round_id: uuid.UUID,
+    locale: str | None = None,
+) -> dict[str, Any]:
     round_ = _get_round(db, owner=owner, round_id=round_id)
     metrics = db.scalars(
         select(RoundMetric).where(
@@ -162,11 +169,14 @@ def get_round_analytics(db: Session, *, owner: User, round_id: uuid.UUID) -> dic
                 "shot_id": str(row.shot_id),
                 "category": row.category,
                 "shot_value": row.shot_value,
+                "expected_before": row.expected_before,
+                "expected_after": row.expected_after,
+                "shot_cost": row.shot_cost,
                 "expected_confidence": row.expected_confidence,
             }
             for row in shot_values
         ],
-        "insights": [_insight_response(insight) for insight in insights],
+        "insights": [_insight_response(insight, locale=locale) for insight in insights],
     }
 
 
@@ -203,13 +213,19 @@ def compare_analytics(db: Session, *, owner: User, group_by: str = "category") -
     return {"group_by": group_by, "rows": rows}
 
 
-def list_insights(db: Session, *, owner: User, status: str = "active") -> list[dict[str, Any]]:
+def list_insights(
+    db: Session,
+    *,
+    owner: User,
+    status: str = "active",
+    locale: str | None = None,
+) -> list[dict[str, Any]]:
     insights = db.scalars(
         select(Insight)
         .where(Insight.user_id == owner.id, Insight.status == status)
         .order_by(Insight.priority_score.desc(), Insight.created_at.desc())
     ).all()
-    return [_insight_response(insight) for insight in insights]
+    return [_insight_response(insight, locale=locale) for insight in insights]
 
 
 def update_insight_status(
@@ -218,6 +234,7 @@ def update_insight_status(
     owner: User,
     insight_id: uuid.UUID,
     status: str,
+    locale: str | None = None,
 ) -> dict[str, Any]:
     insight = db.scalars(
         select(Insight).where(Insight.id == insight_id, Insight.user_id == owner.id)
@@ -230,12 +247,18 @@ def update_insight_status(
     insight.dismissed_at = datetime.now(UTC) if status == "dismissed" else None
     db.commit()
     db.refresh(insight)
-    return _insight_response(insight)
+    return _insight_response(insight, locale=locale)
 
 
-def active_priority_insights(db: Session, *, owner: User, limit: int = 3) -> list[dict[str, Any]]:
+def active_priority_insights(
+    db: Session,
+    *,
+    owner: User,
+    limit: int = 3,
+    locale: str | None = None,
+) -> list[dict[str, Any]]:
     return [
-        _insight_response(insight)
+        _insight_response(insight, locale=locale)
         for insight in db.scalars(
             select(Insight)
             .where(Insight.user_id == owner.id, Insight.status == "active")
@@ -373,6 +396,11 @@ def _replace_shot_values(db: Session, *, owner: User, round_: Round) -> list[Sho
             expected_before = category_expected.get("expected_strokes")
             shot_cost = (shot.score_cost or 1) + (shot.penalty_strokes or 0)
             shot_value = _estimate_shot_value(shot, expected_before, shot_cost)
+            expected_after = (
+                round(expected_before - shot_cost - shot_value, 3)
+                if expected_before is not None and shot_value is not None
+                else None
+            )
             rows.append(
                 ShotValue(
                     user_id=owner.id,
@@ -381,7 +409,7 @@ def _replace_shot_values(db: Session, *, owner: User, round_: Round) -> list[Sho
                     shot_id=shot.id,
                     category=category,
                     expected_before=expected_before,
-                    expected_after=None,
+                    expected_after=expected_after,
                     shot_cost=shot_cost,
                     shot_value=shot_value,
                     expected_lookup_level="category",
@@ -393,6 +421,10 @@ def _replace_shot_values(db: Session, *, owner: User, round_: Round) -> list[Sho
                         "shot_number": shot.shot_number,
                         "club": shot.club,
                         "distance": shot.distance,
+                        "expected_before": expected_before,
+                        "expected_after": expected_after,
+                        "shot_cost": shot_cost,
+                        "shot_value": shot_value,
                         "result_grade": shot.result_grade,
                         "penalty_type": shot.penalty_type,
                     },
@@ -475,9 +507,9 @@ def _build_insight_candidates(db: Session, owner: User) -> list[dict[str, Any]]:
                 category="penalty_impact",
                 root_cause="penalty_strokes",
                 primary_evidence_metric="penalty_strokes",
-                problem="페널티가 스코어를 직접 밀어 올립니다.",
-                evidence=f"저장된 라운드에서 페널티가 총 {penalties}타 기록됐습니다.",
-                impact="페널티 1타는 회복 샷까지 이어져 실제 손실이 더 커질 수 있습니다.",
+                problem="페널티 손실",
+                evidence=f"총 {penalties}타 페널티가 기록됐습니다.",
+                impact="페널티는 회복 샷까지 비용을 키웁니다.",
                 next_action="위험 홀이 보이면 티샷 목표 폭과 세이프 클럽 기준을 먼저 정하세요.",
                 confidence=_confidence(sum(1 for round_ in rounds for hole in round_.holes)),
                 priority_score=float(penalties),
@@ -492,9 +524,9 @@ def _build_insight_candidates(db: Session, owner: User) -> list[dict[str, Any]]:
                 category="putting",
                 root_cause="three_putt",
                 primary_evidence_metric="three_putt_rate",
-                problem="3퍼트가 반복될 여지가 있습니다.",
-                evidence=f"퍼트 기록 {len(putts)}개 중 3퍼트 이상이 {three_putts}개입니다.",
-                impact="3퍼트는 파 세이브 흐름을 끊고 보기 이상으로 이어지기 쉽습니다.",
+                problem="3퍼트 위험",
+                evidence=f"{len(putts)}개 퍼트 기록 중 3퍼트 이상 {three_putts}개.",
+                impact="3퍼트는 파 세이브 흐름을 끊습니다.",
                 next_action="6-12m 래그 퍼트 거리감과 1-2m 마무리 퍼트를 묶어서 점검하세요.",
                 confidence=_confidence(len(putts)),
                 priority_score=rate * 4,
@@ -504,6 +536,7 @@ def _build_insight_candidates(db: Session, owner: User) -> list[dict[str, Any]]:
     for category, payload in category_losses[:3]:
         if payload["total"] >= 0:
             continue
+        label = _category_label_ko(category)
         candidates.append(
             build_insight_unit(
                 scope_type="window",
@@ -511,15 +544,10 @@ def _build_insight_candidates(db: Session, owner: User) -> list[dict[str, Any]]:
                 category=category,
                 root_cause="shot_value_loss",
                 primary_evidence_metric=f"{category}_shot_value",
-                problem=f"{category} 손실이 우선 점검 대상입니다.",
-                evidence=(
-                    f"{payload['count']}샷에서 추정 shot value 합계가 "
-                    f"{payload['total']:.2f}타입니다."
-                ),
-                impact="같은 유형의 손실이 반복되면 라운드 평균 스코어가 고정됩니다.",
-                next_action=(
-                    "다음 라운드에서 이 카테고리의 큰 미스와 페널티 여부를 먼저 기록하세요."
-                ),
+                problem=f"{label} 손실",
+                evidence=f"{payload['count']}샷 합계 {payload['total']:.2f}타.",
+                impact="반복 손실은 평균 스코어를 고정합니다.",
+                next_action=f"다음 라운드에서 {label}의 큰 미스와 페널티를 먼저 기록하세요.",
                 confidence=_confidence(payload["count"]),
                 priority_score=abs(payload["total"]),
             )
@@ -532,15 +560,28 @@ def _build_insight_candidates(db: Session, owner: User) -> list[dict[str, Any]]:
                 category="score",
                 root_cause="baseline",
                 primary_evidence_metric="average_score",
-                problem="현재 스코어 기준선을 확인했습니다.",
-                evidence=f"저장된 라운드 평균 스코어는 {avg_score}타입니다.",
-                impact="MVP 분석은 이 기준선에서 카테고리별 손실을 좁히는 방식으로 확장됩니다.",
+                problem="스코어 기준선",
+                evidence=f"평균 스코어 {avg_score}타.",
+                impact="이 기준선에서 손실 카테고리를 좁힙니다.",
                 next_action="라운드를 더 누적한 뒤 카테고리별 shot value 신뢰도를 올리세요.",
                 confidence=_confidence(len(rounds)),
                 priority_score=0.2,
             )
         )
     return candidates
+
+
+def _category_label_ko(category: str) -> str:
+    return {
+        "off_the_tee": "티샷",
+        "short_game": "쇼트게임",
+        "control_shot": "컨트롤샷",
+        "iron_shot": "아이언샷",
+        "putting": "퍼팅",
+        "recovery": "리커버리",
+        "penalty_impact": "페널티",
+        "score": "스코어",
+    }.get(category, category)
 
 
 def _replace_snapshot(db: Session, *, owner: User, insights: list[Insight]) -> AnalysisSnapshot:
@@ -563,8 +604,8 @@ def _active_insights(db: Session, owner: User) -> list[Insight]:
     ).all()
 
 
-def _insight_response(insight: Insight) -> dict[str, Any]:
-    return {
+def _insight_response(insight: Insight, *, locale: str | None = None) -> dict[str, Any]:
+    payload = {
         "id": insight.id,
         "round_id": insight.round_id,
         "scope_type": insight.scope_type,
@@ -581,6 +622,7 @@ def _insight_response(insight: Insight) -> dict[str, Any]:
         "priority_score": insight.priority_score,
         "status": insight.status,
     }
+    return render_insight_payload(payload, locale=locale)
 
 
 def _score_trend(rounds: list[Round]) -> list[dict[str, Any]]:
@@ -629,11 +671,15 @@ def _shot_category(shot: Shot, hole: Hole) -> str:
         return "putting"
     if shot.shot_number == 1 and hole.par in {4, 5}:
         return "off_the_tee"
-    if shot.distance is not None and shot.distance <= 50:
-        return "short_game"
     if shot.start_lie in {"R", "B", "H", "O"}:
         return "recovery"
-    return "approach"
+    if shot.distance is not None and shot.distance < 40:
+        return "short_game"
+    if shot.distance is not None and shot.distance < 90:
+        return "control_shot"
+    if shot.distance is not None and shot.distance >= 90:
+        return "iron_shot"
+    return "control_shot"
 
 
 def _estimate_shot_value(shot: Shot, expected_before: float | None, shot_cost: int) -> float:

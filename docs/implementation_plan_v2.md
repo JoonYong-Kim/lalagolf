@@ -1,4 +1,4 @@
-# LalaGolf v2 Implementation Plan
+# GolfRaiders v2 Implementation Plan
 
 ## 1. Purpose
 
@@ -42,7 +42,7 @@ Use this file as the day-to-day tracker. Mark checkboxes as work is completed, a
 | P4 | Rounds & Dashboard | core private app screens and APIs | Complete |
 | P5 | Analysis & Insights | trend APIs, insight dedupe, analysis UI | Complete |
 | P6 | Entry & Sharing | minimal logged-out entry and link-only sharing | Complete |
-| P7 | Ask LalaGolf | structured-data Q&A with optional Ollama wording | Complete |
+| P7 | Ask GolfRaiders | structured-data Q&A with optional Ollama wording | Complete |
 | P8 | Migration Dry Run | v1 import and diff report | Complete |
 | P9 | Hardening | QA, security, mobile, production readiness | Complete |
 
@@ -494,7 +494,7 @@ Acceptance:
 - [x] Revoked token stops working.
 - [x] Public-safe serializer hides companion names, private notes, source files, storage keys, and private LLM messages.
 
-## 12. P7. Ask LalaGolf
+## 12. P7. Ask GolfRaiders
 
 Goal: answer user questions using owned structured data. Embeddings are post-MVP.
 

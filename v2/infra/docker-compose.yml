@@ -3,9 +3,9 @@ services:
     build:
       context: ../web
     environment:
-      NEXT_PUBLIC_API_BASE_URL: http://localhost:8000/api/v1
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:2324/api/v1
     ports:
-      - "3000:3000"
+      - "2323:2323"
     depends_on:
       api:
         condition: service_started
@@ -18,9 +18,11 @@ services:
       DATABASE_URL: postgresql+psycopg://lalagolf:lalagolf@postgres:5432/lalagolf_v2
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: change-me-in-local-env
-      CORS_ORIGINS: http://localhost:3000,http://127.0.0.1:3000
+      CORS_ORIGINS: http://localhost:2323,http://127.0.0.1:2323
+      WEB_BASE_URL: http://localhost:2323
+      GOOGLE_OAUTH_REDIRECT_URI: http://localhost:2324/api/v1/auth/google/callback
     ports:
-      - "8000:8000"
+      - "2324:2324"
     depends_on:
       postgres:
         condition: service_healthy

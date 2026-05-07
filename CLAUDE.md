@@ -83,7 +83,7 @@ The v2 stack and rules (from `docs/architecture_v2.md` and `v2/AGENTS.md`) const
 - **Ownership:** every private query is scoped by `user_id` / `owner_id`. Default new rounds to `private`. Public and link-only views use **explicit public-safe serializers** — never return raw ORM objects, and never expose companion names, private notes, original upload files, storage keys, or LLM messages on shared endpoints.
 - **Background-only work:** parsing, analytics recompute, expected/shot-value table refresh, insight generation, summary generation, and embedding generation run in the worker, not request handlers.
 - **Insight shape:** `{ problem, evidence, impact, next_action, confidence }`. Surface sample count and confidence whenever expected values or shot values come from limited data.
-- **LLM (Ask LalaGolf):** retrieval applies ownership/share scope **before** vector or text search. LLM answers do not bypass permission checks and do not replace deterministic analytics.
+- **LLM (Ask GolfRaiders):** retrieval applies ownership/share scope **before** vector or text search. LLM answers do not bypass permission checks and do not replace deterministic analytics.
 - **Migration source of truth:** v1 MySQL + repo-root `data/<year>` files. Maintain a v1→v2 id mapping; record skipped/suspicious rows as migration issues; imported data defaults to `private`. Diff v1 vs v2 outputs for score, GIR, putts, penalty strokes, shot category, expected/shot values, and recommendation category.
 
 When implementing a v2 milestone, mark progress in `docs/implementation_plan_v2.md` and follow the acceptance criteria listed under each `Pn.x` section there.

@@ -1,4 +1,4 @@
-# LalaGolf v2 UI Review
+# GolfRaiders v2 UI Review
 
 ## 1. Purpose
 
@@ -59,7 +59,7 @@ Confirmed decisions:
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────┐
-│ Top nav: LalaGolf | Dashboard | Rounds | Analysis | Upload       [User menu] │
+│ Top nav: GolfRaiders | Dashboard | Rounds | Analysis | Upload       [User menu] │
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ Page header                                                                  │
 │ Dashboard                         [Upload round] [Last 10 rounds v]          │
@@ -246,7 +246,7 @@ Required wireframes:
 Questions to confirm:
 
 - Which filters are always visible?
-- How are Score, Tee, Approach, Short Game, and Putting tabs organized?
+- How are All, Tee, Short Game, Control Shot, Iron Shot, Putting, Recovery, and Penalty tabs organized?
 - Which chart/table appears first in each tab?
 - How are insight units shown without making the page card-heavy?
 - How are low-confidence metrics and sample counts displayed?
@@ -254,9 +254,9 @@ Questions to confirm:
 Confirmed decisions:
 
 - Filters remain visible on desktop and horizontally scrollable on mobile.
-- Score, Tee, Approach, Short Game, Putting tabs are approved.
-- Main analysis stays table/chart-first with insights as a side rail on desktop.
-- Mobile insights collapse into an accordion to avoid card-heavy scrolling.
+- All, Tee, Short Game, Control Shot, Iron Shot, Putting, Recovery, Penalty tabs are approved.
+- Main analysis stays table/table-first with insights as a side widget on desktop.
+- Insights are shown one at a time in a switchable widget to avoid card-heavy scrolling.
 - Low sample and fallback confidence labels remain visible instead of hiding metrics.
 
 ### 5.1 Desktop Analysis Wireframe
@@ -269,16 +269,16 @@ Confirmed decisions:
 │ Filters: [Date range v] [Course v] [Round count: 2] [Min confidence v]       │
 │ Sample notice: low sample, global/baseline expected value may be used        │
 ├──────────────────────────────────────────────────────────────────────────────┤
-│ Tabs: Score | Tee | Approach | Short Game | Putting | Insights              │
+│ Tabs: All | Tee | Short Game | Control Shot | Iron Shot | Putting | Penalty │
 ├──────────────────────────────────────────────┬───────────────────────────────┤
-│ Main chart/table area                         │ Insight rail                 │
+│ Main chart/table area                         │ Insight widget               │
 │ Score tab default:                            │ Max 3 for selected filters   │
 │ ┌──────────────────────────────────────────┐ │ ┌───────────────────────────┐ │
 │ │ Round comparison table                  │ │ │ Problem                   │ │
 │ │ Course       Date       Score +/- Pen   │ │ │ Evidence + sample         │ │
 │ │ 파인힐스     04-14      92    +20 4     │ │ │ Impact                    │ │
 │ │ 베르힐 영종  04-11      90    +18 2     │ │ │ Next action               │ │
-│ └──────────────────────────────────────────┘ │ │ Confidence badge          │ │
+│ └──────────────────────────────────────────┘ │ │ [<] 1 / N [>]             │ │
 │ Chart appears when sample size supports it    │ └───────────────────────────┘ │
 ├──────────────────────────────────────────────┴───────────────────────────────┤
 │ Detail table for selected tab                                                │
@@ -291,10 +291,12 @@ Confirmed decisions:
 Analysis rules:
 
 - Filters are always visible on desktop.
-- Tabs own the main table/chart. Insights are a side rail, not the entire page.
+- Tabs own the main table/chart. Insights are a side widget, not the entire page.
+- The side widget displays one deduplicated insight at a time with previous/next controls and dot
+  indicators.
 - If sample is low, table remains available but chart labels and insight confidence show low/medium.
-- Cards are limited to max-3 insight units and compact filter/sample notices.
-- Dedupe is visible: one evidence metric appears once in the rail.
+- Cards are limited to the selected insight unit, suggested routine items, and compact notices.
+- Dedupe is visible: one evidence metric appears once in the widget sequence.
 
 ### 5.2 Mobile Analysis Wireframe
 
@@ -316,9 +318,9 @@ Analysis rules:
 │ 파인힐스     92    +20 4     │
 │ 베르힐 영종  90    +18 2     │
 ├──────────────────────────────┤
-│ Insights accordion, max 3    │
-│ Problem row                  │
-│ Expanded: evidence/action    │
+│ Insight widget, one at a time│
+│ Problem + confidence         │
+│ Evidence/action + [<] [>]    │
 └──────────────────────────────┘
 ```
 
@@ -326,14 +328,14 @@ Mobile rules:
 
 - Filters and tabs use horizontal scroll, not stacked full-width controls.
 - Tables keep key columns visible first. Secondary metrics move into row expansion.
-- Insight units collapse by default after the first item to avoid card-heavy scrolling.
+- Insight units appear one at a time in a switchable widget to avoid card-heavy scrolling.
 
 ## 6. Empty, Loading, And Error States
 
 Dashboard:
 
 - Empty: show upload CTA, one short sentence, and no fake chart.
-- Loading: skeleton for KPI strip, recent rounds rows, and insight rail.
+- Loading: skeleton for KPI strip, recent rounds rows, and insight widget.
 - Error: compact inline retry near the failed panel. Do not block the whole page unless auth fails.
 
 Round Detail:
@@ -364,4 +366,5 @@ Analysis:
 | --- | --- | --- | --- | --- |
 | 2026-05-03 | Dashboard | Desktop/Mobile | Confirmed `/ui-review` hierarchy, max-3 insights, recent rounds table/list, compact upload status | User |
 | 2026-05-03 | Round Detail | Desktop/Mobile | Confirmed compact header, hole table, selected shot timeline, and separated private/share/raw controls | User |
-| 2026-05-03 | Analysis | Desktop/Mobile | Confirmed filters, tabs, table/chart-first layout, insight rail/accordion, and confidence labels | User |
+| 2026-05-03 | Analysis | Desktop/Mobile | Confirmed filters, tabs, table/chart-first layout, and confidence labels; superseded by 2026-05-07 widget update | User |
+| 2026-05-07 | Analysis | Desktop/Mobile | Updated insight presentation to one-at-a-time switchable widget and equal-level plan/goal actions | User |

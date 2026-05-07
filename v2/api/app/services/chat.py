@@ -1,8 +1,10 @@
+import json
 import logging
 import re
 import uuid
 from datetime import date, timedelta
 from typing import Any
+from urllib import error, request
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
@@ -108,22 +110,40 @@ def answer_question(
 ) -> dict[str, Any]:
     plan = plan_question(question)
     evidence = retrieve_context(db, owner=owner, plan=plan)
-    content = render_answer(question=question, plan=plan, evidence=evidence)
+    deterministic_content = render_answer(question=question, plan=plan, evidence=evidence)
+    content = deterministic_content
     if settings.ollama_enabled:
-        evidence["ollama"] = {
-            "enabled": True,
-            "used": False,
-            "status": "deterministic_answer_returned",
-            "timeout_seconds": settings.ollama_timeout_seconds,
-        }
-        logger.warning(
-            "ollama wording skipped; deterministic answer returned",
-            extra={
-                "user_id": str(owner.id),
-                "timeout_seconds": settings.ollama_timeout_seconds,
-            },
+        llm_content, llm_status = _ollama_answer(
+            question=question,
+            deterministic_content=deterministic_content,
+            evidence=evidence,
+            settings=settings,
         )
+        if llm_content:
+            content = llm_content
+        evidence["ollama"] = llm_status
     return {"content": content, "evidence": evidence}
+
+
+def chat_status(settings: Settings) -> dict[str, Any]:
+    if not settings.ollama_enabled:
+        return {
+            "enabled": False,
+            "reachable": False,
+            "model": settings.ollama_model,
+            "base_url": settings.ollama_base_url,
+            "mode": "deterministic",
+            "detail": "OLLAMA_ENABLED is false",
+        }
+    reachable, detail = _ollama_reachable(settings)
+    return {
+        "enabled": True,
+        "reachable": reachable,
+        "model": settings.ollama_model,
+        "base_url": settings.ollama_base_url,
+        "mode": "llm" if reachable else "deterministic",
+        "detail": detail,
+    }
 
 
 def plan_question(question: str) -> dict[str, Any]:
@@ -224,6 +244,84 @@ def render_answer(*, question: str, plan: dict[str, Any], evidence: dict[str, An
         f"{prefix} 평균 스코어는 {metrics['average_score'] or '-'}타, "
         f"베스트 스코어는 {metrics['best_score'] or '-'}타입니다."
     )
+
+
+def _ollama_answer(
+    *,
+    question: str,
+    deterministic_content: str,
+    evidence: dict[str, Any],
+    settings: Settings,
+) -> tuple[str | None, dict[str, Any]]:
+    evidence_json = json.dumps(_llm_safe_evidence(evidence), ensure_ascii=False, default=str)
+    prompt = (
+        "You are Ask GolfRaiders. Answer in Korean unless the question is in English. "
+        "Use only the provided golf evidence. Be concise and include one practical next action.\n\n"
+        f"Question: {question}\n"
+        f"Deterministic baseline: {deterministic_content}\n"
+        f"Evidence JSON: {evidence_json}"
+    )
+    payload = json.dumps(
+        {
+            "model": settings.ollama_model,
+            "prompt": prompt,
+            "stream": False,
+        }
+    ).encode("utf-8")
+    try:
+        req = request.Request(
+            f"{settings.ollama_base_url.rstrip('/')}/api/generate",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with request.urlopen(req, timeout=settings.ollama_timeout_seconds) as response:
+            body = json.loads(response.read().decode("utf-8"))
+        llm_response = str(body.get("response") or "").strip()
+        return llm_response or None, {
+            "enabled": True,
+            "used": bool(llm_response),
+            "reachable": True,
+            "model": settings.ollama_model,
+            "status": "ok" if llm_response else "empty_response",
+            "timeout_seconds": settings.ollama_timeout_seconds,
+        }
+    except (OSError, error.URLError, TimeoutError, json.JSONDecodeError) as exc:
+        logger.warning(
+            "ollama wording skipped; deterministic answer returned",
+            extra={"error": str(exc)},
+        )
+        return None, {
+            "enabled": True,
+            "used": False,
+            "reachable": False,
+            "model": settings.ollama_model,
+            "status": "fallback_deterministic",
+            "error": str(exc),
+            "timeout_seconds": settings.ollama_timeout_seconds,
+        }
+
+
+def _ollama_reachable(settings: Settings) -> tuple[bool, str]:
+    try:
+        req = request.Request(f"{settings.ollama_base_url.rstrip('/')}/api/tags", method="GET")
+        with request.urlopen(req, timeout=settings.ollama_timeout_seconds) as response:
+            response.read(1024)
+        return True, "Ollama is reachable"
+    except (OSError, error.URLError, TimeoutError) as exc:
+        return False, str(exc)
+
+
+def _llm_safe_evidence(evidence: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "intent": evidence.get("intent"),
+        "filters": evidence.get("filters"),
+        "round_count": evidence.get("round_count"),
+        "shot_count": evidence.get("shot_count"),
+        "hole_count": evidence.get("hole_count"),
+        "rounds": evidence.get("rounds", [])[:10],
+        "metrics": evidence.get("metrics"),
+    }
 
 
 def message_response(message: LlmMessage) -> dict[str, Any]:

@@ -1,8 +1,8 @@
-# LalaGolf v2 PRD
+# GolfRaiders v2 PRD
 
 ## 1. Product Summary
 
-LalaGolf v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고, 자신의 기록을 기반으로 질의할 수 있는 멀티 유저 골프 분석 서비스다. v1의 라운드 파싱, 지표 계산, strokes gained 유사 분석, 추천 로직을 제품 코어로 유지하되, UI/UX, 계정 모델, 데이터 권한, 공유 경험, 자연어 질의 기능을 새 프로젝트 구조에서 재설계한다.
+GolfRaiders v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고, 자신의 기록을 기반으로 질의할 수 있는 멀티 유저 골프 분석 서비스다. v1의 라운드 파싱, 지표 계산, strokes gained 유사 분석, 추천 로직을 제품 코어로 유지하되, UI/UX, 계정 모델, 데이터 권한, 공유 경험, 자연어 질의 기능을 새 프로젝트 구조에서 재설계한다.
 
 MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, embedding 기반 RAG, social graph는 핵심 분석 경험과 link-only 공유가 검증된 뒤 단계적으로 확장한다.
 
@@ -32,6 +32,8 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
 - 사용자는 이메일/소셜 로그인으로 가입하고 자신의 라운드 기록만 기본적으로 볼 수 있다.
 - 사용자는 기존 텍스트 라운드 파일을 업로드하고, 파싱 결과를 저장 전에 검토/수정할 수 있다.
 - 사용자는 대시보드에서 최근 성과, 주요 약점, 개선 추세, 다음 연습 과제를 확인한다.
+- 사용자는 확인된 인사이트에서 연습 계획을 만들고, 연습 중 발견한 내용을 다이어리로 기록한다.
+- 사용자는 다음 라운드의 측정 가능한 목표를 만들고, 라운드 저장 후 달성 여부를 확인한다.
 - 사용자는 라운드를 private 또는 link-only로 공유한다. followers/public은 MVP 이후 도입한다.
 - 사용자는 “최근 10라운드에서 드라이버가 스코어에 얼마나 영향을 줬어?”처럼 자연어로 질문한다.
 - 사용자는 특정 라운드, 기간, 골프장, 동반자, 클럽, 샷 유형을 필터링해 분석한다.
@@ -58,12 +60,14 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
 ### 6.3 Analytics
 
 - v1 유지 지표: score, score_to_par, GIR, putts, one-putt, three-putt, scrambling, up-and-down, penalty strokes, par type score.
-- 샷 모델: off the tee, approach, short game, putting 분류.
+- 샷 모델: tee, short game(0-40m), control shot(40-90m), iron shot(90m+), putting, recovery,
+  penalty impact 분류.
 - expected score table 및 strokes gained 유사 shot_value 계산.
 - 기간 비교: 최근 N라운드, 연도, 골프장, 동반자, 선택 라운드.
 - 중복 정리 원칙:
   - “원인”, “영향”, “다음 행동”을 하나의 insight unit으로 통합한다.
-  - 같은 근거에서 나온 코멘트는 한 번만 표시하고, 상세 펼침으로 보조 설명을 제공한다.
+  - 같은 근거에서 나온 코멘트는 한 번만 표시하고, Analysis에서는 하나의 전환형 위젯에서
+    인사이트를 넘겨 보게 한다.
   - 추천 우선순위는 최대 3개만 기본 노출한다.
 - 신뢰도 표시: 샘플 수, expected lookup level, 데이터 부족 경고.
 - cold-start 정책: 사용자 샘플이 부족하면 global 또는 운영자가 승인한 baseline expected table로 fallback하고, confidence와 lookup level에 이를 표시한다.
@@ -76,9 +80,10 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
   - Rounds: 라운드 목록, 필터, 비교 선택.
   - Round Detail: 홀/샷 단위 상세 분석.
   - Analysis: 기간/조건별 분석.
-  - Feed/Profile: 공개 또는 공유된 라운드.
-  - Ask LalaGolf: 자연어 질의.
+  - Practice/Goals: 인사이트를 연습 계획, 다이어리, 다음 라운드 목표로 연결.
+  - Ask GolfRaiders: 자연어 질의.
   - Upload Review: 파싱 결과 검토.
+  - Feed/Profile: post-MVP 공개 또는 공유된 라운드.
 - 디자인 방향:
   - 스포츠 기록장이 아니라 개인 퍼포먼스 분석 앱처럼 느껴지는 조용하고 밀도 있는 UI.
   - Linear/Stripe Dashboard 계열의 정돈된 SaaS 톤을 기준으로 하되, 골프 데이터의 맥락을 색상과 차트에 반영한다.
@@ -92,22 +97,30 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
 - 내비게이션:
   - 데스크톱은 좌측 사이드바를 기본으로 한다.
   - 모바일은 하단 탭 또는 상단 메뉴를 사용한다.
-  - 기본 메뉴는 Dashboard, Rounds, Analysis, Ask, Feed, Profile이다.
+  - MVP 기본 메뉴는 Dashboard, Rounds, Analysis, Practice, Goals, Ask, Upload이다.
+  - Feed/Profile/Settings는 post-MVP 또는 별도 계정 설정 화면으로 분리한다.
 - Dashboard 구성:
-  - 상단: 최근 5라운드 스코어 추세와 핵심 KPI.
+  - 상단: 핵심 KPI와 최근 라운드 기반 스코어 추이 차트. 차트는 축 라벨, 평균선, 점수
+    라벨, 최근 라운드별 스코어/파 대비 요약을 제공한다.
   - 중단: 우선순위 인사이트 최대 3개.
   - 우측 또는 하단: 이번 주 연습 과제와 최근 업로드 상태.
   - 하단: 최근 라운드 목록.
 - Round Detail 구성:
   - 상단: 총 스코어, 전/후반, 페널티, 퍼트, GIR 요약.
-  - 중단: 홀별 스코어카드.
-  - 하단: 홀 선택 기반 샷 타임라인.
-  - 보조 영역: 해당 라운드에서 가장 큰 손실/개선 샷과 추천.
+  - 중단: 라운드 분석 요약과 홀별 스코어카드. 스코어카드는 동일 폭 홀 컬럼과
+    eagle/birdie/par/bogey/double+ 배지로 결과를 시각화한다.
+  - 하단: 홀 선택 기반 샷 타임라인. 타임라인에는 expected before, shot cost,
+    expected after, stroke gained를 함께 표시한다.
+  - 보조 영역: 공유 버튼과 해당 라운드 재계산/분석 진입.
 - Analysis 구성:
   - 상단 고정 필터: 기간, 골프장, 동반자, 클럽, 라운드 선택.
-  - 탭: Score, Tee, Approach, Short Game, Putting.
+  - 탭: All, Tee, Short Game, Control Shot, Iron Shot, Putting, Recovery, Penalty.
+  - 인사이트는 긴 카드 목록이 아니라 하나의 전환형 위젯에서 1개씩 확인한다.
+  - 인사이트 기반 제안은 `플랜 선택`과 `목표 선택`을 같은 레벨의 액션으로 제공한다.
+  - 선택 라운드가 2개 이상이면 라운드 비교 위젯을 제공한다. 2개 라운드는 head-to-head로
+    비교하고, 3개 이상은 마지막/최근 대상 라운드를 나머지 선택 라운드 평균과 비교한다.
   - 한 화면에 모든 지표를 펼치지 않고 탭/비교 테이블/추세 차트로 밀도를 관리한다.
-- Ask LalaGolf 구성:
+- Ask GolfRaiders 구성:
   - 좌측 또는 중앙에 채팅 UI를 둔다.
   - 우측 또는 하단에 근거 데이터 패널을 제공한다.
   - 자연어 답변과 원본 수치 근거를 시각적으로 분리한다.
@@ -124,14 +137,45 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
   - Analysis: 필터, 탭, 차트/테이블 밀도, insight unit 노출 방식.
 - 주요 UI 방향이 바뀌면 구현 전에 `docs/ui_review_v2.md`를 갱신한다.
 
+### 6.4.2 Practice & Goal Loop
+
+- GolfRaiders는 분석 화면에서 끝나지 않고, 개선 행동과 다음 라운드 검증까지 이어지는 루프를 제공한다.
+- Practice Plan:
+  - 인사이트의 `next_action`, `category`, `root_cause`, `primary_evidence_metric`에서 연습 계획을 만들 수 있다.
+  - 사용자는 계획을 직접 입력하기보다 Analysis 인사이트에서 제안된 루틴을 선택해 연습 계획을 생성한다.
+  - 계획은 제목, 목적, 카테고리, 추천 드릴, 목표량, 예정일, 상태를 가진다.
+  - 상태는 `planned`, `in_progress`, `done`, `skipped`를 기본으로 한다.
+  - 하나의 인사이트에서 여러 연습 계획을 만들 수 있고, 하나의 계획은 특정 인사이트 없이도 직접 만들 수 있다.
+- Practice Diary:
+  - 사용자는 연습 후 발견한 점, 감각, 실패 패턴, 다음 조정 사항을 다이어리 형식으로 남긴다.
+  - 다이어리는 연습 계획에 연결될 수 있고, 독립적인 자유 기록도 가능하다.
+  - `/practice`에서는 달력과 다이어리 기록이 하나의 위젯에서 토글되며, 달력의 날짜를
+    선택한 뒤 해당 날짜의 기록을 확인하거나 새 기록을 저장한다.
+  - 권장 구조는 날짜, 제목, 본문, 카테고리, 태그, 자신감/컨디션, 관련 인사이트/라운드 링크다.
+  - 다이어리 내용은 기본 private이며, Ask GolfRaiders와 향후 인사이트 생성의 개인 컨텍스트로 활용 가능하다.
+- Next Round Goal:
+  - 사용자는 다음 라운드에서 검증할 측정 가능한 목표를 만든다.
+  - 목표는 특정 카테고리와 평가 규칙을 가져야 한다. 예: `tee_penalties <= 0`, `three_putt_holes <= 1`, `score_to_par <= 12`.
+  - 목표는 연습 계획 또는 인사이트에서 생성할 수 있고, 사용자가 직접 만들 수도 있다.
+  - 상태는 `active`, `achieved`, `missed`, `partial`, `not_evaluable`, `cancelled`를 사용한다.
+- Goal Evaluation:
+  - 라운드 저장 또는 재계산 후 활성 목표를 해당 라운드 지표와 비교해 평가한다.
+  - 자동 평가가 가능한 목표는 시스템이 결과를 제안하고, 모호한 목표는 사용자가 수동 평가할 수 있다.
+  - 평가 결과는 목표의 history로 남기고, 이후 대시보드와 Ask에서 “연습이 다음 라운드에 영향을 줬는가?”를 확인하는 근거가 된다.
+- UI:
+  - Analysis 인사이트 위젯에는 제안 루틴별 `플랜 선택`, `목표 선택` 액션을 제공한다.
+  - Round Detail에는 라운드 분석 요약과 공유 액션을 제공한다.
+  - `/practice`는 연습 계획 목록과 달력/다이어리 토글 위젯 중심의 작업 화면이다.
+  - `/goals`는 활성 목표, 평가 결과, 다음 라운드 검증 상태를 보여준다.
+
 ### 6.5 Public Home / Logged-out Experience
 
 - MVP에서 로그인하지 않은 사용자가 `/`에 접근하면 최소 진입 화면을 보여준다.
 - 공개 홈의 목적은 서비스 설명보다 “가입하면 어떤 분석을 볼 수 있는지”를 실제 제품 화면처럼 보여주는 것이지만, full public home은 v2.1 이후로 미룬다.
 - 첫 화면 구성:
-  - Hero: LalaGolf 이름과 한 문장 설명.
-  - Primary CTA: 시작하기.
-  - Secondary CTA: 샘플 분석 보기, 로그인.
+  - Hero: GolfRaiders 이름과 한 문장 설명.
+  - Primary CTA: 시작하기. 시작하기는 회원가입 모드로 열린다.
+  - Secondary CTA: 샘플 분석 보기, 로그인. 우측 상단 로그인은 로그인 모드로 열린다.
   - 샘플 대시보드 프리뷰: 평균 스코어 추세, 최근 라운드, 핵심 인사이트 2~3개를 샘플 데이터로 표시.
 - 공개 콘텐츠:
   - MVP 이후 사용자가 public으로 공개한 라운드 또는 프로필 일부를 노출할 수 있다.
@@ -167,11 +211,11 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
   - 업로드 파싱 결과를 빠르게 검토하고 저장.
   - 최근 라운드 요약과 핵심 인사이트 확인.
   - 공유 링크 생성 후 메신저/SNS로 전달.
-  - Ask LalaGolf에 짧은 질문 입력.
+  - Ask GolfRaiders에 짧은 질문 입력.
 - 모바일 내비게이션:
   - 하단 탭을 기본으로 한다.
-  - 권장 탭: Dashboard, Rounds, Upload, Ask, Profile.
-  - Analysis, Feed, Settings는 Profile 또는 더보기 메뉴에서 접근한다.
+  - MVP 탭은 Dashboard, Rounds, Analysis, Practice, Goals, Ask, Upload를 가로 스크롤로 제공한다.
+  - Feed, Profile, Settings는 post-MVP 또는 더보기 메뉴에서 접근한다.
 - 모바일 Dashboard:
   - 첫 화면에는 최근 스코어 추세, 마지막 라운드 요약, 우선순위 인사이트 1~3개만 노출한다.
   - 긴 비교 테이블은 기본 숨김 처리하고, 차트/요약/상세 보기 순서로 드릴다운한다.
@@ -181,6 +225,8 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
   - 스코어카드는 가로 스크롤 또는 전반/후반 분할을 지원한다.
   - 홀을 탭하면 해당 홀의 샷 타임라인이 펼쳐진다.
   - 샷 타임라인은 클럽, 거리, 시작/종료 위치, 결과, 패널티를 한 줄 단위로 스캔 가능하게 표시한다.
+  - 저장된 라운드는 `원문 데이터 수정` 버튼으로 기존 업로드 검토 화면에 진입해 raw 파일을
+    수정/재파싱할 수 있다. 다시 저장하면 새 파싱 결과가 기존 라운드를 갱신하고 재계산 대상이 된다.
 - 모바일 Upload Review:
   - 파싱 오류와 확인 필요 항목을 먼저 보여준다.
   - 전체 라운드 표를 먼저 보여주지 않고, 문제가 있는 홀/샷부터 수정하게 한다.
@@ -188,7 +234,8 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
   - 저장 전 “총 홀 수, 총 스코어, 파싱 경고 수”를 확인한다.
 - 모바일 Analysis:
   - 필터는 상단 sheet/drawer로 제공한다.
-  - Score, Tee, Approach, Short Game, Putting 탭을 유지하되, 각 탭은 핵심 그래프 1개와 핵심 테이블 1개로 시작한다.
+  - All, Tee, Short Game, Control Shot, Iron Shot, Putting, Recovery, Penalty 탭을 유지하되,
+    각 탭은 핵심 요약 테이블과 전환형 인사이트 위젯으로 시작한다.
   - 상세 테이블은 모바일에서 열 단위 숨김 또는 expandable row를 사용한다.
 - 모바일 Ask:
   - 채팅 입력창은 하단 고정으로 둔다.
@@ -260,6 +307,10 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
 - round_metrics: round_id, metric_key, metric_value, sample_count, computed_at.
 - shot_values: shot_id, category, expected_before, expected_after, shot_value, lookup_level, sample_count.
 - insights: id, user_id, scope_type, scope_id, insight_type, title, summary, evidence_json, priority_score.
+- practice_plans: id, user_id, insight_id, title, purpose, category, status, scheduled_for, completed_at.
+- practice_diary_entries: id, user_id, practice_plan_id, entry_date, title, body, category, tags_json.
+- round_goals: id, user_id, source_insight_id, practice_plan_id, title, metric_key, target_operator, target_value, status.
+- goal_evaluations: id, user_id, goal_id, round_id, evaluation_status, actual_value, evaluated_at.
 - shares: id, owner_id, resource_type, resource_id, visibility, token, created_at.
 - follows: follower_id, following_id, status.
 - llm_threads: id, user_id, title, created_at.
@@ -273,11 +324,13 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
 - Uploads: POST /uploads/round-file, GET /uploads/{id}/review, POST /uploads/{id}/commit.
 - Analytics: GET /analytics/summary, GET /analytics/trends, GET /analytics/rounds/{id}.
 - Insights: GET /insights, PATCH /insights/{id}/dismiss.
+- Practice: GET/POST /practice/plans, PATCH /practice/plans/{id}, GET/POST /practice/diary.
+- Goals: GET/POST /goals, PATCH /goals/{id}, POST /goals/{id}/evaluate.
 - Sharing: POST /shares, PATCH /shares/{id}, GET /s/{token}.
 - Public: GET /.
 - Social: post-MVP.
 - LLM: POST /chat/threads, POST /chat/threads/{id}/messages, GET /chat/threads/{id}.
-- Admin: GET /admin/uploads/errors, GET /admin/reports.
+- Admin: GET /admin/uploads/errors.
 
 ## 10. MVP Definition
 
@@ -290,8 +343,8 @@ MVP에 반드시 포함:
 - 로그인 전 최소 진입 화면.
 - 중복 제거된 추천/인사이트 UI.
 - private/link-only 공유.
-- Ask LalaGolf 1차 버전: 사용자 본인 데이터만 대상으로 한 structured SQL/metric 답변과 근거 표시.
-- 기본 관리자 화면: 사용자 목록, 업로드 오류 로그.
+- Ask GolfRaiders 1차 버전: 사용자 본인 데이터만 대상으로 한 structured SQL/metric 답변과 근거 표시.
+- 기본 관리자 화면: 업로드 오류 로그. 관리자 메뉴는 `role=admin` 사용자에게만 노출된다.
 - Dashboard, Round Detail, Analysis UI 와이어프레임 확인.
 
 MVP 이후:

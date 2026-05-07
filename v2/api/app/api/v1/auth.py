@@ -1,13 +1,23 @@
+import json
+import secrets
+from typing import Any
+from urllib.parse import urlencode
+from urllib.request import Request as UrlRequest
+from urllib.request import urlopen
+
 from fastapi import APIRouter, HTTPException, Request, Response, status
+from fastapi.responses import RedirectResponse
 
 from app.api.deps import AppSettings, CurrentUser, DbSession
 from app.schemas.auth import LoginRequest, ProfileUpdateRequest, RegisterRequest, UserResponse
 from app.services.auth import (
     DuplicateEmailError,
     InvalidCredentialsError,
+    OAuthEmailNotVerifiedError,
     authenticate_user,
     create_session,
     create_user,
+    get_or_create_google_user,
     revoke_session,
 )
 
@@ -29,6 +39,18 @@ def set_session_cookie(response: Response, *, token: str, settings: AppSettings)
 
 def user_payload(user: CurrentUser) -> dict[str, UserResponse]:
     return {"user": UserResponse.model_validate(user)}
+
+
+def google_oauth_configured(settings: AppSettings) -> bool:
+    return bool(settings.google_oauth_client_id and settings.google_oauth_client_secret)
+
+
+def require_google_oauth(settings: AppSettings) -> None:
+    if not google_oauth_configured(settings):
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Google sign-in is not configured",
+        )
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -88,6 +110,129 @@ def login(
     )
     set_session_cookie(response, token=token, settings=settings)
     return {"data": user_payload(user)}
+
+
+@router.get("/google/status")
+def google_status(settings: AppSettings) -> dict[str, dict[str, bool]]:
+    return {"data": {"configured": google_oauth_configured(settings)}}
+
+
+@router.get("/google/start")
+def start_google_login(settings: AppSettings) -> RedirectResponse:
+    require_google_oauth(settings)
+    state = secrets.token_urlsafe(32)
+    params = {
+        "client_id": settings.google_oauth_client_id,
+        "redirect_uri": settings.google_oauth_redirect_uri,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": state,
+        "access_type": "online",
+        "prompt": "select_account",
+    }
+    response = RedirectResponse(f"https://accounts.google.com/o/oauth2/v2/auth?{urlencode(params)}")
+    response.set_cookie(
+        key=settings.google_oauth_state_cookie_name,
+        value=state,
+        httponly=True,
+        secure=settings.session_cookie_secure,
+        samesite="lax",
+        max_age=10 * 60,
+        path="/api/v1/auth/google",
+    )
+    return response
+
+
+@router.get("/google/callback")
+def google_callback(
+    code: str,
+    state: str,
+    request: Request,
+    db: DbSession,
+    settings: AppSettings,
+) -> RedirectResponse:
+    require_google_oauth(settings)
+    expected_state = request.cookies.get(settings.google_oauth_state_cookie_name)
+    if not expected_state or not secrets.compare_digest(expected_state, state):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid OAuth state")
+
+    google_user = fetch_google_userinfo(code=code, settings=settings)
+    try:
+        user = get_or_create_google_user(
+            db,
+            email=google_user["email"],
+            display_name=google_user.get("name") or google_user["email"].split("@", 1)[0],
+            avatar_url=google_user.get("picture"),
+            email_verified=google_user.get("email_verified") is True,
+        )
+    except OAuthEmailNotVerifiedError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Google email is not verified",
+        ) from exc
+
+    token, _session = create_session(
+        db,
+        user=user,
+        settings=settings,
+        user_agent=request.headers.get("user-agent"),
+        ip_address=request.client.host if request.client else None,
+    )
+    response = RedirectResponse(f"{settings.web_base_url.rstrip('/')}/upload")
+    set_session_cookie(response, token=token, settings=settings)
+    response.delete_cookie(settings.google_oauth_state_cookie_name, path="/api/v1/auth/google")
+    return response
+
+
+def fetch_google_userinfo(*, code: str, settings: AppSettings) -> dict[str, Any]:
+    token_payload = {
+        "code": code,
+        "client_id": settings.google_oauth_client_id,
+        "client_secret": settings.google_oauth_client_secret,
+        "redirect_uri": settings.google_oauth_redirect_uri,
+        "grant_type": "authorization_code",
+    }
+    token_response = post_form("https://oauth2.googleapis.com/token", token_payload)
+    id_token = token_response.get("id_token")
+    if not isinstance(id_token, str):
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Google token missing")
+
+    info = get_json(f"https://oauth2.googleapis.com/tokeninfo?{urlencode({'id_token': id_token})}")
+    if info.get("aud") != settings.google_oauth_client_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Google token")
+    email = info.get("email")
+    if not isinstance(email, str):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Google email missing")
+    return info
+
+
+def post_form(url: str, payload: dict[str, str | None]) -> dict[str, Any]:
+    body = urlencode({key: value for key, value in payload.items() if value is not None}).encode()
+    request = UrlRequest(
+        url,
+        data=body,
+        headers={"Content-Type": "application/x-www-form-urlencoded"},
+        method="POST",
+    )
+    return read_json(request)
+
+
+def get_json(url: str) -> dict[str, Any]:
+    return read_json(UrlRequest(url, method="GET"))
+
+
+def read_json(request: UrlRequest) -> dict[str, Any]:
+    try:
+        with urlopen(request, timeout=10) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Google OAuth failed",
+        ) from exc
+    if not isinstance(payload, dict):
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail="Google OAuth failed")
+    return payload
 
 
 @router.post("/logout")

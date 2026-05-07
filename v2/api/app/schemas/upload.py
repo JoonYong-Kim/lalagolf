@@ -18,10 +18,15 @@ class UploadReviewResponse(BaseModel):
     warnings: list[dict[str, Any]]
     user_edits: dict[str, Any]
     committed_round_id: UUID | None
+    raw_content: str | None = None
 
 
 class UploadReviewUpdateRequest(BaseModel):
     user_edits: dict[str, Any] = Field(default_factory=dict)
+
+
+class UploadReviewRawUpdateRequest(BaseModel):
+    raw_content: str = Field(min_length=1, max_length=1_000_000)
 
 
 class UploadCommitRequest(BaseModel):

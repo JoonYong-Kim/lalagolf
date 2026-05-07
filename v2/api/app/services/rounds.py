@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Hole, Round, RoundCompanion, Shot, User
+from app.models import Hole, Round, RoundCompanion, Shot, UploadReview, User
 from app.models.constants import COMPUTED_STATUS_PENDING, COMPUTED_STATUS_STALE
 from app.schemas.round import (
     DashboardSummaryResponse,
@@ -53,7 +53,7 @@ def list_rounds(
 
 def get_round_detail(db: Session, *, owner: User, round_id: uuid.UUID) -> RoundDetailResponse:
     round_ = _get_round(db, owner=owner, round_id=round_id)
-    return _round_detail(round_)
+    return _round_detail(round_, upload_review_id=_upload_review_id(db, owner=owner, round_id=round_.id))
 
 
 def list_round_holes(db: Session, *, owner: User, round_id: uuid.UUID) -> list[HoleResponse]:
@@ -161,7 +161,12 @@ def update_shot(db: Session, *, owner: User, shot_id: uuid.UUID, values: dict) -
     return _shot_response(shot)
 
 
-def dashboard_summary(db: Session, *, owner: User) -> DashboardSummaryResponse:
+def dashboard_summary(
+    db: Session,
+    *,
+    owner: User,
+    locale: str | None = None,
+) -> DashboardSummaryResponse:
     recent = list_rounds(db, owner=owner, limit=5).items
     all_rounds = db.scalars(
         _rounds_select(owner)
@@ -200,10 +205,12 @@ def dashboard_summary(db: Session, *, owner: User) -> DashboardSummaryResponse:
         },
         recent_rounds=recent,
         score_trend=score_trend,
-        priority_insights=active_priority_insights(db, owner=owner) or _priority_insights(
-            all_rounds,
-            average_score,
-        ),
+        priority_insights=active_priority_insights(
+            db,
+            owner=owner,
+            locale=locale,
+        )
+        or _priority_insights(all_rounds, average_score, locale=locale),
     )
 
 
@@ -255,9 +262,10 @@ def _round_item(round_: Round) -> RoundListItem:
     )
 
 
-def _round_detail(round_: Round) -> RoundDetailResponse:
+def _round_detail(round_: Round, *, upload_review_id: uuid.UUID | None = None) -> RoundDetailResponse:
     return RoundDetailResponse(
         **_round_item(round_).model_dump(),
+        upload_review_id=upload_review_id,
         tee=round_.tee,
         weather=round_.weather,
         target_score=round_.target_score,
@@ -266,6 +274,15 @@ def _round_detail(round_: Round) -> RoundDetailResponse:
         holes=[_hole_response(hole, include_shots=True) for hole in _sorted_holes(round_)],
         insights=[],
         metrics=_round_metrics(round_),
+    )
+
+
+def _upload_review_id(db: Session, *, owner: User, round_id: uuid.UUID) -> uuid.UUID | None:
+    return db.scalar(
+        select(UploadReview.id).where(
+            UploadReview.user_id == owner.id,
+            UploadReview.committed_round_id == round_id,
+        )
     )
 
 
@@ -337,29 +354,56 @@ def _average_putts(rounds: list[Round]) -> float | None:
     return round(sum(totals) / len(totals), 1) if totals else None
 
 
-def _priority_insights(rounds: list[Round], average_score: float | None) -> list[dict]:
+def _priority_insights(
+    rounds: list[Round],
+    average_score: float | None,
+    *,
+    locale: str | None = None,
+) -> list[dict]:
     insights = []
     stale_count = sum(1 for round_ in rounds if round_.computed_status != "ready")
     if stale_count:
-        insights.append(
-            {
-                "problem": "분석 재계산 대기",
-                "evidence": f"{stale_count}개 라운드가 최신 분석 전 상태입니다.",
-                "impact": "대시보드 KPI는 저장된 스코어 기준으로 먼저 표시됩니다.",
-                "next_action": "라운드 상세에서 재계산을 요청하세요.",
-                "confidence": "medium",
-            }
-        )
+        if locale == "en":
+            insights.append(
+                {
+                    "problem": "Analysis recalculation is pending.",
+                    "evidence": f"{stale_count} rounds are not in the latest analysis state.",
+                    "impact": "Dashboard KPIs are shown first from saved score data.",
+                    "next_action": "Request recalculation from the round detail page.",
+                    "confidence": "medium",
+                }
+            )
+        else:
+            insights.append(
+                {
+                    "problem": "분석 재계산 대기",
+                    "evidence": f"{stale_count}개 라운드가 최신 분석 전 상태입니다.",
+                    "impact": "대시보드 KPI는 저장된 스코어 기준으로 먼저 표시됩니다.",
+                    "next_action": "라운드 상세에서 재계산을 요청하세요.",
+                    "confidence": "medium",
+                }
+            )
     if average_score is not None:
-        insights.append(
-            {
-                "problem": "최근 평균 스코어 확인",
-                "evidence": f"현재 저장된 라운드 평균은 {average_score}타입니다.",
-                "impact": "초기 MVP에서는 스코어와 퍼팅 흐름부터 안정적으로 추적합니다.",
-                "next_action": "라운드를 더 업로드한 뒤 샷 가치 분석을 활성화합니다.",
-                "confidence": "low" if len(rounds) < 5 else "medium",
-            }
-        )
+        if locale == "en":
+            insights.append(
+                {
+                    "problem": "Recent average score is available.",
+                    "evidence": f"Your saved-round average score is {average_score}.",
+                    "impact": "The MVP first tracks score and putting trends reliably.",
+                    "next_action": "Upload more rounds, then enable shot-value analysis.",
+                    "confidence": "low" if len(rounds) < 5 else "medium",
+                }
+            )
+        else:
+            insights.append(
+                {
+                    "problem": "최근 평균 스코어 확인",
+                    "evidence": f"현재 저장된 라운드 평균은 {average_score}타입니다.",
+                    "impact": "초기 MVP에서는 스코어와 퍼팅 흐름부터 안정적으로 추적합니다.",
+                    "next_action": "라운드를 더 업로드한 뒤 샷 가치 분석을 활성화합니다.",
+                    "confidence": "low" if len(rounds) < 5 else "medium",
+                }
+            )
     return insights[:3]
 
 

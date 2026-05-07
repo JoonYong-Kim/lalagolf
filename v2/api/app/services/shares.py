@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.models import Hole, Round, ShareLink, User
 from app.models.constants import VISIBILITY_LINK_ONLY
+from app.services.insight_i18n import render_insight_payload
 
 
 class ShareNotFoundError(Exception):
@@ -73,7 +74,7 @@ def update_share(
     return share
 
 
-def get_shared_round(db: Session, *, token: str) -> dict[str, Any]:
+def get_shared_round(db: Session, *, token: str, locale: str | None = None) -> dict[str, Any]:
     now = datetime.now(UTC)
     share = db.scalars(
         select(ShareLink).where(ShareLink.token_hash == _token_hash(token))
@@ -96,7 +97,7 @@ def get_shared_round(db: Session, *, token: str) -> dict[str, Any]:
 
     share.last_accessed_at = now
     db.commit()
-    return _public_round_payload(round_, share)
+    return _public_round_payload(round_, share, locale=locale)
 
 
 def share_response(share: ShareLink) -> dict[str, Any]:
@@ -128,9 +129,14 @@ def _get_owned_round(db: Session, *, owner: User, round_id: uuid.UUID) -> Round:
     return round_
 
 
-def _public_round_payload(round_: Round, share: ShareLink) -> dict[str, Any]:
+def _public_round_payload(
+    round_: Round,
+    share: ShareLink,
+    *,
+    locale: str | None = None,
+) -> dict[str, Any]:
     holes = sorted(round_.holes, key=lambda item: item.hole_number)
-    insights = _public_top_issue(round_)
+    insights = _public_top_issue(round_, locale=locale)
     # Public-safe: only non-private insight text, never source files, companions, or private notes.
     return {
         "title": share.title or "Shared round",
@@ -164,14 +170,14 @@ def _public_round_payload(round_: Round, share: ShareLink) -> dict[str, Any]:
     }
 
 
-def _public_top_issue(round_: Round) -> list[dict[str, Any]]:
+def _public_top_issue(round_: Round, *, locale: str | None = None) -> list[dict[str, Any]]:
     active_insights = [
         insight
         for insight in getattr(round_, "shared_insights", [])
         if insight.status == "active"
     ]
     if not active_insights:
-        fallback = _public_scorecard_issue(round_)
+        fallback = _public_scorecard_issue(round_, locale=locale)
         return [fallback] if fallback else []
 
     top_issue = sorted(
@@ -179,26 +185,50 @@ def _public_top_issue(round_: Round) -> list[dict[str, Any]]:
         key=lambda insight: (insight.priority_score, insight.created_at),
         reverse=True,
     )[0]
-    return [
+    rendered = render_insight_payload(
         {
             "category": top_issue.category,
+            "root_cause": top_issue.root_cause,
+            "primary_evidence_metric": top_issue.primary_evidence_metric,
             "problem": top_issue.problem,
             "evidence": top_issue.evidence,
             "impact": top_issue.impact,
             "next_action": top_issue.next_action,
             "confidence": top_issue.confidence,
             "priority_score": top_issue.priority_score,
+        },
+        locale=locale,
+    )
+    return [
+        {
+            "category": rendered["category"],
+            "problem": rendered["problem"],
+            "evidence": rendered["evidence"],
+            "impact": rendered["impact"],
+            "next_action": rendered["next_action"],
+            "confidence": rendered["confidence"],
+            "priority_score": rendered["priority_score"],
         }
     ]
 
 
-def _public_scorecard_issue(round_: Round) -> dict[str, Any] | None:
+def _public_scorecard_issue(round_: Round, *, locale: str | None = None) -> dict[str, Any] | None:
     holes = list(round_.holes)
     penalties = sum(hole.penalties for hole in holes)
     three_putts = sum(1 for hole in holes if (hole.putts or 0) >= 3)
     played_holes = len(holes)
 
     if penalties > 0:
+        if locale == "en":
+            return {
+                "category": "penalty_impact",
+                "problem": "Penalties are the top issue in this round.",
+                "evidence": f"The scorecard includes {penalties} total penalty strokes.",
+                "impact": "Penalties immediately add strokes and make the next shot choice harder.",
+                "next_action": "Start with the penalty holes and reset tee targets and safe clubs.",
+                "confidence": _round_issue_confidence(played_holes),
+                "priority_score": float(penalties),
+            }
         return {
             "category": "penalty_impact",
             "problem": "페널티가 이 라운드의 최우선 이슈입니다.",
@@ -210,6 +240,16 @@ def _public_scorecard_issue(round_: Round) -> dict[str, Any] | None:
         }
 
     if three_putts > 0:
+        if locale == "en":
+            return {
+                "category": "putting",
+                "problem": "3-putts are the top issue in this round.",
+                "evidence": f"The scorecard includes {three_putts} holes with 3-putts or worse.",
+                "impact": "3-putts can still turn GIR holes into bogey or worse.",
+                "next_action": "Check long-putt distance control and 1-2m finish putts first.",
+                "confidence": _round_issue_confidence(played_holes),
+                "priority_score": float(three_putts),
+            }
         return {
             "category": "putting",
             "problem": "3퍼트가 이 라운드의 최우선 이슈입니다.",
@@ -221,6 +261,18 @@ def _public_scorecard_issue(round_: Round) -> dict[str, Any] | None:
         }
 
     if round_.score_to_par is not None and round_.score_to_par > 0:
+        if locale == "en":
+            return {
+                "category": "score",
+                "problem": "Over-par strokes are the review target for this round.",
+                "evidence": f"The final score was +{round_.score_to_par} to par.",
+                "impact": "With more rounds, the causes can be narrowed by category.",
+                "next_action": (
+                    "Keep shot-level records so the next share can show loss categories."
+                ),
+                "confidence": _round_issue_confidence(played_holes),
+                "priority_score": float(round_.score_to_par),
+            }
         return {
             "category": "score",
             "problem": "파 대비 초과 타수가 이 라운드의 점검 대상입니다.",

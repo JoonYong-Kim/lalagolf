@@ -1,8 +1,8 @@
-# LalaGolf v2 Insight Dedupe
+# GolfRaiders v2 Insight Dedupe
 
 ## 1. Purpose
 
-LalaGolf v2 should reduce repeated recommendation cards by grouping the same root cause, evidence, and action into one insight unit.
+GolfRaiders v2 should reduce repeated recommendation cards by grouping the same root cause, evidence, and action into one insight unit.
 
 MVP dedupe is deterministic and explainable. Semantic clustering and LLM-based dedupe are post-MVP.
 
@@ -62,7 +62,12 @@ Confidence weights:
 - Do not show multiple active dashboard insights from the same category in the default top-3.
 - If multiple insights share evidence, keep the higher priority one and link secondary explanations in detail.
 - Dashboard default is max 3 active insights.
-- Analysis pages may show more insights, but grouped by category and root cause.
+- Analysis pages may keep a small deduplicated set for the current tab/filter, but the UI presents
+  one insight at a time in a switchable widget instead of stacking repeated cards.
+- Insight display text should remain concise. Long evidence/impact/action text can be truncated in
+  the UI with the full text available through hover/title or detail affordances.
+- Practice and goal actions derived from an insight should be expressed at the same level: plan
+  selection creates a practice plan, goal selection creates the measurable next-round goal.
 
 ## 6. Required Example Set
 

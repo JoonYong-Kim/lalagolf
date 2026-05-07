@@ -26,8 +26,25 @@ class Settings(BaseSettings):
     )
     upload_max_bytes: int = Field(default=1_000_000, validation_alias="UPLOAD_MAX_BYTES")
     cors_origins: str = Field(
-        default="http://localhost:3000,http://localhost:3001,http://localhost:3002",
+        default="http://localhost:2323,http://127.0.0.1:2323",
         validation_alias="CORS_ORIGINS",
+    )
+    web_base_url: str = Field(default="http://localhost:2323", validation_alias="WEB_BASE_URL")
+    google_oauth_client_id: str | None = Field(
+        default=None,
+        validation_alias="GOOGLE_OAUTH_CLIENT_ID",
+    )
+    google_oauth_client_secret: str | None = Field(
+        default=None,
+        validation_alias="GOOGLE_OAUTH_CLIENT_SECRET",
+    )
+    google_oauth_redirect_uri: str = Field(
+        default="http://localhost:2324/api/v1/auth/google/callback",
+        validation_alias="GOOGLE_OAUTH_REDIRECT_URI",
+    )
+    google_oauth_state_cookie_name: str = Field(
+        default="golfraiders_google_oauth_state",
+        validation_alias="GOOGLE_OAUTH_STATE_COOKIE_NAME",
     )
     ollama_enabled: bool = Field(default=False, validation_alias="OLLAMA_ENABLED")
     ollama_base_url: str = Field(

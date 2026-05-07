@@ -1,4 +1,4 @@
-# LalaGolf v2 API Proposal
+# GolfRaiders v2 API Proposal
 
 ## 1. API Goals
 
@@ -109,6 +109,18 @@ Response:
 ### POST /auth/logout
 
 Invalidates current session.
+
+### GET /auth/google/start
+
+Starts Google OAuth login. Requires `GOOGLE_OAUTH_CLIENT_ID` and
+`GOOGLE_OAUTH_CLIENT_SECRET` to be configured. The API sets a short-lived OAuth state cookie and
+redirects to Google.
+
+### GET /auth/google/callback
+
+Handles Google OAuth callback, verifies the state cookie and Google token audience, creates or
+reuses an active user with a verified Google email, creates a session cookie, and redirects to
+`WEB_BASE_URL` `/upload`.
 
 ### GET /me
 
@@ -424,6 +436,7 @@ Returns dashboard summary.
 Query:
 
 - `window`, e.g. `last_5`, `last_10`, `all`
+- `locale`: optional `ko` or `en`, default `ko`. Applies to insight text fields only.
 
 Response:
 
@@ -454,10 +467,15 @@ Query:
 - `companion`
 - `round_ids`
 - `tab`: `score`, `tee`, `approach`, `short_game`, `putting`
+- `locale`: optional `ko` or `en`, default `ko`. Applies to insight text fields only.
 
 ### GET /analytics/rounds/{round_id}
 
 Returns detailed analytics for one round.
+
+Query:
+
+- `locale`: optional `ko` or `en`, default `ko`. Applies to insight text fields only.
 
 ### GET /analytics/compare
 
@@ -478,15 +496,21 @@ Returns deduplicated insights.
 
 Query:
 
-- `scope_type`
-- `scope_id`
-- `category`
 - `status`
-- `limit`
+- `locale`: optional `ko` or `en`, default `ko`
+
+Insight text fields use the MVP unit shape: `problem`, `evidence`, `impact`, `next_action`, and
+`confidence`. Korean is the default stored/generated language. For `locale=en`, the API renders
+supported deterministic MVP insight templates into English at the response boundary without changing
+stored rows.
 
 ### PATCH /insights/{insight_id}
 
 Updates insight status.
+
+Query:
+
+- `locale`: optional `ko` or `en`, default `ko`
 
 Request:
 
@@ -496,7 +520,207 @@ Request:
 }
 ```
 
-## 11. Sharing
+## 11. Practice Plans, Diary, and Goals
+
+These endpoints close the loop from analysis to action:
+
+- create a practice plan from an insight,
+- record practice discoveries in a private diary,
+- define a measurable next-round goal,
+- evaluate the goal after a round is committed or recalculated.
+
+All endpoints are owner-scoped and require authentication.
+
+### GET /practice/plans
+
+Lists practice plans.
+
+Query:
+
+- `status`: optional `planned`, `in_progress`, `done`, `skipped`
+- `category`
+- `from`
+- `to`
+
+### POST /practice/plans
+
+Creates a practice plan. `source_insight_id` is optional; when supplied, the API may prefill category,
+root cause, and suggested drills from the insight.
+
+Request:
+
+```json
+{
+  "source_insight_id": "uuid",
+  "title": "Reduce 3-putt risk",
+  "purpose": "Improve lag-putt distance control before the next round.",
+  "category": "putting",
+  "scheduled_for": "2026-05-10",
+  "drill_json": {
+    "drills": [
+      {
+        "name": "6-12m lag putting",
+        "quantity": "30 minutes"
+      },
+      {
+        "name": "1-2m finish putts",
+        "quantity": "50 reps"
+      }
+    ]
+  },
+  "target_json": {
+    "sessions": 2,
+    "minutes": 60
+  }
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "status": "planned",
+    "category": "putting",
+    "title": "Reduce 3-putt risk"
+  }
+}
+```
+
+### PATCH /practice/plans/{plan_id}
+
+Updates plan content or status.
+
+Request:
+
+```json
+{
+  "status": "done",
+  "completed_at": "2026-05-10T09:30:00Z"
+}
+```
+
+### GET /practice/diary
+
+Lists private practice diary entries.
+
+Query:
+
+- `practice_plan_id`
+- `category`
+- `from`
+- `to`
+
+### POST /practice/diary
+
+Creates a diary entry.
+
+Request:
+
+```json
+{
+  "practice_plan_id": "uuid",
+  "entry_date": "2026-05-10",
+  "title": "Lag putting discovery",
+  "body": "8m uphill putts were consistently short. 6m downhill putts needed a smaller stroke than expected.",
+  "category": "putting",
+  "tags": ["lag-putt", "distance-control"],
+  "confidence": "medium"
+}
+```
+
+### GET /goals
+
+Lists round goals.
+
+Query:
+
+- `status`: optional `active`, `achieved`, `missed`, `partial`, `not_evaluable`, `cancelled`
+- `category`
+
+### POST /goals
+
+Creates a measurable goal for a future round.
+
+Request:
+
+```json
+{
+  "source_insight_id": "uuid",
+  "practice_plan_id": "uuid",
+  "title": "Keep 3-putts to one or fewer",
+  "category": "putting",
+  "metric_key": "three_putt_holes",
+  "target_operator": "<=",
+  "target_value": 1,
+  "applies_to": "next_round",
+  "due_date": "2026-05-20"
+}
+```
+
+Supported first-pass `metric_key` candidates:
+
+- `score_to_par`
+- `total_score`
+- `putts_total`
+- `three_putt_holes`
+- `penalties_total`
+- `tee_penalties`
+- `gir_count`
+- `fairway_miss_count`
+
+### PATCH /goals/{goal_id}
+
+Updates goal content or status.
+
+### POST /goals/{goal_id}/evaluate
+
+Evaluates a goal against a round. If `round_id` is omitted, the API may choose the first eligible
+round after the goal was created for `applies_to = next_round`.
+
+Request:
+
+```json
+{
+  "round_id": "uuid"
+}
+```
+
+Response:
+
+```json
+{
+  "data": {
+    "goal_id": "uuid",
+    "round_id": "uuid",
+    "evaluation_status": "achieved",
+    "actual_value": 1,
+    "actual_json": {
+      "metric_key": "three_putt_holes",
+      "target": "<= 1"
+    },
+    "evaluated_by": "system"
+  }
+}
+```
+
+### POST /goals/{goal_id}/manual-evaluation
+
+Creates or overrides a manual evaluation for goals that are qualitative or not automatically
+evaluable.
+
+Request:
+
+```json
+{
+  "round_id": "uuid",
+  "evaluation_status": "partial",
+  "note": "No tee penalty, but two recovery shots still came from conservative misses."
+}
+```
+
+## 12. Sharing
 
 ### POST /shares
 
@@ -541,6 +765,10 @@ Public route, not under `/api/v1` if rendered by Next.js. API equivalent can be:
 Returns public-safe serialized resource. For shared scorecards, `insights` contains at most one
 public-safe top issue for that round.
 
+Query:
+
+- `locale`: optional `ko` or `en`, default `ko`. Applies to shared insight text fields only.
+
 Response excerpt:
 
 ```json
@@ -570,7 +798,7 @@ Response excerpt:
 }
 ```
 
-## 12. Social
+## 13. Social
 
 Post-MVP. Public profiles, public rounds, feed, follows, comments, and likes are not part of the MVP.
 
@@ -598,7 +826,7 @@ Request:
 }
 ```
 
-## 13. Ask LalaGolf
+## 14. Ask GolfRaiders
 
 MVP Ask uses structured SQL/metric retrieval plus deterministic answer templates. Ollama may be used only to improve wording. Embedding/RAG retrieval is post-MVP.
 
@@ -668,7 +896,7 @@ Response:
 
 Optional debug/admin endpoint. Returns interpreted filters and planned data sources.
 
-## 14. Profile & Settings
+## 15. Profile & Settings
 
 ### GET /settings/privacy
 
@@ -692,23 +920,24 @@ Request:
 
 Starts account deletion flow.
 
-## 15. Admin
+## 16. Admin
 
 All admin endpoints require admin role.
 
-### GET /admin/users
-
 ### GET /admin/uploads/errors
 
-### GET /admin/reports
+Returns failed upload parse reviews for operational triage.
 
-### PATCH /admin/reports/{report_id}
+The following admin endpoints are post-MVP placeholders and are not part of the current
+implementation contract:
 
-### GET /admin/jobs
+- `GET /admin/users`
+- `GET /admin/reports`
+- `PATCH /admin/reports/{report_id}`
+- `GET /admin/jobs`
+- `GET /admin/llm/errors`
 
-### GET /admin/llm/errors
-
-## 16. Common Error Codes
+## 17. Common Error Codes
 
 - `unauthorized`
 - `forbidden`
@@ -726,7 +955,7 @@ All admin endpoints require admin role.
 - `llm_timeout`
 - `rate_limited`
 
-## 17. Authorization Matrix
+## 18. Authorization Matrix
 
 | Resource | Owner | Link token | Public | Other logged-in user | Admin |
 | --- | --- | --- | --- | --- | --- |
@@ -737,7 +966,7 @@ All admin endpoints require admin role.
 | private chat | read/write | no | no | no | audited read only if needed |
 | public profile | post-MVP | post-MVP | post-MVP | post-MVP | audited read/write moderation |
 
-## 18. Rate Limits
+## 19. Rate Limits
 
 Suggested initial limits:
 
@@ -747,7 +976,7 @@ Suggested initial limits:
 - public feed: post-MVP, per IP.
 - share token access: per IP/token.
 
-## 19. Open Decisions
+## 20. Open Decisions
 
 - Final auth mechanism: cookie session vs JWT.
 - Supported MVP Ask question set.

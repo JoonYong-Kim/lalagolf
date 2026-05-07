@@ -62,6 +62,7 @@ class RoundListResponse(BaseModel):
 
 
 class RoundDetailResponse(RoundListItem):
+    upload_review_id: UUID | None = None
     tee: str | None
     weather: str | None
     target_score: int | None

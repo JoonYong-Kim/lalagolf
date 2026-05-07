@@ -106,7 +106,7 @@ export default function UiReviewPage() {
         <div className="mx-auto flex max-w-7xl flex-col gap-4 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase text-[#4d6f8f]">UI Review Gate</p>
-            <h1 className="mt-1 text-2xl font-semibold">LalaGolf v2 Core Screens</h1>
+            <h1 className="mt-1 text-2xl font-semibold">GolfRaiders Core Screens</h1>
           </div>
           <div className="flex flex-wrap gap-2">
             <SegmentButton active={screen === "dashboard"} onClick={() => setScreen("dashboard")}>
@@ -618,7 +618,7 @@ function MockNav({ mobile, title }: { mobile: boolean; title: string }) {
   return (
     <div className="flex items-center justify-between border-b border-[#d7ddd5] bg-[#1f2522] px-4 py-3 text-white">
       <div className="flex gap-5 text-sm">
-        <span className="font-semibold">LalaGolf</span>
+        <span className="font-semibold">GolfRaiders</span>
         <span>Dashboard</span>
         <span>Rounds</span>
         <span>Analysis</span>

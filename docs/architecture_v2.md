@@ -1,10 +1,11 @@
-# LalaGolf v2 Architecture Proposal
+# GolfRaiders v2 Architecture Proposal
 
 ## 1. Architecture Goals
 
 - v1의 검증된 파서/분석 로직을 재사용하면서 UI, API, 데이터 저장소를 분리한다.
 - 멀티 유저 환경에서 사용자별 데이터 격리와 공유 권한을 명확히 보장한다.
 - Ask 질의를 정형 데이터 조회 중심으로 안전하게 제공하고, RAG 검색은 post-MVP로 확장한다.
+- 인사이트를 연습 계획, 연습 다이어리, 다음 라운드 목표, 목표 평가로 연결하는 개선 루프를 제공한다.
 - 모바일/데스크톱 모두에서 빠르게 동작하는 웹 앱을 만든다.
 - 초기에는 단일 서버 또는 Docker Compose로 운영 가능하게 하고, 이후 서비스별 분리를 쉽게 한다.
 
@@ -52,7 +53,8 @@ Ask context      Optional Ollama
 
 - MVP: 로그인 전 최소 진입 화면.
 - Post-MVP: 공개 홈, 샘플 분석, 공개 라운드 화면.
-- 로그인 후 Dashboard, Rounds, Round Detail, Analysis, Upload Review, Ask, Profile.
+- 로그인 후 Dashboard, Rounds, Round Detail, Analysis, Practice, Goals, Upload Review, Ask.
+  Profile/Feed/Settings는 post-MVP 또는 별도 계정 설정 범위로 둔다.
 - 서버 컴포넌트는 초기 데이터 로딩과 SEO가 필요한 공개 화면에 사용한다.
 - 클라이언트 컴포넌트는 필터, 차트 상호작용, 업로드 리뷰, 채팅에 사용한다.
 - 인증 토큰 또는 세션 쿠키는 브라우저에서 직접 조작하지 않는다.
@@ -63,6 +65,7 @@ Ask context      Optional Ollama
 - 라운드/홀/샷 CRUD.
 - 업로드 파일 등록 및 파싱 작업 요청.
 - 분석 결과 조회.
+- 연습 계획, 연습 다이어리, 다음 라운드 목표, 목표 평가 관리.
 - 공유 링크 및 공개 데이터 필터링.
 - Ask 요청 orchestration.
 - Worker 작업 상태 조회.
@@ -88,6 +91,7 @@ Ask context      Optional Ollama
 - 라운드 저장 후 분석 재계산.
 - expected table/shot values 갱신.
 - insight 생성 및 중복 제거.
+- 목표 자동 평가.
 - 라운드 요약 텍스트 생성.
 - embedding 생성은 post-MVP RAG에서 추가한다.
 - 장기적으로 public feed materialization, notification도 담당 가능.
@@ -135,7 +139,19 @@ Ask context      Optional Ollama
 3. 결과를 `round_metrics`, `shot_values`, `insights`, `analysis_snapshots`에 저장한다.
 4. 기존 insight와 새 insight를 비교해 중복 또는 stale 데이터를 정리한다.
 
-### 5.4 Sharing
+### 5.4 Practice and Goal Loop
+
+1. 사용자가 Dashboard, Analysis, Round Detail의 insight에서 연습 계획을 만든다.
+2. API가 `practice_plans` row를 만들고 insight의 category/root_cause/next_action을 초기값으로 사용한다.
+3. 사용자는 연습 후 `/practice`에서 다이어리 entry를 남긴다.
+4. 사용자는 연습 계획 또는 인사이트에서 다음 라운드 목표를 만든다.
+5. 목표는 가능한 한 `metric_key`, `target_operator`, `target_value`로 구조화한다.
+6. 새 라운드가 commit/recalculate되면 API 또는 Worker가 활성 목표를 owner scope로 조회한다.
+7. 지원되는 metric은 라운드/홀/샷/metric 데이터에서 actual value를 계산해 `goal_evaluations`에 저장한다.
+8. 자동 계산이 불가능하면 `not_evaluable`로 남기고 수동 평가 UI를 제공한다.
+9. 평가 결과는 Dashboard, Goals, Ask context에서 “연습 -> 다음 라운드 결과” 근거로 사용한다.
+
+### 5.5 Sharing
 
 1. 사용자가 라운드 또는 분석 스냅샷의 visibility를 변경한다.
 2. private이면 owner만 조회 가능하다.
@@ -143,7 +159,7 @@ Ask context      Optional Ollama
 4. public profile/feed 노출은 post-MVP에서 추가한다.
 5. 공개 응답 serializer는 동반자명, 비공개 메모, 원본 파일, 정확한 티타임을 제거한다.
 
-### 5.5 Ask Question
+### 5.6 Ask Question
 
 1. 사용자가 Ask 화면에서 질문한다.
 2. API가 질문을 저장하고 user_id를 확인한다.
@@ -194,6 +210,7 @@ Ask context      Optional Ollama
 - `recalculate_shot_values`
 - `generate_insights`
 - `dedupe_insights`
+- `evaluate_round_goals`
 - `generate_round_summary`
 - `embed_document`
 - `refresh_public_feed_item`
@@ -215,7 +232,11 @@ Job requirements:
   - shots
   - round_metrics
   - shot_values
-  - insights
+- insights
+- practice_plans
+- practice_diary_entries
+- round_goals
+- goal_evaluations
 - Unstructured:
   - uploaded original text
   - round notes
@@ -225,7 +246,7 @@ Job requirements:
 
 ### 9.2 Prompt Contract
 
-- 시스템 프롬프트는 LalaGolf 분석 도우미 역할을 명시한다.
+- 시스템 프롬프트는 GolfRaiders 분석 도우미 역할을 명시한다.
 - 답변은 사용자의 실제 데이터와 제공된 context에만 근거한다.
 - 샘플 수가 작으면 불확실성을 표시한다.
 - 사용자의 권한 밖 데이터는 존재 여부도 언급하지 않는다.
@@ -258,12 +279,14 @@ LLM 응답은 내부적으로 다음 citation 구조를 가진다.
 - `/upload`: upload entry.
 - `/upload/[id]/review`: upload review.
 - `/analysis`: analysis workspace.
-- `/ask`: Ask LalaGolf.
+- `/practice`: practice plans and diary.
+- `/goals`: next-round goals and evaluations.
+- `/ask`: Ask GolfRaiders.
 - `/profile/[handle]`: post-MVP public profile.
 - `/feed`: post-MVP public/following feed.
 - `/s/[token]`: shared resource.
-- `/settings`: account and privacy settings.
-- `/admin`: admin console.
+- `/settings`: post-MVP account and privacy settings.
+- `/admin/uploads/errors`: MVP admin upload error console.
 
 ## 11. Deployment Topology
 

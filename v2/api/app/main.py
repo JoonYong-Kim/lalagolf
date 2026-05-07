@@ -8,6 +8,7 @@ from app.api.v1.auth import account_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.chat import router as chat_router
 from app.api.v1.health import router as health_router
+from app.api.v1.practice import router as practice_router
 from app.api.v1.rounds import analytics_router
 from app.api.v1.rounds import router as rounds_router
 from app.api.v1.shares import router as shares_router
@@ -34,6 +35,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix="/api/v1")
     app.include_router(chat_router, prefix="/api/v1")
     app.include_router(health_router, prefix="/api/v1")
+    app.include_router(practice_router, prefix="/api/v1")
     app.include_router(rounds_router, prefix="/api/v1")
     app.include_router(analytics_router, prefix="/api/v1")
     app.include_router(shares_router, prefix="/api/v1")

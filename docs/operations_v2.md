@@ -1,4 +1,4 @@
-# LalaGolf v2 Operations
+# GolfRaiders v2 Operations
 
 ## Production Environment Checklist
 
@@ -6,10 +6,15 @@
 - Set a non-placeholder `SECRET_KEY` from a secret manager or host environment.
 - Set `SESSION_COOKIE_SECURE=true` behind HTTPS.
 - Restrict `CORS_ORIGINS` to the production web origin.
+- Set `WEB_BASE_URL` to the production web origin.
+- Set `NEXT_PUBLIC_API_BASE_URL` to the public API base path, e.g. `https://api.example.com/api/v1`.
 - Point `DATABASE_URL` and `REDIS_URL` at managed or backed-up services.
 - Store `UPLOAD_STORAGE_DIR` outside public web/static paths and include it in backups.
 - Keep `LOG_LEVEL=INFO` for normal operation and use `REQUEST_ID_HEADER=X-Request-ID`.
 - Keep `OLLAMA_ENABLED=false` unless a reachable Ollama host and timeout are configured.
+- If Google sign-in is enabled, set `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, and
+  `GOOGLE_OAUTH_REDIRECT_URI`. The redirect URI must match the Google console configuration, for
+  example `https://api.example.com/api/v1/auth/google/callback`.
 - Run `npm run security-check`, API tests, frontend build, and migration dry-run report before release.
 
 ## Systemd Deployment
@@ -33,6 +38,10 @@ It creates:
 The script installs Python dependencies into per-service virtualenvs, runs `npm ci` and
 `npm run build`, writes systemd units, and starts the services. It also runs `alembic upgrade head`
 unless `SKIP_DB_MIGRATION=true` is set for the installer process.
+
+The default installer environment binds the web service to port `2323` and the API service to port
+`2324`. Adjust reverse proxy, firewall, `CORS_ORIGINS`, `WEB_BASE_URL`, and
+`NEXT_PUBLIC_API_BASE_URL` together when changing those ports.
 
 Before running it, make sure PostgreSQL and Redis are reachable from the values in
 `/etc/lalagolf-v2/lalagolf-v2.env` or edit that file after the first run and restart services:
@@ -96,3 +105,13 @@ wording is enabled but the MVP deterministic answer path is used.
 Admins can inspect failed upload parses at `/admin/uploads/errors`. The API route is
 `GET /api/v1/admin/uploads/errors` and requires `role=admin`. The page is intentionally minimal for
 MVP operations and shows filename, failed status, warning codes, and creation time.
+
+Local admin access is role-based. The default import owner is `owner@example.com` / `password`, but it
+is a normal user unless promoted:
+
+```sql
+update users set role = 'admin' where email = 'owner@example.com';
+```
+
+After promotion, log out and log back in so the frontend reloads the current user role and exposes
+the admin navigation item.

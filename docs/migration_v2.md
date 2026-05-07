@@ -1,4 +1,4 @@
-# LalaGolf v2 Migration Plan
+# GolfRaiders v2 Migration Plan
 
 ## 1. Migration Goals
 
@@ -224,7 +224,7 @@ Tasks:
 - Spot-check top 10 recent rounds.
 - Spot-check worst/best rounds.
 - Spot-check analysis dashboard.
-- Spot-check Ask LalaGolf structured answers with imported data.
+- Spot-check Ask GolfRaiders structured answers with imported data.
 
 Acceptance:
 

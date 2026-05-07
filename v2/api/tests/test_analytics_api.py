@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import ExpectedScoreTable, Insight, Round, RoundMetric, ShotValue
+from app.services.insight_i18n import render_insight_payload
 from tests.test_rounds_api import create_committed_round
 from tests.test_uploads_api import register
 
@@ -55,6 +56,8 @@ def test_analysis_endpoints_and_insight_dismissal(client: TestClient) -> None:
     round_response = client.get(f"/api/v1/analytics/rounds/{round_id}")
     assert round_response.status_code == 200
     assert round_response.json()["data"]["shot_values"]
+    first_value = round_response.json()["data"]["shot_values"][0]
+    assert {"expected_before", "expected_after", "shot_cost"} <= set(first_value)
 
     compare_response = client.get("/api/v1/analytics/compare?group_by=category")
     assert compare_response.status_code == 200
@@ -71,6 +74,34 @@ def test_analysis_endpoints_and_insight_dismissal(client: TestClient) -> None:
     )
     assert dismiss_response.status_code == 200
     assert dismiss_response.json()["data"]["status"] == "dismissed"
+
+
+def test_insights_support_english_locale(client: TestClient) -> None:
+    register(client)
+    round_id = create_committed_round(client)
+    client.post(f"/api/v1/rounds/{round_id}/recalculate")
+
+    trends_response = client.get("/api/v1/analytics/trends?locale=en")
+
+    assert trends_response.status_code == 200
+    insights = trends_response.json()["data"]["insights"]
+    assert insights
+    assert any("Penalties" in insight["problem"] for insight in insights)
+
+
+def test_insight_renderer_keeps_korean_default() -> None:
+    payload = {
+        "category": "penalty_impact",
+        "root_cause": "penalty_strokes",
+        "primary_evidence_metric": "penalty_strokes",
+        "problem": "페널티가 스코어를 직접 밀어 올립니다.",
+        "evidence": "저장된 라운드에서 페널티가 총 3타 기록됐습니다.",
+        "impact": "페널티 1타는 회복 샷까지 이어져 실제 손실이 더 커질 수 있습니다.",
+        "next_action": "위험 홀이 보이면 티샷 목표 폭과 세이프 클럽 기준을 먼저 정하세요.",
+    }
+
+    assert render_insight_payload(payload, locale="ko")["problem"] == payload["problem"]
+    assert render_insight_payload(payload, locale="en")["problem"].startswith("Penalties")
 
 
 def test_analysis_is_owner_scoped(client: TestClient) -> None:

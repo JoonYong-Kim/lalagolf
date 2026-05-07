@@ -62,9 +62,13 @@ def categorize_shot(shot):
         return "off_the_tee"
     if shot.get("penalty") or start_state == "recovery":
         return "recovery"
-    if distance is not None and distance <= 30:
+    if distance is not None and distance < 40:
         return "short_game"
-    return "approach"
+    if distance is not None and distance < 90:
+        return "control_shot"
+    if distance is not None and distance >= 90:
+        return "iron_shot"
+    return "control_shot"
 
 
 def _group_shots_by_hole(shots):

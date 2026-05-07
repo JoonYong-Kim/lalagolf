@@ -1,9 +1,12 @@
-export const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000/api/v1";
+export const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:2324/api/v1";
+export const googleOAuthStartUrl = `${apiBaseUrl}/auth/google/start`;
+export type ApiLocale = "ko" | "en";
 
 export type ApiUser = {
   id: string;
   email: string;
   display_name: string;
+  role: "user" | "admin";
 };
 
 export type UploadReview = {
@@ -13,6 +16,7 @@ export type UploadReview = {
   warnings: UploadWarning[];
   user_edits: Record<string, unknown>;
   committed_round_id: string | null;
+  raw_content: string | null;
 };
 
 export type ParsedRound = {
@@ -80,6 +84,7 @@ export type RoundListResponse = {
 };
 
 export type RoundDetail = RoundListItem & {
+  upload_review_id: string | null;
   tee: string | null;
   weather: string | null;
   target_score: number | null;
@@ -182,6 +187,41 @@ export type AnalyticsTrend = {
   insights: InsightUnit[];
 };
 
+export type RoundAnalytics = {
+  round_id: string;
+  metrics: Record<string, unknown>;
+  shot_values: Array<{
+    shot_id: string;
+    category: string;
+    shot_value: number | null;
+    expected_before: number | null;
+    expected_after: number | null;
+    shot_cost: number;
+    expected_confidence: string | null;
+  }>;
+  insights: InsightUnit[];
+};
+
+export type ShareCreateResponse = {
+  id: string;
+  round_id: string;
+  title: string | null;
+  url_path: string | null;
+  token: string;
+  expires_at: string | null;
+  revoked_at: string | null;
+  last_accessed_at: string | null;
+};
+
+export type ChatStatus = {
+  enabled: boolean;
+  reachable: boolean;
+  model: string;
+  base_url: string;
+  mode: "llm" | "deterministic";
+  detail: string;
+};
+
 export type SharedRound = {
   title: string;
   round: {
@@ -246,6 +286,72 @@ export type AdminUploadError = {
   created_at: string;
 };
 
+export type PracticePlan = {
+  id: string;
+  source_insight_id: string | null;
+  title: string;
+  purpose: string | null;
+  category: string;
+  root_cause: string | null;
+  drill_json: Record<string, unknown>;
+  target_json: Record<string, unknown>;
+  scheduled_for: string | null;
+  status: string;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PracticeDiaryEntry = {
+  id: string;
+  practice_plan_id: string | null;
+  source_insight_id: string | null;
+  round_id: string | null;
+  entry_date: string;
+  title: string;
+  body: string;
+  category: string | null;
+  tags: string[];
+  confidence: string | null;
+  mood: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type RoundGoal = {
+  id: string;
+  source_insight_id: string | null;
+  practice_plan_id: string | null;
+  title: string;
+  description: string | null;
+  category: string;
+  metric_key: string;
+  target_operator: string;
+  target_value: string | null;
+  target_value_max: string | null;
+  target_json: Record<string, unknown>;
+  applies_to: string;
+  due_round_id: string | null;
+  due_date: string | null;
+  status: string;
+  closed_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type GoalEvaluation = {
+  id: string;
+  goal_id: string;
+  round_id: string | null;
+  evaluation_status: string;
+  actual_value: string | null;
+  actual_json: Record<string, unknown>;
+  evaluated_by: string;
+  note: string | null;
+  evaluated_at: string;
+  created_at: string;
+};
+
 type ApiEnvelope<T> = {
   data: T;
 };
@@ -272,7 +378,7 @@ export async function registerOrLogin(payload: {
     body: JSON.stringify({
       email: payload.email,
       password: payload.password,
-      display_name: payload.display_name ?? "Lala Golfer",
+      display_name: payload.display_name ?? "GolfRaider",
     }),
   });
   return registerResponse.data.user;
@@ -284,6 +390,22 @@ export async function login(payload: { email: string; password: string }): Promi
     body: JSON.stringify(payload),
   });
   return response.data.user;
+}
+
+export async function logout(): Promise<void> {
+  await apiFetch<ApiEnvelope<{ ok: boolean }>>("/auth/logout", { method: "POST" });
+}
+
+export async function getGoogleOAuthStatus(): Promise<{ configured: boolean }> {
+  const response = await fetch(`${apiBaseUrl}/auth/google/status`, {
+    credentials: "include",
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    return { configured: false };
+  }
+  const data = (await response.json()) as ApiEnvelope<{ configured: boolean }>;
+  return data.data;
 }
 
 export async function getCurrentUser(): Promise<ApiUser | null> {
@@ -348,6 +470,20 @@ export async function updateUploadReview(
   return response.data;
 }
 
+export async function updateUploadReviewRawContent(
+  uploadReviewId: string,
+  rawContent: string,
+): Promise<UploadReview> {
+  const response = await apiFetch<ApiEnvelope<UploadReview>>(
+    `/uploads/${uploadReviewId}/review/raw`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ raw_content: rawContent }),
+    },
+  );
+  return response.data;
+}
+
 export async function commitUploadReview(uploadReviewId: string): Promise<{
   round_id: string;
   computed_status: string;
@@ -396,8 +532,9 @@ export async function getRound(roundId: string): Promise<RoundDetail> {
   return response.data;
 }
 
-export async function getDashboardSummary(): Promise<DashboardSummary> {
-  const response = await apiFetch<ApiEnvelope<DashboardSummary>>("/analytics/summary", {
+export async function getDashboardSummary(locale?: ApiLocale): Promise<DashboardSummary> {
+  const query = locale ? `?locale=${locale}` : "";
+  const response = await apiFetch<ApiEnvelope<DashboardSummary>>(`/analytics/summary${query}`, {
     method: "GET",
   });
   return response.data;
@@ -416,15 +553,38 @@ export async function requestRoundRecalculation(roundId: string): Promise<{
   return response.data;
 }
 
-export async function getAnalyticsTrends(): Promise<AnalyticsTrend> {
-  const response = await apiFetch<ApiEnvelope<AnalyticsTrend>>("/analytics/trends", {
+export async function updateShot(
+  shotId: string,
+  values: Partial<Pick<RoundShot, "raw_text">>,
+): Promise<RoundShot> {
+  const response = await apiFetch<ApiEnvelope<RoundShot>>(`/shots/${shotId}`, {
+    method: "PATCH",
+    body: JSON.stringify(values),
+  });
+  return response.data;
+}
+
+export async function getAnalyticsTrends(locale?: ApiLocale): Promise<AnalyticsTrend> {
+  const query = locale ? `?locale=${locale}` : "";
+  const response = await apiFetch<ApiEnvelope<AnalyticsTrend>>(`/analytics/trends${query}`, {
     method: "GET",
   });
   return response.data;
 }
 
-export async function getInsights(status = "active"): Promise<InsightUnit[]> {
-  const response = await apiFetch<ApiEnvelope<InsightUnit[]>>(`/insights?status=${status}`, {
+export async function getRoundAnalytics(roundId: string, locale?: ApiLocale): Promise<RoundAnalytics> {
+  const query = locale ? `?locale=${locale}` : "";
+  const response = await apiFetch<ApiEnvelope<RoundAnalytics>>(
+    `/analytics/rounds/${roundId}${query}`,
+    { method: "GET" },
+  );
+  return response.data;
+}
+
+export async function getInsights(status = "active", locale?: ApiLocale): Promise<InsightUnit[]> {
+  const search = new URLSearchParams({ status });
+  if (locale) search.set("locale", locale);
+  const response = await apiFetch<ApiEnvelope<InsightUnit[]>>(`/insights?${search.toString()}`, {
     method: "GET",
   });
   return response.data;
@@ -433,16 +593,19 @@ export async function getInsights(status = "active"): Promise<InsightUnit[]> {
 export async function updateInsightStatus(
   insightId: string,
   status: "active" | "dismissed",
+  locale?: ApiLocale,
 ): Promise<InsightUnit> {
-  const response = await apiFetch<ApiEnvelope<InsightUnit>>(`/insights/${insightId}`, {
+  const query = locale ? `?locale=${locale}` : "";
+  const response = await apiFetch<ApiEnvelope<InsightUnit>>(`/insights/${insightId}${query}`, {
     method: "PATCH",
     body: JSON.stringify({ status }),
   });
   return response.data;
 }
 
-export async function getSharedRound(token: string): Promise<SharedRound> {
-  const response = await fetch(`${apiBaseUrl}/shared/${token}`, {
+export async function getSharedRound(token: string, locale?: ApiLocale): Promise<SharedRound> {
+  const query = locale ? `?locale=${locale}` : "";
+  const response = await fetch(`${apiBaseUrl}/shared/${token}${query}`, {
     cache: "no-store",
   });
   if (!response.ok) {
@@ -481,10 +644,127 @@ export async function sendChatMessage(threadId: string, content: string): Promis
   return response.data;
 }
 
+export async function getChatStatus(): Promise<ChatStatus> {
+  const response = await apiFetch<ApiEnvelope<ChatStatus>>("/chat/status", { method: "GET" });
+  return response.data;
+}
+
+export async function createShare(roundId: string, title?: string): Promise<ShareCreateResponse> {
+  const response = await apiFetch<ApiEnvelope<ShareCreateResponse>>("/shares", {
+    method: "POST",
+    body: JSON.stringify({ round_id: roundId, title }),
+  });
+  return response.data;
+}
+
 export async function getAdminUploadErrors(limit = 50): Promise<AdminUploadError[]> {
   const response = await apiFetch<ApiEnvelope<AdminUploadError[]>>(
     `/admin/uploads/errors?limit=${limit}`,
     { method: "GET" },
+  );
+  return response.data;
+}
+
+export async function getPracticePlans(): Promise<PracticePlan[]> {
+  const response = await apiFetch<ApiEnvelope<PracticePlan[]>>("/practice/plans", {
+    method: "GET",
+  });
+  return response.data;
+}
+
+export async function createPracticePlan(payload: {
+  source_insight_id?: string;
+  title: string;
+  purpose?: string;
+  category?: string;
+  scheduled_for?: string;
+  drill_json?: Record<string, unknown>;
+  target_json?: Record<string, unknown>;
+}): Promise<PracticePlan> {
+  const response = await apiFetch<ApiEnvelope<PracticePlan>>("/practice/plans", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
+export async function updatePracticePlan(
+  planId: string,
+  payload: { status?: string; title?: string },
+): Promise<PracticePlan> {
+  const response = await apiFetch<ApiEnvelope<PracticePlan>>(`/practice/plans/${planId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
+export async function getPracticeDiary(): Promise<PracticeDiaryEntry[]> {
+  const response = await apiFetch<ApiEnvelope<PracticeDiaryEntry[]>>("/practice/diary", {
+    method: "GET",
+  });
+  return response.data;
+}
+
+export async function createPracticeDiary(payload: {
+  practice_plan_id?: string;
+  source_insight_id?: string;
+  entry_date: string;
+  title: string;
+  body: string;
+  category?: string;
+  tags?: string[];
+  confidence?: string;
+}): Promise<PracticeDiaryEntry> {
+  const response = await apiFetch<ApiEnvelope<PracticeDiaryEntry>>("/practice/diary", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
+export async function getGoals(): Promise<RoundGoal[]> {
+  const response = await apiFetch<ApiEnvelope<RoundGoal[]>>("/goals", { method: "GET" });
+  return response.data;
+}
+
+export async function createGoal(payload: {
+  source_insight_id?: string;
+  practice_plan_id?: string;
+  title: string;
+  description?: string;
+  category?: string;
+  metric_key: string;
+  target_operator: string;
+  target_value?: number;
+  applies_to?: string;
+  due_date?: string;
+}): Promise<RoundGoal> {
+  const response = await apiFetch<ApiEnvelope<RoundGoal>>("/goals", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return response.data;
+}
+
+export async function evaluateGoal(goalId: string, roundId?: string): Promise<GoalEvaluation> {
+  const response = await apiFetch<ApiEnvelope<GoalEvaluation>>(`/goals/${goalId}/evaluate`, {
+    method: "POST",
+    body: JSON.stringify({ round_id: roundId ?? null }),
+  });
+  return response.data;
+}
+
+export async function manuallyEvaluateGoal(
+  goalId: string,
+  payload: { evaluation_status: string; note?: string },
+): Promise<GoalEvaluation> {
+  const response = await apiFetch<ApiEnvelope<GoalEvaluation>>(
+    `/goals/${goalId}/manual-evaluation`,
+    {
+      method: "POST",
+      body: JSON.stringify(payload),
+    },
   );
   return response.data;
 }
@@ -507,7 +787,20 @@ async function apiFetch<T>(path: string, init: RequestInit): Promise<T> {
 async function responseText(response: Response, fallback: string): Promise<string> {
   try {
     const payload = await response.json();
-    return payload.detail ?? payload.error?.message ?? fallback;
+    if (typeof payload.detail === "string") return payload.detail;
+    if (Array.isArray(payload.detail)) {
+      return payload.detail
+        .map((item: unknown) => {
+          if (typeof item === "object" && item !== null && "msg" in item) {
+            const message = (item as { msg?: unknown }).msg;
+            if (typeof message === "string") return message;
+          }
+          if (typeof item === "string") return item;
+          return JSON.stringify(item);
+        })
+        .join(", ");
+    }
+    return payload.error?.message ?? fallback;
   } catch {
     return fallback;
   }

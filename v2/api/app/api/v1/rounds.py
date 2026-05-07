@@ -214,16 +214,18 @@ def patch_shot(
 def read_dashboard_summary(
     db: DbSession,
     current_user: CurrentUser,
+    locale: str = Query(default="ko", pattern="^(ko|en)$"),
 ) -> dict[str, DashboardSummaryResponse]:
-    return {"data": dashboard_summary(db, owner=current_user)}
+    return {"data": dashboard_summary(db, owner=current_user, locale=locale)}
 
 
 @analytics_router.get("/analytics/trends")
 def read_analytics_trends(
     db: DbSession,
     current_user: CurrentUser,
+    locale: str = Query(default="ko", pattern="^(ko|en)$"),
 ) -> dict[str, AnalyticsTrendResponse]:
-    return {"data": AnalyticsTrendResponse(**get_trends(db, owner=current_user))}
+    return {"data": AnalyticsTrendResponse(**get_trends(db, owner=current_user, locale=locale))}
 
 
 @analytics_router.get("/analytics/rounds/{round_id}")
@@ -231,11 +233,12 @@ def read_round_analytics(
     round_id: UUID,
     db: DbSession,
     current_user: CurrentUser,
+    locale: str = Query(default="ko", pattern="^(ko|en)$"),
 ) -> dict[str, RoundAnalyticsResponse]:
     try:
         return {
             "data": RoundAnalyticsResponse(
-                **get_round_analytics(db, owner=current_user, round_id=round_id)
+                **get_round_analytics(db, owner=current_user, round_id=round_id, locale=locale)
             )
         }
     except AnalyticsNotFoundError as exc:
@@ -263,8 +266,9 @@ def read_insights(
     db: DbSession,
     current_user: CurrentUser,
     status: str = "active",
+    locale: str = Query(default="ko", pattern="^(ko|en)$"),
 ) -> dict[str, list[InsightResponse]]:
-    insights = list_insights(db, owner=current_user, status=status)
+    insights = list_insights(db, owner=current_user, status=status, locale=locale)
     return {"data": [InsightResponse(**item) for item in insights]}
 
 
@@ -274,6 +278,7 @@ def patch_insight(
     payload: InsightUpdateRequest,
     db: DbSession,
     current_user: CurrentUser,
+    locale: str = Query(default="ko", pattern="^(ko|en)$"),
 ) -> dict[str, InsightResponse]:
     try:
         insight = update_insight_status(
@@ -281,6 +286,7 @@ def patch_insight(
             owner=current_user,
             insight_id=insight_id,
             status=payload.status,
+            locale=locale,
         )
     except AnalyticsNotFoundError as exc:
         raise HTTPException(

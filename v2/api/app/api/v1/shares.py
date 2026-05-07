@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Query, status
 
 from app.api.deps import CurrentUser, DbSession
 from app.schemas.share import (
@@ -76,9 +76,13 @@ def patch_share(
 
 
 @router.get("/shared/{token}")
-def read_shared_round(token: str, db: DbSession) -> dict[str, SharedRoundResponse]:
+def read_shared_round(
+    token: str,
+    db: DbSession,
+    locale: str = Query(default="ko", pattern="^(ko|en)$"),
+) -> dict[str, SharedRoundResponse]:
     try:
-        payload = get_shared_round(db, token=token)
+        payload = get_shared_round(db, token=token, locale=locale)
     except ShareNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

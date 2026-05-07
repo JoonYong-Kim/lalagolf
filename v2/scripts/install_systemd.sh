@@ -79,7 +79,7 @@ setup_env_file() {
         secret="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
         cat > "${ENV_FILE}" <<EOF
 LALAGOLF_ENV=production
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000/api/v1
+NEXT_PUBLIC_API_BASE_URL=http://localhost:2324/api/v1
 DATABASE_URL=postgresql+psycopg://lalagolf:lalagolf@localhost:5432/lalagolf_v2
 REDIS_URL=redis://localhost:6379/0
 SECRET_KEY=${secret}
@@ -90,7 +90,11 @@ REQUEST_ID_HEADER=X-Request-ID
 LOG_LEVEL=INFO
 UPLOAD_STORAGE_DIR=${UPLOAD_DIR}
 UPLOAD_MAX_BYTES=1000000
-CORS_ORIGINS=http://localhost:3000
+CORS_ORIGINS=http://localhost:2323
+WEB_BASE_URL=http://localhost:2323
+GOOGLE_OAUTH_CLIENT_ID=
+GOOGLE_OAUTH_CLIENT_SECRET=
+GOOGLE_OAUTH_REDIRECT_URI=http://localhost:2324/api/v1/auth/google/callback
 RQ_QUEUES=default
 WORKER_USE_RQ=true
 WORKER_POLL_INTERVAL_SECONDS=5
@@ -151,7 +155,7 @@ User=${APP_USER}
 Group=${APP_GROUP}
 WorkingDirectory=${INSTALL_DIR}/api
 EnvironmentFile=${ENV_FILE}
-ExecStart=${INSTALL_DIR}/api/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000
+ExecStart=${INSTALL_DIR}/api/.venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 2324
 Restart=on-failure
 RestartSec=5
 
@@ -191,7 +195,7 @@ User=${APP_USER}
 Group=${APP_GROUP}
 WorkingDirectory=${INSTALL_DIR}/web
 EnvironmentFile=${ENV_FILE}
-ExecStart=${NPM_BIN} run start -- --hostname 0.0.0.0 --port 3000
+ExecStart=${NPM_BIN} run start -- --hostname 0.0.0.0 --port 2323
 Restart=on-failure
 RestartSec=5
 
