@@ -15,6 +15,7 @@ import {
   type AnalyticsTrend,
   type InsightUnit,
   type RoundDetail,
+  type ShotQualitySummary,
 } from "@/lib/api";
 import { useI18n, type MessageKey } from "@/lib/i18n";
 
@@ -187,6 +188,8 @@ export default function AnalysisPage() {
           <Kpi label={t("bestScore")} value={trend?.kpis.best_score ?? "-"} />
           <Kpi label={t("avgPutts")} value={trend?.kpis.average_putts ?? "-"} />
         </section>
+
+        {trend?.shot_quality_summary && <ShotQualityWidget quality={trend.shot_quality_summary} t={t} />}
 
         <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-md border border-line bg-white">
@@ -401,6 +404,60 @@ function Kpi({ label, value }: { label: string; value: number | string }) {
   );
 }
 
+function ShotQualityWidget({
+  quality,
+  t,
+}: {
+  quality: ShotQualitySummary;
+  t: (key: MessageKey) => string;
+}) {
+  const riskRows = [
+    { label: t("technicalMiss"), value: quality.risk.technical_miss_count ?? 0, rate: quality.risk.technical_miss_rate },
+    { label: t("strategyIssue"), value: quality.risk.strategy_issue_count ?? 0, rate: quality.risk.strategy_issue_rate },
+    { label: t("luckyResult"), value: quality.risk.lucky_result_count ?? 0, rate: quality.risk.lucky_result_rate },
+    { label: t("driverResultC"), value: quality.risk.driver_result_c_count ?? 0, rate: quality.risk.driver_result_c_rate },
+  ];
+  return (
+    <section className="rounded-md border border-line bg-white">
+      <div className="border-b border-line px-4 py-3">
+        <h2 className="text-base font-semibold">{t("shotQuality")}</h2>
+      </div>
+      <div className="grid gap-4 p-4 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <QualityDistribution title={t("feelDistribution")} distribution={quality.feel_distribution} />
+          <QualityDistribution title={t("resultDistribution")} distribution={quality.result_distribution} />
+        </div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {riskRows.map((row) => (
+            <div className="rounded-md border border-line bg-surface p-3" key={row.label}>
+              <p className="text-sm text-muted">{row.label}</p>
+              <p className="mt-1 text-lg font-semibold">
+                {row.value} <span className="text-sm font-normal text-muted">({formatPercent(row.rate)})</span>
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function QualityDistribution({ title, distribution }: { title: string; distribution: ShotQualitySummary["feel_distribution"] }) {
+  return (
+    <div className="rounded-md border border-line p-3">
+      <p className="text-sm font-semibold">{title}</p>
+      <div className="mt-3 grid grid-cols-3 gap-2 text-sm">
+        {(["A", "B", "C"] as const).map((grade) => (
+          <div className="rounded-md bg-surface p-2" key={grade}>
+            <p className="font-semibold">{grade}</p>
+            <p className="text-muted">{distribution.counts[grade]} ({formatPercent(distribution.rates[grade])})</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function categoryLabel(category: string, t: (key: MessageKey) => string) {
   const labels: Record<string, string> = {
     all: t("allRounds"),
@@ -458,9 +515,94 @@ async function selectedRoundTrend(roundIds: string[], locale: "ko" | "en"): Prom
       score_to_par: round.score_to_par,
     })),
     category_summary,
+    shot_quality_summary: buildShotQualitySummary(rounds),
     insights: analytics.flatMap((item) => item.insights),
   };
   return trend;
+}
+
+function buildShotQualitySummary(rounds: RoundDetail[]): ShotQualitySummary {
+  const emptyDistribution = () => ({
+    counts: { A: 0, B: 0, C: 0 },
+    rates: { A: null, B: null, C: null },
+    total: 0,
+  });
+  const feel = { A: 0, B: 0, C: 0 };
+  const result = { A: 0, B: 0, C: 0 };
+  const matrix = {
+    A: { A: 0, B: 0, C: 0 },
+    B: { A: 0, B: 0, C: 0 },
+    C: { A: 0, B: 0, C: 0 },
+  };
+  const risk = {
+    reproducible_count: 0,
+    technical_miss_count: 0,
+    lucky_result_count: 0,
+    strategy_issue_count: 0,
+    high_risk_count: 0,
+    driver_tee_shot_count: 0,
+    driver_result_c_count: 0,
+  };
+  let sampleCount = 0;
+  for (const round of rounds) {
+    for (const hole of round.holes) {
+      for (const shot of hole.shots) {
+        if ((shot.club_normalized ?? shot.club) === "P") continue;
+        sampleCount += 1;
+        const feelGrade = grade(shot.feel_grade);
+        const resultGrade = grade(shot.result_grade);
+        if (feelGrade) feel[feelGrade] += 1;
+        if (resultGrade) result[resultGrade] += 1;
+        if (feelGrade && resultGrade) {
+          matrix[feelGrade][resultGrade] += 1;
+          if ((feelGrade === "A" || feelGrade === "B") && (resultGrade === "A" || resultGrade === "B")) risk.reproducible_count += 1;
+          if (feelGrade === "C" && resultGrade === "C") risk.technical_miss_count += 1;
+          if (feelGrade === "C" && (resultGrade === "A" || resultGrade === "B")) risk.lucky_result_count += 1;
+          if ((feelGrade === "A" || feelGrade === "B") && resultGrade === "C") risk.strategy_issue_count += 1;
+        }
+        if (resultGrade === "C" || shot.penalty_strokes > 0) risk.high_risk_count += 1;
+        if (shot.shot_number === 1 && hole.par >= 4 && (shot.club_normalized ?? shot.club) === "D") {
+          risk.driver_tee_shot_count += 1;
+          if (resultGrade === "C") risk.driver_result_c_count += 1;
+        }
+      }
+    }
+  }
+  const distribution = (counts: Record<"A" | "B" | "C", number>) => {
+    const total = counts.A + counts.B + counts.C;
+    return {
+      counts,
+      rates: {
+        A: total ? counts.A / total : null,
+        B: total ? counts.B / total : null,
+        C: total ? counts.C / total : null,
+      },
+      total,
+    };
+  };
+  return {
+    sample_count: sampleCount,
+    feel_distribution: sampleCount ? distribution(feel) : emptyDistribution(),
+    result_distribution: sampleCount ? distribution(result) : emptyDistribution(),
+    feel_result_matrix: matrix,
+    risk: {
+      ...risk,
+      driver_result_c_rate: risk.driver_tee_shot_count ? risk.driver_result_c_count / risk.driver_tee_shot_count : null,
+      strategy_issue_rate: sampleCount ? risk.strategy_issue_count / sampleCount : null,
+      technical_miss_rate: sampleCount ? risk.technical_miss_count / sampleCount : null,
+      lucky_result_rate: sampleCount ? risk.lucky_result_count / sampleCount : null,
+      high_risk_rate: sampleCount ? risk.high_risk_count / sampleCount : null,
+    },
+    tee_result_distribution: emptyDistribution(),
+    under_90_result_distribution: emptyDistribution(),
+    over_90_result_distribution: emptyDistribution(),
+    club_groups: [],
+  };
+}
+
+function grade(value: string | null | undefined): "A" | "B" | "C" | null {
+  const normalized = (value ?? "").toUpperCase();
+  return normalized === "A" || normalized === "B" || normalized === "C" ? normalized : null;
 }
 
 function fallbackCategorySummaryFromRounds(rounds: RoundDetail[]) {
@@ -506,7 +648,14 @@ function formatNumber(value: number | null | undefined) {
   return value.toFixed(2);
 }
 
+function formatPercent(value: number | null | undefined) {
+  if (value === null || value === undefined) return "-";
+  return `${Math.round(value * 1000) / 10}%`;
+}
+
 function goalMetricForInsight(insight: InsightUnit) {
+  if (insight.primary_evidence_metric === "driver_result_c_rate") return "driver_result_c_count";
+  if (insight.primary_evidence_metric === "strategy_issue_count") return "strategy_issue_count";
   if (insight.primary_evidence_metric === "three_putt_rate") return "three_putt_holes";
   if (insight.primary_evidence_metric === "penalty_strokes") return "penalties_total";
   if (insight.category === "putting") return "three_putt_holes";

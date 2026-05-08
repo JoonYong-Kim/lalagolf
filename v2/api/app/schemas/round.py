@@ -146,12 +146,14 @@ class AnalyticsTrendResponse(BaseModel):
     kpis: dict
     score_trend: list[dict]
     category_summary: list[dict]
+    shot_quality_summary: dict = Field(default_factory=dict)
     insights: list[InsightResponse]
 
 
 class RoundAnalyticsResponse(BaseModel):
     round_id: UUID
     metrics: dict
+    shot_quality_summary: dict = Field(default_factory=dict)
     shot_values: list[dict]
     insights: list[InsightResponse]
 

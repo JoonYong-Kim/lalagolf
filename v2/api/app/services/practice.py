@@ -29,6 +29,8 @@ SUPPORTED_METRICS = {
     "tee_penalties",
     "gir_count",
     "fairway_miss_count",
+    "driver_result_c_count",
+    "strategy_issue_count",
 }
 
 
@@ -373,6 +375,28 @@ def _metric_value(metric_key: str, round_: Round | None) -> Decimal | None:
     if metric_key == "fairway_miss_count":
         fairways = [hole for hole in holes if hole.fairway_hit is not None]
         return Decimal(sum(1 for hole in fairways if hole.fairway_hit is False))
+    if metric_key == "driver_result_c_count":
+        return Decimal(
+            sum(
+                1
+                for hole in holes
+                for shot in hole.shots
+                if shot.shot_number == 1
+                and hole.par in {4, 5}
+                and (shot.club_normalized or shot.club or "").upper() == "D"
+                and (shot.result_grade or "").upper() == "C"
+            )
+        )
+    if metric_key == "strategy_issue_count":
+        return Decimal(
+            sum(
+                1
+                for hole in holes
+                for shot in hole.shots
+                if (shot.feel_grade or "").upper() in {"A", "B"}
+                and (shot.result_grade or "").upper() == "C"
+            )
+        )
     return None
 
 

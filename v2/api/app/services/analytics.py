@@ -133,6 +133,7 @@ def get_trends(db: Session, *, owner: User, locale: str | None = None) -> dict[s
         "kpis": _kpis(rounds),
         "score_trend": _score_trend(rounds),
         "category_summary": category_summary,
+        "shot_quality_summary": _shot_quality_summary_for_rounds(rounds),
         "insights": [_insight_response(insight, locale=locale) for insight in insights],
     }
 
@@ -164,6 +165,7 @@ def get_round_analytics(
     return {
         "round_id": round_.id,
         "metrics": {metric.metric_key: metric.payload for metric in metrics},
+        "shot_quality_summary": _shot_quality_summary_for_rounds([round_]),
         "shot_values": [
             {
                 "shot_id": str(row.shot_id),
@@ -498,6 +500,8 @@ def _build_insight_candidates(db: Session, owner: User) -> list[dict[str, Any]]:
     putts = [hole.putts for round_ in rounds for hole in round_.holes if hole.putts is not None]
     three_putts = sum(1 for putt in putts if putt >= 3)
     avg_score = _kpis(rounds).get("average_score")
+    quality = _shot_quality_summary_for_rounds(rounds)
+    risk = quality.get("risk") or {}
 
     if penalties:
         candidates.append(
@@ -530,6 +534,53 @@ def _build_insight_candidates(db: Session, owner: User) -> list[dict[str, Any]]:
                 next_action="6-12m 래그 퍼트 거리감과 1-2m 마무리 퍼트를 묶어서 점검하세요.",
                 confidence=_confidence(len(putts)),
                 priority_score=rate * 4,
+            )
+        )
+    driver_result_c_rate = _number_or_none(risk.get("driver_result_c_rate"))
+    if driver_result_c_rate is not None and driver_result_c_rate >= 0.3:
+        driver_result_c_count = int(risk.get("driver_result_c_count") or 0)
+        candidates.append(
+            build_insight_unit(
+                scope_type="window",
+                scope_key="all",
+                category="off_the_tee",
+                root_cause="driver_result_c",
+                primary_evidence_metric="driver_result_c_rate",
+                problem="드라이버 큰 미스",
+                evidence=(
+                    f"드라이버 티샷 Result C가 {driver_result_c_count}개, "
+                    f"비율 {driver_result_c_rate * 100:.1f}%입니다."
+                ),
+                impact="큰 미스 비율이 높으면 페널티가 없어도 다음 샷 난도가 올라갑니다.",
+                next_action=(
+                    "비거리보다 넓은 랜딩 구역과 허용 미스 방향을 먼저 정하고 "
+                    "출발선 루틴을 반복하세요."
+                ),
+                confidence=_confidence(int(risk.get("driver_tee_shot_count") or 0)),
+                priority_score=driver_result_c_rate * 3,
+            )
+        )
+    strategy_issue_count = int(risk.get("strategy_issue_count") or 0)
+    if strategy_issue_count:
+        candidates.append(
+            build_insight_unit(
+                scope_type="window",
+                scope_key="all",
+                category="score",
+                root_cause="feel_result_mismatch",
+                primary_evidence_metric="strategy_issue_count",
+                problem="전략/판단 미스",
+                evidence=f"Feel A/B였지만 Result C인 샷이 {strategy_issue_count}개입니다.",
+                impact=(
+                    "컨택 감각이 나쁘지 않은데 결과가 나쁘면 타깃, 클럽 선택, "
+                    "리스크 판단 문제가 섞였을 가능성이 큽니다."
+                ),
+                next_action=(
+                    "다음 라운드에서 공격 핀과 보수 목표를 구분하고, "
+                    "각 샷의 허용 미스 방향을 먼저 적으세요."
+                ),
+                confidence=_confidence(int(quality.get("sample_count") or 0)),
+                priority_score=min(strategy_issue_count, 10) / 3,
             )
         )
     category_losses = _category_losses(shot_values)
@@ -582,6 +633,167 @@ def _category_label_ko(category: str) -> str:
         "penalty_impact": "페널티",
         "score": "스코어",
     }.get(category, category)
+
+
+def _shot_quality_summary_for_rounds(rounds: list[Round]) -> dict[str, Any]:
+    shots = [
+        shot
+        for round_ in rounds
+        for hole in round_.holes
+        for shot in hole.shots
+        if shot.club_normalized != "P" and shot.club != "P"
+    ]
+    feel_counts = _grade_counts(shot.feel_grade for shot in shots)
+    result_counts = _grade_counts(shot.result_grade for shot in shots)
+    matrix = {feel: {result: 0 for result in ("A", "B", "C")} for feel in ("A", "B", "C")}
+    club_groups: dict[str, dict[str, Any]] = defaultdict(
+        lambda: {
+            "club_group": "",
+            "count": 0,
+            "feel": {"A": 0, "B": 0, "C": 0},
+            "result": {"A": 0, "B": 0, "C": 0},
+            "penalty_count": 0,
+        }
+    )
+    risk = {
+        "reproducible_count": 0,
+        "technical_miss_count": 0,
+        "lucky_result_count": 0,
+        "strategy_issue_count": 0,
+        "high_risk_count": 0,
+        "driver_tee_shot_count": 0,
+        "driver_result_c_count": 0,
+    }
+    tee_result_counts = {"A": 0, "B": 0, "C": 0}
+    under_90_result_counts = {"A": 0, "B": 0, "C": 0}
+    over_90_result_counts = {"A": 0, "B": 0, "C": 0}
+
+    for round_ in rounds:
+        for hole in round_.holes:
+            for shot in hole.shots:
+                if shot.club_normalized == "P" or shot.club == "P":
+                    continue
+                feel = _grade(shot.feel_grade)
+                result = _grade(shot.result_grade)
+                if feel and result:
+                    matrix[feel][result] += 1
+                    if feel in {"A", "B"} and result in {"A", "B"}:
+                        risk["reproducible_count"] += 1
+                    if feel == "C" and result == "C":
+                        risk["technical_miss_count"] += 1
+                    if feel == "C" and result in {"A", "B"}:
+                        risk["lucky_result_count"] += 1
+                    if feel in {"A", "B"} and result == "C":
+                        risk["strategy_issue_count"] += 1
+                if result == "C" or shot.penalty_strokes:
+                    risk["high_risk_count"] += 1
+                if shot.shot_number == 1 and hole.par in {4, 5}:
+                    if result:
+                        tee_result_counts[result] += 1
+                    if (shot.club_normalized or shot.club or "").upper() == "D":
+                        risk["driver_tee_shot_count"] += 1
+                        if result == "C":
+                            risk["driver_result_c_count"] += 1
+                if shot.distance is not None and result:
+                    if shot.distance < 90:
+                        under_90_result_counts[result] += 1
+                    else:
+                        over_90_result_counts[result] += 1
+                group = _club_group(shot.club_normalized or shot.club)
+                bucket = club_groups[group]
+                bucket["club_group"] = group
+                bucket["count"] += 1
+                if feel:
+                    bucket["feel"][feel] += 1
+                if result:
+                    bucket["result"][result] += 1
+                if shot.penalty_strokes:
+                    bucket["penalty_count"] += 1
+
+    total = len(shots)
+    risk["driver_result_c_rate"] = _safe_rate(
+        risk["driver_result_c_count"],
+        risk["driver_tee_shot_count"],
+    )
+    risk["strategy_issue_rate"] = _safe_rate(risk["strategy_issue_count"], total)
+    risk["technical_miss_rate"] = _safe_rate(risk["technical_miss_count"], total)
+    risk["lucky_result_rate"] = _safe_rate(risk["lucky_result_count"], total)
+    risk["high_risk_rate"] = _safe_rate(risk["high_risk_count"], total)
+
+    return {
+        "sample_count": total,
+        "feel_distribution": _distribution(feel_counts),
+        "result_distribution": _distribution(result_counts),
+        "feel_result_matrix": matrix,
+        "risk": risk,
+        "tee_result_distribution": _distribution(tee_result_counts),
+        "under_90_result_distribution": _distribution(under_90_result_counts),
+        "over_90_result_distribution": _distribution(over_90_result_counts),
+        "club_groups": [
+            _club_group_summary(bucket)
+            for bucket in sorted(club_groups.values(), key=lambda item: item["club_group"])
+        ],
+    }
+
+
+def _club_group_summary(bucket: dict[str, Any]) -> dict[str, Any]:
+    count = bucket["count"]
+    return {
+        **bucket,
+        "feel_c_rate": _safe_rate(bucket["feel"]["C"], count),
+        "result_c_rate": _safe_rate(bucket["result"]["C"], count),
+        "penalty_rate": _safe_rate(bucket["penalty_count"], count),
+    }
+
+
+def _grade_counts(values: Any) -> dict[str, int]:
+    counts = {"A": 0, "B": 0, "C": 0}
+    for value in values:
+        grade = _grade(value)
+        if grade:
+            counts[grade] += 1
+    return counts
+
+
+def _distribution(counts: dict[str, int]) -> dict[str, Any]:
+    total = sum(counts.values())
+    return {
+        "counts": counts,
+        "rates": {grade: _safe_rate(count, total) for grade, count in counts.items()},
+        "total": total,
+    }
+
+
+def _grade(value: str | None) -> str | None:
+    normalized = (value or "").upper()
+    return normalized if normalized in {"A", "B", "C"} else None
+
+
+def _club_group(club: str | None) -> str:
+    normalized = (club or "").upper()
+    if normalized == "D":
+        return "D"
+    if normalized in {"W3", "W5", "UW"}:
+        return "W"
+    if normalized in {"U3", "U4", "U5"}:
+        return "U"
+    if normalized in {"I3", "I4"}:
+        return "LI"
+    if normalized in {"I5", "I6", "I7"}:
+        return "MI"
+    if normalized in {"I8", "I9", "IP", "IW", "IA", "48", "50", "52", "56", "58", "60"}:
+        return "SI"
+    if normalized in {"P", "PT"}:
+        return "P"
+    return "OTHER"
+
+
+def _safe_rate(numerator: int | float, denominator: int | float) -> float | None:
+    return round(numerator / denominator, 3) if denominator else None
+
+
+def _number_or_none(value: object) -> float | None:
+    return float(value) if isinstance(value, int | float) else None
 
 
 def _replace_snapshot(db: Session, *, owner: User, insights: list[Insight]) -> AnalysisSnapshot:

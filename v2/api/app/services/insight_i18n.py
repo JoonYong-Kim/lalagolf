@@ -63,6 +63,43 @@ def _render_known_english(payload: dict[str, Any]) -> dict[str, str] | None:
             "next_action": f"Track big misses and penalties in {label.lower()} first.",
         }
 
+    if metric == "driver_result_c_rate" or root_cause == "driver_result_c":
+        numbers = _numbers(payload.get("evidence"))
+        evidence = (
+            f"Driver tee shots include {int(numbers[0])} Result C shots, {numbers[1]:.1f}%."
+            if len(numbers) >= 2
+            else "Driver tee-shot Result C rate is elevated."
+        )
+        return {
+            "problem": "Driver big misses",
+            "evidence": evidence,
+            "impact": "Big misses raise the difficulty of the next shot even without penalties.",
+            "next_action": (
+                "Prioritize a wider landing zone, acceptable miss side, "
+                "and start-line routine over distance."
+            ),
+        }
+
+    if metric == "strategy_issue_count" or root_cause == "feel_result_mismatch":
+        count = _first_number(payload.get("evidence"))
+        evidence = (
+            f"{int(count)} shots had Feel A/B but Result C."
+            if count is not None
+            else "Some shots felt acceptable but finished as Result C."
+        )
+        return {
+            "problem": "Strategy or decision misses",
+            "evidence": evidence,
+            "impact": (
+                "When contact feels acceptable but the result is poor, "
+                "target, club, or risk decisions may be involved."
+            ),
+            "next_action": (
+                "Separate aggressive pins from conservative targets and name "
+                "the acceptable miss before each shot."
+            ),
+        }
+
     if metric == "average_score" or root_cause == "baseline":
         avg_score = _first_number(payload.get("evidence"))
         evidence = (

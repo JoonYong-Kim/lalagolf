@@ -12,8 +12,9 @@ import {
   type RoundAnalytics,
   type RoundDetail,
   type RoundHole,
+  type ShotQualitySummary,
 } from "@/lib/api";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, type MessageKey } from "@/lib/i18n";
 
 export default function RoundDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -114,6 +115,10 @@ export default function RoundDetailPage({ params }: { params: Promise<{ id: stri
             {t("contributionFormula")}
           </div>
         </section>
+
+        {analytics?.shot_quality_summary && (
+          <ShotQualityPanel quality={analytics.shot_quality_summary} t={t} />
+        )}
 
         <section className="rounded-md border border-line bg-white">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
@@ -304,6 +309,41 @@ function Metric({
   );
 }
 
+function ShotQualityPanel({
+  quality,
+  t,
+}: {
+  quality: ShotQualitySummary;
+  t: (key: MessageKey) => string;
+}) {
+  const rows = [
+    { label: t("resultC"), value: quality.result_distribution.counts.C, rate: quality.result_distribution.rates.C },
+    { label: t("feelC"), value: quality.feel_distribution.counts.C, rate: quality.feel_distribution.rates.C },
+    { label: t("technicalMiss"), value: quality.risk.technical_miss_count ?? 0, rate: quality.risk.technical_miss_rate },
+    { label: t("strategyIssue"), value: quality.risk.strategy_issue_count ?? 0, rate: quality.risk.strategy_issue_rate },
+    { label: t("luckyResult"), value: quality.risk.lucky_result_count ?? 0, rate: quality.risk.lucky_result_rate },
+    { label: t("driverResultC"), value: quality.risk.driver_result_c_count ?? 0, rate: quality.risk.driver_result_c_rate },
+  ];
+
+  return (
+    <section className="rounded-md border border-line bg-white">
+      <div className="border-b border-line px-4 py-3">
+        <h2 className="text-base font-semibold">{t("shotQuality")}</h2>
+      </div>
+      <div className="grid gap-3 p-4 sm:grid-cols-2 lg:grid-cols-3">
+        {rows.map((row) => (
+          <div className="rounded-md bg-surface p-3" key={row.label}>
+            <p className="text-sm text-muted">{row.label}</p>
+            <p className="mt-1 text-lg font-semibold">
+              {row.value} <span className="text-sm font-normal text-muted">({formatPercent(row.rate)})</span>
+            </p>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function AnalysisMetric({
   label,
   total,
@@ -377,6 +417,11 @@ function formatSigned(value: number) {
 function formatNullable(value: number | null | undefined) {
   if (value === null || value === undefined) return "-";
   return (Math.round(value * 100) / 100).toFixed(2);
+}
+
+function formatPercent(value: number | null | undefined) {
+  if (value === null || value === undefined) return "-";
+  return `${Math.round(value * 1000) / 10}%`;
 }
 
 function formatToPar(value: number | null | undefined) {

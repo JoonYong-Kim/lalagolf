@@ -158,6 +158,12 @@ function buildRoundComparison(rounds: RoundDetail[], t: (key: MessageKey) => str
       comparisonMetric("threePutts", t("threePutts"), averageMetric(baselineRounds, threePuttHoles), threePuttHoles(target), true),
       girMetric(baselineRounds, target, t),
       comparisonMetric("fairwayHitRate", t("fairwayHitRate"), averageMetric(baselineRounds, fairwayHitRate), fairwayHitRate(target), false, "percent"),
+      comparisonMetric("resultC", t("resultC"), averageMetric(baselineRounds, resultCShots), resultCShots(target), true),
+      comparisonMetric("feelC", t("feelC"), averageMetric(baselineRounds, feelCShots), feelCShots(target), true),
+      comparisonMetric("driverResultC", t("driverResultC"), averageMetric(baselineRounds, driverResultCRate), driverResultCRate(target), true, "percent"),
+      comparisonMetric("technicalMiss", t("technicalMiss"), averageMetric(baselineRounds, technicalMissShots), technicalMissShots(target), true),
+      comparisonMetric("strategyIssue", t("strategyIssue"), averageMetric(baselineRounds, strategyIssueShots), strategyIssueShots(target), true),
+      comparisonMetric("luckyResult", t("luckyResult"), averageMetric(baselineRounds, luckyResultShots), luckyResultShots(target), true),
       comparisonMetric("penalties", t("penalty"), averageMetric(baselineRounds, (round) => round.metrics.penalties_total ?? null), target.metrics.penalties_total ?? null, true),
       comparisonMetric("penaltyHoles", t("penaltyHoles"), averageMetric(baselineRounds, penaltyHoles), penaltyHoles(target), true),
       comparisonMetric("birdies", t("birdie"), averageMetric(baselineRounds, birdieOrBetterHoles), birdieOrBetterHoles(target), false),
@@ -224,6 +230,50 @@ function fairwayHitRate(round: RoundDetail) {
     .filter((shot) => shot?.start_lie === "T" && shot.end_lie !== null);
   if (fairways.length === 0) return null;
   return fairways.filter((shot) => shot?.end_lie === "F").length / fairways.length;
+}
+
+function resultCShots(round: RoundDetail) {
+  return qualityShots(round).filter((shot) => grade(shot.result_grade) === "C").length;
+}
+
+function feelCShots(round: RoundDetail) {
+  return qualityShots(round).filter((shot) => grade(shot.feel_grade) === "C").length;
+}
+
+function driverResultCRate(round: RoundDetail) {
+  const driverTeeShots = round.holes
+    .flatMap((hole) => hole.shots.filter((shot) => shot.shot_number === 1 && hole.par >= 4 && (shot.club_normalized ?? shot.club) === "D"));
+  if (driverTeeShots.length === 0) return null;
+  return driverTeeShots.filter((shot) => grade(shot.result_grade) === "C").length / driverTeeShots.length;
+}
+
+function technicalMissShots(round: RoundDetail) {
+  return qualityShots(round).filter((shot) => grade(shot.feel_grade) === "C" && grade(shot.result_grade) === "C").length;
+}
+
+function strategyIssueShots(round: RoundDetail) {
+  return qualityShots(round).filter((shot) => {
+    const feel = grade(shot.feel_grade);
+    return (feel === "A" || feel === "B") && grade(shot.result_grade) === "C";
+  }).length;
+}
+
+function luckyResultShots(round: RoundDetail) {
+  return qualityShots(round).filter((shot) => {
+    const result = grade(shot.result_grade);
+    return grade(shot.feel_grade) === "C" && (result === "A" || result === "B");
+  }).length;
+}
+
+function qualityShots(round: RoundDetail) {
+  return round.holes
+    .flatMap((hole) => hole.shots)
+    .filter((shot) => (shot.club_normalized ?? shot.club) !== "P");
+}
+
+function grade(value: string | null | undefined): "A" | "B" | "C" | null {
+  const normalized = (value ?? "").toUpperCase();
+  return normalized === "A" || normalized === "B" || normalized === "C" ? normalized : null;
 }
 
 function penaltyHoles(round: RoundDetail) {

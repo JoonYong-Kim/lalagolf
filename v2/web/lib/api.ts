@@ -184,12 +184,14 @@ export type AnalyticsTrend = {
     total_shot_value: number;
     avg_shot_value: number;
   }>;
+  shot_quality_summary: ShotQualitySummary;
   insights: InsightUnit[];
 };
 
 export type RoundAnalytics = {
   round_id: string;
   metrics: Record<string, unknown>;
+  shot_quality_summary: ShotQualitySummary;
   shot_values: Array<{
     shot_id: string;
     category: string;
@@ -200,6 +202,46 @@ export type RoundAnalytics = {
     expected_confidence: string | null;
   }>;
   insights: InsightUnit[];
+};
+
+export type ShotQualitySummary = {
+  sample_count: number;
+  feel_distribution: GradeDistribution;
+  result_distribution: GradeDistribution;
+  feel_result_matrix: Record<"A" | "B" | "C", Record<"A" | "B" | "C", number>>;
+  risk: {
+    reproducible_count?: number;
+    technical_miss_count?: number;
+    lucky_result_count?: number;
+    strategy_issue_count?: number;
+    high_risk_count?: number;
+    driver_tee_shot_count?: number;
+    driver_result_c_count?: number;
+    driver_result_c_rate?: number | null;
+    strategy_issue_rate?: number | null;
+    technical_miss_rate?: number | null;
+    lucky_result_rate?: number | null;
+    high_risk_rate?: number | null;
+  };
+  tee_result_distribution: GradeDistribution;
+  under_90_result_distribution: GradeDistribution;
+  over_90_result_distribution: GradeDistribution;
+  club_groups: Array<{
+    club_group: string;
+    count: number;
+    feel: Record<"A" | "B" | "C", number>;
+    result: Record<"A" | "B" | "C", number>;
+    penalty_count: number;
+    feel_c_rate: number | null;
+    result_c_rate: number | null;
+    penalty_rate: number | null;
+  }>;
+};
+
+export type GradeDistribution = {
+  counts: Record<"A" | "B" | "C", number>;
+  rates: Record<"A" | "B" | "C", number | null>;
+  total: number;
 };
 
 export type ShareCreateResponse = {
