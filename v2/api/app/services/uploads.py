@@ -297,6 +297,9 @@ def _apply_parsed_round_to_round(
             par=hole_payload.get("par"),
             score=hole_payload.get("score"),
             putts=hole_payload.get("putts"),
+            fairway_hit=hole_payload.get("fairway_hit")
+            if hole_payload.get("fairway_hit") is not None
+            else _derive_fairway_hit(hole_payload),
             gir=hole_payload.get("gir"),
             penalties=hole_payload.get("penalties") or 0,
         )
@@ -444,3 +447,22 @@ def _is_gir(par: int | None, score: int | None, putts: int | None) -> bool | Non
     if par is None or score is None or putts is None:
         return None
     return par >= score - putts + 2
+
+
+def _derive_fairway_hit(hole: dict[str, Any]) -> bool | None:
+    if hole.get("par") not in {4, 5}:
+        return None
+    first_shot = next(
+        (
+            shot
+            for shot in hole.get("shots") or []
+            if isinstance(shot, dict) and shot.get("shot_number") == 1
+        ),
+        None,
+    )
+    if not first_shot or first_shot.get("start_lie") != "T":
+        return None
+    end_lie = first_shot.get("end_lie")
+    if end_lie is None:
+        return None
+    return end_lie == "F"

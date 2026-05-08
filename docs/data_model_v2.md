@@ -220,7 +220,7 @@ Stores hole-level score data.
 | par | integer not null | |
 | score | integer nullable | |
 | putts | integer nullable | |
-| fairway_hit | boolean nullable | par 4/5 tee result if known |
+| fairway_hit | boolean nullable | par 4/5 tee result if known; upload commit derives this from the first tee shot ending in `F` when explicit data is absent |
 | gir | boolean nullable | computed or parsed |
 | up_and_down | boolean nullable | |
 | sand_save | boolean nullable | |

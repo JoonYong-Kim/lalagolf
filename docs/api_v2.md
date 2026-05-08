@@ -479,14 +479,16 @@ Query:
 
 ### GET /analytics/compare
 
-Compares selected rounds or windows.
+Returns shot-value comparison rows grouped across the current user's analytics data.
 
 Query:
 
-- `left_round_ids`
-- `right_round_ids`
-- `left_window`
-- `right_window`
+- `group_by`: `category` or `club`, default `category`
+
+Note: the web round-comparison page (`/rounds/compare`) is not backed by this endpoint. It loads
+selected round details and compares scorecard-derived metrics client-side: score, putts, putts per
+hole, 3-putt holes, GIR count/rate, fairway hit rate, penalties, penalty holes, birdie-or-better,
+par, bogey, and double-bogey-or-worse.
 
 ## 10. Insights
 

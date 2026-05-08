@@ -119,17 +119,17 @@ export default function RoundDetailPage({ params }: { params: Promise<{ id: stri
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
             <h2 className="text-base font-semibold">{t("scorecard")}</h2>
             <div className="flex flex-wrap gap-2">
+              <button className="rounded-md border border-line px-3 py-2 text-sm font-semibold" onClick={shareRound}>
+                {t("share")}
+              </button>
               {round?.upload_review_id && (
                 <Link
                   className="rounded-md border border-line px-3 py-2 text-sm font-semibold"
                   href={`/upload/${round.upload_review_id}/review`}
                 >
-                  {t("editRawUpload")}
+                  {t("edit")}
                 </Link>
               )}
-              <button className="rounded-md border border-line px-3 py-2 text-sm font-semibold" onClick={shareRound}>
-                {t("share")}
-              </button>
               <button className="rounded-md border border-line px-3 py-2 text-sm font-semibold" onClick={recalculate}>
                 {t("recalculate")}
               </button>

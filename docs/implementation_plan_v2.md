@@ -439,7 +439,7 @@ Acceptance:
 
 - [x] `GET /api/v1/analytics/trends`
 - [x] `GET /api/v1/analytics/rounds/{round_id}`
-- [x] `GET /api/v1/analytics/compare`
+- [x] `GET /api/v1/analytics/compare` for shot-value group summaries by category or club
 - [x] `GET /api/v1/insights`
 - [x] `PATCH /api/v1/insights/{insight_id}`
 
@@ -448,6 +448,7 @@ Acceptance:
 - [x] Filter bar.
 - [x] Mobile filter sheet.
 - [x] Score tab.
+- [x] Separate `/rounds/compare` page for selected-round scorecard metric comparison.
 - [x] Tee tab.
 - [x] Approach tab.
 - [x] Short Game tab.

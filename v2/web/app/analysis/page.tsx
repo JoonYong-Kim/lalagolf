@@ -22,7 +22,6 @@ const tabs = ["all", "off_the_tee", "short_game", "control_shot", "iron_shot", "
 
 export default function AnalysisPage() {
   const [trend, setTrend] = useState<AnalyticsTrend | null>(null);
-  const [comparison, setComparison] = useState<RoundComparison | null>(null);
   const [activeTab, setActiveTab] = useState("all");
   const [scopeLabel, setScopeLabel] = useState("");
   const [selectedInsightIndex, setSelectedInsightIndex] = useState(0);
@@ -36,14 +35,11 @@ export default function AnalysisPage() {
       const params = new URLSearchParams(window.location.search);
       const roundIds = (params.get("roundIds") ?? "").split(",").filter(Boolean);
       if (roundIds.length > 0) {
-        const selected = await selectedRoundTrend(roundIds, locale);
-        setTrend(selected.trend);
-        setComparison(selected.comparison);
+        setTrend(await selectedRoundTrend(roundIds, locale));
         setScopeLabel(`${t("selectedAnalysis")} (${roundIds.length})`);
         return;
       }
       setTrend(await getAnalyticsTrends(locale));
-      setComparison(null);
       setScopeLabel(t("allRounds"));
     } catch (analysisError) {
       setError(analysisError instanceof Error ? analysisError.message : t("loadingAnalysis"));
@@ -93,16 +89,13 @@ export default function AnalysisPage() {
     try {
       if (scope === "all") {
         setTrend(await getAnalyticsTrends(locale));
-        setComparison(null);
         setScopeLabel(t("allRounds"));
         return;
       }
       const currentYear = new Date().getFullYear();
       const limit = scope === "recent3" ? 3 : scope === "recent5" ? 5 : scope === "recent10" ? 10 : 100;
       const rounds = await getRounds({ limit, year: scope === "year" ? String(currentYear) : undefined });
-      const selected = await selectedRoundTrend(rounds.items.map((round) => round.id), locale);
-      setTrend(selected.trend);
-      setComparison(selected.comparison);
+      setTrend(await selectedRoundTrend(rounds.items.map((round) => round.id), locale));
       setScopeLabel(t(scope === "year" ? "thisYear" : scope));
     } catch (shortcutError) {
       setError(shortcutError instanceof Error ? shortcutError.message : t("loadingAnalysis"));
@@ -194,8 +187,6 @@ export default function AnalysisPage() {
           <Kpi label={t("bestScore")} value={trend?.kpis.best_score ?? "-"} />
           <Kpi label={t("avgPutts")} value={trend?.kpis.average_putts ?? "-"} />
         </section>
-
-        {comparison && <RoundComparisonWidget comparison={comparison} t={t} />}
 
         <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-md border border-line bg-white">
@@ -344,68 +335,6 @@ type PracticeSuggestion = {
   };
 };
 
-type RoundComparisonMetric = {
-  key: "score" | "toPar" | "putts" | "gir" | "penalties";
-  label: string;
-  baseline: number | null;
-  target: number | null;
-  lowerIsBetter: boolean;
-};
-
-type RoundComparison = {
-  mode: "two_rounds" | "average_vs_round";
-  baselineLabel: string;
-  targetLabel: string;
-  metrics: RoundComparisonMetric[];
-};
-
-function RoundComparisonWidget({
-  comparison,
-  t,
-}: {
-  comparison: RoundComparison;
-  t: (key: MessageKey) => string;
-}) {
-  return (
-    <section className="rounded-md border border-line bg-white">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
-        <h2 className="text-base font-semibold">{t("roundComparison")}</h2>
-        <span className="text-sm text-muted">
-          {comparison.mode === "two_rounds" ? "2 rounds" : `${t("baselineAverage")} vs ${t("targetRound")}`}
-        </span>
-      </div>
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="bg-surface text-muted">
-            <tr>
-              <th className="px-4 py-2 font-medium">{t("category")}</th>
-              <th className="px-4 py-2 font-medium">{comparison.baselineLabel}</th>
-              <th className="px-4 py-2 font-medium">{comparison.targetLabel}</th>
-              <th className="px-4 py-2 font-medium">{t("difference")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {comparison.metrics.map((metric) => {
-              const delta = metric.baseline === null || metric.target === null ? null : metric.target - metric.baseline;
-              const improved = delta === null || delta === 0 ? null : metric.lowerIsBetter ? delta < 0 : delta > 0;
-              return (
-                <tr className="border-t border-line" key={metric.key}>
-                  <td className="px-4 py-3 font-medium">{metric.label}</td>
-                  <td className="px-4 py-3">{formatComparable(metric.baseline)}</td>
-                  <td className="px-4 py-3">{formatComparable(metric.target)}</td>
-                  <td className={improved === null ? "px-4 py-3 text-muted" : improved ? "px-4 py-3 text-green-700" : "px-4 py-3 text-[#b42318]"}>
-                    {delta === null ? "-" : `${formatSignedDelta(delta)} ${improved === null ? "" : improved ? t("better") : t("worse")}`}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-    </section>
-  );
-}
-
 function PracticeSuggestionList({
   insight,
   onCreateGoal,
@@ -487,10 +416,7 @@ function categoryLabel(category: string, t: (key: MessageKey) => string) {
   return labels[category] ?? category;
 }
 
-async function selectedRoundTrend(roundIds: string[], locale: "ko" | "en"): Promise<{
-  trend: AnalyticsTrend;
-  comparison: RoundComparison | null;
-}> {
+async function selectedRoundTrend(roundIds: string[], locale: "ko" | "en"): Promise<AnalyticsTrend> {
   await Promise.all(roundIds.map((roundId) => requestRoundRecalculation(roundId).catch(() => null)));
   const [rounds, analytics] = await Promise.all([
     Promise.all(roundIds.map((roundId) => getRound(roundId))),
@@ -534,51 +460,7 @@ async function selectedRoundTrend(roundIds: string[], locale: "ko" | "en"): Prom
     category_summary,
     insights: analytics.flatMap((item) => item.insights),
   };
-  return { trend, comparison: buildRoundComparison(rounds) };
-}
-
-function buildRoundComparison(rounds: RoundDetail[]): RoundComparison | null {
-  const completed = rounds
-    .filter((round) => round.total_score !== null)
-    .sort((a, b) => a.play_date.localeCompare(b.play_date));
-  if (completed.length < 2) return null;
-  const target = completed[completed.length - 1];
-  const baselineRounds = completed.length === 2 ? [completed[0]] : completed.slice(0, -1);
-  const baselineLabel = completed.length === 2
-    ? roundLabel(baselineRounds[0])
-    : `${baselineRounds.length} ${"Avg"}`;
-  return {
-    mode: completed.length === 2 ? "two_rounds" : "average_vs_round",
-    baselineLabel,
-    targetLabel: roundLabel(target),
-    metrics: [
-      comparisonMetric("score", "Score", averageMetric(baselineRounds, (round) => round.total_score), target.total_score, true),
-      comparisonMetric("toPar", "To par", averageMetric(baselineRounds, (round) => round.score_to_par), target.score_to_par, true),
-      comparisonMetric("putts", "Putts", averageMetric(baselineRounds, (round) => round.metrics.putts_total ?? null), target.metrics.putts_total ?? null, true),
-      comparisonMetric("gir", "GIR", averageMetric(baselineRounds, (round) => round.metrics.gir_count ?? null), target.metrics.gir_count ?? null, false),
-      comparisonMetric("penalties", "Penalty", averageMetric(baselineRounds, (round) => round.metrics.penalties_total ?? null), target.metrics.penalties_total ?? null, true),
-    ],
-  };
-}
-
-function comparisonMetric(
-  key: RoundComparisonMetric["key"],
-  label: string,
-  baseline: number | null,
-  target: number | null,
-  lowerIsBetter: boolean,
-): RoundComparisonMetric {
-  return { key, label, baseline, target, lowerIsBetter };
-}
-
-function averageMetric(rounds: RoundDetail[], select: (round: RoundDetail) => number | null | undefined) {
-  const values = rounds.map(select).filter((value): value is number => typeof value === "number");
-  if (values.length === 0) return null;
-  return Math.round((values.reduce((sum, value) => sum + value, 0) / values.length) * 10) / 10;
-}
-
-function roundLabel(round: RoundDetail) {
-  return `${round.play_date} ${round.course_name}`;
+  return trend;
 }
 
 function fallbackCategorySummaryFromRounds(rounds: RoundDetail[]) {
@@ -622,16 +504,6 @@ function fallbackShotCategory(shot: RoundDetail["holes"][number]["shots"][number
 function formatNumber(value: number | null | undefined) {
   if (value === null || value === undefined) return "-";
   return value.toFixed(2);
-}
-
-function formatComparable(value: number | null | undefined) {
-  if (value === null || value === undefined) return "-";
-  return Number.isInteger(value) ? String(value) : value.toFixed(1);
-}
-
-function formatSignedDelta(value: number) {
-  const formatted = Number.isInteger(value) ? String(value) : value.toFixed(1);
-  return value > 0 ? `+${formatted}` : formatted;
 }
 
 function goalMetricForInsight(insight: InsightUnit) {

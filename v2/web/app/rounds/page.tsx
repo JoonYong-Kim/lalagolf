@@ -35,6 +35,7 @@ export default function RoundsPage() {
   }, []);
 
   const summary = useMemo(() => roundSummary(details), [details]);
+  const detailById = useMemo(() => new Map(details.map((detail) => [detail.id, detail])), [details]);
 
   function toggleRound(roundId: string) {
     setSelectedRoundIds((current) =>
@@ -73,12 +74,22 @@ export default function RoundsPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-base font-semibold">{t("filteredSummary")}</h2>
             {selectedRoundIds.length > 0 && (
-              <Link
-                className="rounded-md bg-green-700 px-3 py-2 text-sm font-semibold text-white"
-                href={`/analysis?roundIds=${selectedRoundIds.join(",")}`}
-              >
-                {t("analyzeSelected")} ({selectedRoundIds.length})
-              </Link>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  className="rounded-md border border-line px-3 py-2 text-sm font-semibold"
+                  href={`/analysis?roundIds=${selectedRoundIds.join(",")}`}
+                >
+                  {t("analyzeSelected")} ({selectedRoundIds.length})
+                </Link>
+                {selectedRoundIds.length >= 2 && (
+                  <Link
+                    className="rounded-md bg-green-700 px-3 py-2 text-sm font-semibold text-white"
+                    href={`/rounds/compare?roundIds=${selectedRoundIds.join(",")}`}
+                  >
+                    {t("compareSelected")} ({selectedRoundIds.length})
+                  </Link>
+                )}
+              </div>
             )}
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -94,7 +105,7 @@ export default function RoundsPage() {
             {rounds ? `${rounds.total} ${t("rounds")}` : t("loadingRounds")}
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left text-sm">
+            <table className="w-full min-w-[860px] text-left text-sm">
               <thead className="bg-surface text-muted">
                 <tr>
                   <th className="px-4 py-2 font-medium">{t("date")}</th>
@@ -104,31 +115,47 @@ export default function RoundsPage() {
                   <th className="px-4 py-2 font-medium">{t("holes")}</th>
                   <th className="px-4 py-2 font-medium">{t("companions")}</th>
                   <th className="px-4 py-2 font-medium">{t("status")}</th>
+                  <th className="px-4 py-2 font-medium">{t("edit")}</th>
                 </tr>
               </thead>
               <tbody>
-                {(rounds?.items ?? []).map((round) => (
-                  <tr className="border-t border-line hover:bg-surface" key={round.id}>
-                    <td className="px-4 py-3">{round.play_date}</td>
-                    <td className="px-4 py-3">
-                      <input
-                        checked={selectedRoundIds.includes(round.id)}
-                        type="checkbox"
-                        onChange={() => toggleRound(round.id)}
-                      />
-                    </td>
-                    <td className="px-4 py-3 font-medium">
-                      <Link href={`/rounds/${round.id}`}>{round.course_name}</Link>
-                    </td>
-                    <td className="px-4 py-3">{round.total_score ?? "-"}</td>
-                    <td className="px-4 py-3">{round.hole_count}</td>
-                    <td className="px-4 py-3">{round.companions.join(", ") || "-"}</td>
-                    <td className="px-4 py-3">{round.computed_status}</td>
-                  </tr>
-                ))}
+                {(rounds?.items ?? []).map((round) => {
+                  const detail = detailById.get(round.id);
+                  return (
+                    <tr className="border-t border-line hover:bg-surface" key={round.id}>
+                      <td className="px-4 py-3">{round.play_date}</td>
+                      <td className="px-4 py-3">
+                        <input
+                          checked={selectedRoundIds.includes(round.id)}
+                          type="checkbox"
+                          onChange={() => toggleRound(round.id)}
+                        />
+                      </td>
+                      <td className="px-4 py-3 font-medium">
+                        <Link href={`/rounds/${round.id}`}>{round.course_name}</Link>
+                      </td>
+                      <td className="px-4 py-3">{round.total_score ?? "-"}</td>
+                      <td className="px-4 py-3">{round.hole_count}</td>
+                      <td className="px-4 py-3">{round.companions.join(", ") || "-"}</td>
+                      <td className="px-4 py-3">{round.computed_status}</td>
+                      <td className="px-4 py-3">
+                        {detail?.upload_review_id ? (
+                          <Link
+                            className="rounded-md border border-line px-2 py-1.5 text-xs font-semibold"
+                            href={`/upload/${detail.upload_review_id}/review`}
+                          >
+                            {t("edit")}
+                          </Link>
+                        ) : (
+                          "-"
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
                 {rounds && rounds.items.length === 0 && (
                   <tr>
-                    <td className="px-4 py-6 text-muted" colSpan={7}>{t("noRoundsMatch")}</td>
+                    <td className="px-4 py-6 text-muted" colSpan={8}>{t("noRoundsMatch")}</td>
                   </tr>
                 )}
               </tbody>

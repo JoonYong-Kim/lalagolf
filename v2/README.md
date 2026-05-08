@@ -126,8 +126,16 @@ Current UI behavior:
   recent-round score/to-par details.
 - Round detail and shared-round scorecards use equal-width hole columns and visual score badges for
   eagle-or-better, birdie, par, bogey, and double-bogey-or-worse.
+- Round detail exposes scorecard actions in order: Share, Edit, Recalculate. Edit opens the existing
+  upload review screen so raw source text can be corrected, reparsed, and saved back into the same
+  round.
 - Analysis shows deduplicated insights one at a time in a switchable insight widget. Each suggested
   routine exposes same-level actions for selecting a practice plan or selecting a next-round goal.
+- Round comparison is separate from Analysis. Selecting 2+ rounds from `/rounds` opens
+  `/rounds/compare`; 2 rounds compare head-to-head, while 3+ rounds compare the latest selected
+  round against the average of the other selected rounds. The comparison table excludes to-par and
+  total-par, combines GIR as `count (rate)`, and derives fairway hit rate from par 4/5 tee-shot
+  results when stored fairway data is absent.
 - Practice combines calendar and diary in one toggle widget; diary entries are date-scoped and can
   be linked to an insight-derived practice plan.
 - The entry/login UI keeps `Get started` on registration and opens the header `Login` action directly
