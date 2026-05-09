@@ -146,6 +146,7 @@ class AnalyticsTrendResponse(BaseModel):
     kpis: dict
     score_trend: list[dict]
     category_summary: list[dict]
+    item_summary: list[dict] = Field(default_factory=list)
     shot_quality_summary: dict = Field(default_factory=dict)
     insights: list[InsightResponse]
 

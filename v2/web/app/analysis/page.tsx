@@ -13,13 +13,15 @@ import {
   requestRoundRecalculation,
   updateInsightStatus,
   type AnalyticsTrend,
+  type AnalysisItemSummary,
   type InsightUnit,
+  type RoundAnalytics,
   type RoundDetail,
   type ShotQualitySummary,
 } from "@/lib/api";
 import { useI18n, type MessageKey } from "@/lib/i18n";
 
-const tabs = ["all", "off_the_tee", "short_game", "control_shot", "iron_shot", "putting", "recovery", "penalty_impact"];
+const tabs = ["all", "off_the_tee", "short_game", "control_shot", "iron_shot", "putting", "recovery", "penalty_impact", "shot_quality"];
 
 export default function AnalysisPage() {
   const [trend, setTrend] = useState<AnalyticsTrend | null>(null);
@@ -55,6 +57,10 @@ export default function AnalysisPage() {
     if (!trend) return [];
     if (activeTab === "all") return trend.category_summary;
     return trend.category_summary.filter((row) => row.category === activeTab);
+  }, [trend, activeTab]);
+  const visibleItemRows = useMemo(() => {
+    if (!trend || activeTab === "all") return [];
+    return (trend.item_summary ?? []).filter((row) => row.group === activeTab);
   }, [trend, activeTab]);
 
   const visibleInsights = useMemo(() => {
@@ -194,36 +200,72 @@ export default function AnalysisPage() {
         <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
           <div className="rounded-md border border-line bg-white">
             <div className="border-b border-line px-4 py-3">
-              <h2 className="text-base font-semibold">{t("categorySummary")}</h2>
+              <h2 className="text-base font-semibold">
+                {activeTab === "all" ? t("categorySummary") : t("itemSummary")}
+              </h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[560px] text-left text-sm">
-                <thead className="bg-surface text-muted">
-                  <tr>
-                    <th className="px-4 py-2 font-medium">{t("category")}</th>
-                    <th className="px-4 py-2 font-medium">{t("shots")}</th>
-                    <th className="px-4 py-2 font-medium">{t("totalValue")}</th>
-                    <th className="px-4 py-2 font-medium">{t("avgValue")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleCategoryRows.map((row) => (
-                    <tr className="border-t border-line" key={row.category}>
-                      <td className="px-4 py-3 font-medium">{categoryLabel(row.category, t)}</td>
-                      <td className="px-4 py-3">{row.count}</td>
-                      <td className="px-4 py-3">{formatNumber(row.total_shot_value)}</td>
-                      <td className="px-4 py-3">{formatNumber(row.avg_shot_value)}</td>
-                    </tr>
-                  ))}
-                  {trend && visibleCategoryRows.length === 0 && (
+              {activeTab === "all" ? (
+                <table className="w-full min-w-[560px] text-left text-sm">
+                  <thead className="bg-surface text-muted">
                     <tr>
-                      <td className="px-4 py-6 text-muted" colSpan={4}>
-                        {t("noAnalysisRows")}
-                      </td>
+                      <th className="px-4 py-2 font-medium">{t("category")}</th>
+                      <th className="px-4 py-2 font-medium">{t("shots")}</th>
+                      <th className="px-4 py-2 font-medium">{t("totalValue")}</th>
+                      <th className="px-4 py-2 font-medium">{t("avgValue")}</th>
                     </tr>
-                  )}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {visibleCategoryRows.map((row) => (
+                      <tr className="border-t border-line" key={row.category}>
+                        <td className="px-4 py-3 font-medium">{categoryLabel(row.category, t)}</td>
+                        <td className="px-4 py-3">{row.count}</td>
+                        <td className="px-4 py-3">{formatNumber(row.total_shot_value)}</td>
+                        <td className="px-4 py-3">{formatNumber(row.avg_shot_value)}</td>
+                      </tr>
+                    ))}
+                    {trend && visibleCategoryRows.length === 0 && (
+                      <tr>
+                        <td className="px-4 py-6 text-muted" colSpan={4}>
+                          {t("noAnalysisRows")}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              ) : (
+                <table className="w-full min-w-[760px] text-left text-sm">
+                  <thead className="bg-surface text-muted">
+                    <tr>
+                      <th className="px-4 py-2 font-medium">{t("item")}</th>
+                      <th className="px-4 py-2 font-medium">{t("shots")}</th>
+                      <th className="px-4 py-2 font-medium">{t("avgValue")}</th>
+                      <th className="px-4 py-2 font-medium">{itemMetricLabels(activeTab, t)[0]}</th>
+                      <th className="px-4 py-2 font-medium">{itemMetricLabels(activeTab, t)[1]}</th>
+                      {activeTab === "penalty_impact" && (
+                        <th className="px-4 py-2 font-medium">{t("goodFeelPenalty")}</th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleItemRows.map((row) => (
+                      <tr className="border-t border-line" key={`${row.group}-${row.item}`}>
+                        <td className="px-4 py-3 font-medium">{itemLabel(row.item, t)}</td>
+                        <td className="px-4 py-3">{row.count}</td>
+                        <td className="px-4 py-3">{formatNumber(row.avg_shot_value)}</td>
+                        {itemMetricCells(row, activeTab, t)}
+                      </tr>
+                    ))}
+                    {trend && visibleItemRows.length === 0 && (
+                      <tr>
+                        <td className="px-4 py-6 text-muted" colSpan={activeTab === "penalty_impact" ? 6 : 5}>
+                          {t("noAnalysisRows")}
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
             </div>
           </div>
 
@@ -469,8 +511,129 @@ function categoryLabel(category: string, t: (key: MessageKey) => string) {
     putting: t("putting"),
     recovery: t("recovery"),
     penalty_impact: t("penalty"),
+    shot_quality: t("shotQuality"),
   };
   return labels[category] ?? category;
+}
+
+function itemLabel(item: string, t: (key: MessageKey) => string) {
+  const keys: Record<string, MessageKey> = {
+    putt_0_2: "putt_0_2",
+    putt_2_7: "putt_2_7",
+    putt_7_10: "putt_7_10",
+    putt_10_20: "putt_10_20",
+    putt_20_plus: "putt_20_plus",
+    putt_unknown: "putt_unknown",
+    short_0_10: "short_0_10",
+    short_10_20: "short_10_20",
+    short_20_30: "short_20_30",
+    short_30_40: "short_30_40",
+    short_chip: "short_chip",
+    mid_approach: "mid_approach",
+    long_approach: "long_approach",
+    control_40_60: "control_40_60",
+    control_60_75: "control_60_75",
+    control_75_90: "control_75_90",
+    long_iron: "long_iron",
+    pitching_wedge: "pitching_wedge",
+    other_iron: "other_iron",
+    driver: "driver",
+    wood_utility: "wood_utility",
+    iron_tee: "iron_tee",
+    other_tee: "other_tee",
+    rough: "rough",
+    bunker: "bunker",
+    hazard: "hazard",
+    trouble: "trouble",
+    other_recovery: "other_recovery",
+    greenside_bunker: "greenside_bunker",
+    fairway_bunker: "fairway_bunker",
+    ob: "ob",
+    hazard_penalty: "hazard_penalty",
+    unplayable: "unplayable",
+    tee_penalty: "tee_penalty",
+    other_penalty: "other_penalty",
+    tee_ob: "tee_ob",
+    tee_hazard: "tee_hazard",
+    tee_other_penalty: "tee_other_penalty",
+    non_tee_ob: "non_tee_ob",
+    non_tee_hazard: "non_tee_hazard",
+    non_tee_other_penalty: "non_tee_other_penalty",
+    strategy_issue: "strategyIssue",
+    technical_miss: "technicalMiss",
+    lucky_result: "luckyResult",
+    reproducible_shot: "reproducibleShot",
+    high_risk_shot: "high_risk_shot",
+  };
+  if (item in keys) return t(keys[item]);
+  return item.replaceAll("_", " ");
+}
+
+function itemMetricLabels(activeTab: string, t: (key: MessageKey) => string) {
+  if (activeTab === "putting") return [t("made"), t("conceded")];
+  if (activeTab === "recovery") return [t("recovered"), t("failedRecovery")];
+  if (activeTab === "penalty_impact") return [t("obPenalty"), t("hazardPenalty")];
+  if (activeTab === "shot_quality") return [t("rate"), t("primaryClub")];
+  if (activeTab === "short_game") return [t("upAndDownChance"), t("upAndDownSuccess")];
+  return [t("resultC"), t("penalty")];
+}
+
+function itemMetricCells(row: AnalysisItemSummary, activeTab: string, t: (key: MessageKey) => string) {
+  if (activeTab === "putting") {
+    return (
+      <>
+        <td className="px-4 py-3">{row.made_count ?? 0} ({formatPercent(row.made_rate)})</td>
+        <td className="px-4 py-3">{row.ok_count ?? 0} ({formatPercent(row.ok_rate)})</td>
+      </>
+    );
+  }
+  if (activeTab === "recovery") {
+    return (
+      <>
+        <td className="px-4 py-3">{row.recovered_count ?? 0} ({formatPercent(row.recovered_rate)})</td>
+        <td className="px-4 py-3">{row.failed_recovery_count ?? 0} ({formatPercent(row.failed_recovery_rate)})</td>
+      </>
+    );
+  }
+  if (activeTab === "penalty_impact") {
+    return (
+      <>
+        <td className="px-4 py-3">
+          {row.ob_count ?? 0} ({formatPercent(row.ob_rate)})
+        </td>
+        <td className="px-4 py-3">
+          {row.hazard_count ?? 0} ({formatPercent(row.hazard_rate)})
+        </td>
+        <td className="px-4 py-3">
+          {row.good_feel_penalty_count ?? 0} ({formatPercent(row.good_feel_penalty_rate)})
+        </td>
+      </>
+    );
+  }
+  if (activeTab === "shot_quality") {
+    return (
+      <>
+        <td className="px-4 py-3">{formatPercent(row.item_rate)}</td>
+        <td className="px-4 py-3">{row.primary_club_group ?? "-"}</td>
+      </>
+    );
+  }
+  if (activeTab === "short_game") {
+    return (
+      <>
+        <td className="px-4 py-3">{row.up_and_down_chance_count ?? 0}</td>
+        <td className="px-4 py-3">
+          {row.up_and_down_success_count ?? 0} ({formatPercent(row.up_and_down_success_rate)})
+        </td>
+      </>
+    );
+  }
+  return (
+    <>
+      <td className="px-4 py-3">{row.result_c_count} ({formatPercent(row.result_c_rate)})</td>
+      <td className="px-4 py-3">{row.penalty_count} ({formatPercent(row.penalty_rate)})</td>
+    </>
+  );
 }
 
 async function selectedRoundTrend(roundIds: string[], locale: "ko" | "en"): Promise<AnalyticsTrend> {
@@ -515,10 +678,135 @@ async function selectedRoundTrend(roundIds: string[], locale: "ko" | "en"): Prom
       score_to_par: round.score_to_par,
     })),
     category_summary,
+    item_summary: buildItemSummary(rounds, analytics.flatMap((item) => item.shot_values)),
     shot_quality_summary: buildShotQualitySummary(rounds),
     insights: analytics.flatMap((item) => item.insights),
   };
   return trend;
+}
+
+function buildItemSummary(rounds: RoundDetail[], shotValues: RoundAnalytics["shot_values"]): AnalysisItemSummary[] {
+  const shotValueById = new Map(shotValues.map((value) => [value.shot_id, value]));
+  const buckets = new Map<string, AnalysisItemSummary>();
+  for (const round of rounds) {
+    for (const hole of round.holes) {
+      for (const shot of hole.shots) {
+        for (const [group, item] of analysisItemsForShot(shot, hole.par)) {
+          const key = `${group}:${item}`;
+          const bucket = buckets.get(key) ?? {
+            group,
+            item,
+            count: 0,
+            total_shot_value: 0,
+            avg_shot_value: 0,
+            result_c_count: 0,
+            feel_c_count: 0,
+            penalty_count: 0,
+            made_count: 0,
+            ok_count: 0,
+            recovered_count: 0,
+            failed_recovery_count: 0,
+            ob_count: 0,
+            hazard_count: 0,
+            good_feel_penalty_count: 0,
+            item_rate: null,
+            primary_club_group: null,
+            up_and_down_chance_count: 0,
+            up_and_down_success_count: 0,
+            result_c_rate: null,
+            feel_c_rate: null,
+            penalty_rate: null,
+            made_rate: null,
+            ok_rate: null,
+            recovered_rate: null,
+            failed_recovery_rate: null,
+            ob_rate: null,
+            hazard_rate: null,
+            good_feel_penalty_rate: null,
+            up_and_down_success_rate: null,
+          };
+          bucket.count += 1;
+          bucket.total_shot_value += shotValueById.get(shot.id)?.shot_value ?? 0;
+          if (grade(shot.result_grade) === "C") bucket.result_c_count += 1;
+          if (grade(shot.feel_grade) === "C") bucket.feel_c_count += 1;
+          if (shot.penalty_strokes > 0) bucket.penalty_count += 1;
+          if (group === "putting") {
+            if (puttOk(shot)) bucket.ok_count = (bucket.ok_count ?? 0) + 1;
+            else if (puttMade(shot, hole.shots)) bucket.made_count = (bucket.made_count ?? 0) + 1;
+          }
+          if (group === "recovery") {
+            if (recoverySuccess(shot)) bucket.recovered_count = (bucket.recovered_count ?? 0) + 1;
+            else bucket.failed_recovery_count = (bucket.failed_recovery_count ?? 0) + 1;
+          }
+          if (group === "penalty_impact") {
+            const penaltyType = (shot.penalty_type ?? "").toUpperCase();
+            if (penaltyType === "OB") bucket.ob_count = (bucket.ob_count ?? 0) + 1;
+            if (penaltyType === "H") bucket.hazard_count = (bucket.hazard_count ?? 0) + 1;
+            const feel = grade(shot.feel_grade);
+            if (feel === "A" || feel === "B") {
+              bucket.good_feel_penalty_count = (bucket.good_feel_penalty_count ?? 0) + 1;
+            }
+          }
+          if (group === "shot_quality") {
+            bucket.primary_club_group = bucket.primary_club_group ?? clubGroup(shot.club_normalized ?? shot.club);
+          }
+          if (group === "short_game") {
+            bucket.up_and_down_chance_count = (bucket.up_and_down_chance_count ?? 0) + 1;
+            if (upAndDownSuccess(hole)) {
+              bucket.up_and_down_success_count = (bucket.up_and_down_success_count ?? 0) + 1;
+            }
+          }
+          buckets.set(key, bucket);
+        }
+      }
+    }
+  }
+  return [...buckets.values()].map((row) => ({
+    ...row,
+    total_shot_value: Math.round(row.total_shot_value * 1000) / 1000,
+    avg_shot_value: row.count ? Math.round((row.total_shot_value / row.count) * 1000) / 1000 : 0,
+    result_c_rate: row.count ? row.result_c_count / row.count : null,
+    feel_c_rate: row.count ? row.feel_c_count / row.count : null,
+    penalty_rate: row.count ? row.penalty_count / row.count : null,
+    made_rate: row.count ? (row.made_count ?? 0) / row.count : null,
+    ok_rate: row.count ? (row.ok_count ?? 0) / row.count : null,
+    recovered_rate: row.count ? (row.recovered_count ?? 0) / row.count : null,
+    failed_recovery_rate: row.count ? (row.failed_recovery_count ?? 0) / row.count : null,
+    ob_rate: row.count ? (row.ob_count ?? 0) / row.count : null,
+    hazard_rate: row.count ? (row.hazard_count ?? 0) / row.count : null,
+    good_feel_penalty_rate: row.count ? (row.good_feel_penalty_count ?? 0) / row.count : null,
+    item_rate: row.group === "shot_quality" ? row.count / Math.max(1, qualityShotCount(rounds)) : null,
+    up_and_down_success_rate: row.up_and_down_chance_count
+      ? (row.up_and_down_success_count ?? 0) / row.up_and_down_chance_count
+      : null,
+  })).sort((a, b) => a.group.localeCompare(b.group) || a.total_shot_value - b.total_shot_value);
+}
+
+function analysisItemsForShot(
+  shot: RoundDetail["holes"][number]["shots"][number],
+  par: number,
+): Array<[string, string]> {
+  const club = (shot.club_normalized || shot.club || "").toUpperCase();
+  const items: Array<[string, string]> = [];
+  if (club === "P" || club === "PT") {
+    items.push(["putting", puttingItem(shot.distance)]);
+  } else if (shot.shot_number === 1 && par >= 4) {
+    items.push(["off_the_tee", teeItem(club)]);
+    if (shot.penalty_strokes > 0) items.push(["penalty_impact", penaltyItem(shot, true)]);
+  } else if (shot.penalty_strokes > 0) {
+    items.push(["penalty_impact", penaltyItem(shot, false)]);
+  } else if (typeof shot.distance === "number" && shot.distance < 40) {
+    items.push(["short_game", shortGameItem(shot)]);
+  } else if (shot.start_lie === "R" || shot.start_lie === "B" || shot.start_lie === "H" || shot.start_lie === "O") {
+    items.push(["recovery", recoveryItem(shot)]);
+  } else if (typeof shot.distance === "number" && shot.distance < 90) {
+    items.push(["control_shot", controlShotItem(shot.distance)]);
+  } else if (typeof shot.distance === "number" && shot.distance >= 90) {
+    items.push(["iron_shot", ironItem(club)]);
+  }
+  const quality = qualityItem(shot);
+  if (quality) items.push(["shot_quality", quality]);
+  return items;
 }
 
 function buildShotQualitySummary(rounds: RoundDetail[]): ShotQualitySummary {
@@ -603,6 +891,117 @@ function buildShotQualitySummary(rounds: RoundDetail[]): ShotQualitySummary {
 function grade(value: string | null | undefined): "A" | "B" | "C" | null {
   const normalized = (value ?? "").toUpperCase();
   return normalized === "A" || normalized === "B" || normalized === "C" ? normalized : null;
+}
+
+function puttingItem(distance: number | null) {
+  if (distance === null) return "putt_unknown";
+  if (distance <= 2) return "putt_0_2";
+  if (distance <= 7) return "putt_2_7";
+  if (distance <= 10) return "putt_7_10";
+  if (distance <= 20) return "putt_10_20";
+  return "putt_20_plus";
+}
+
+function puttOk(shot: RoundDetail["holes"][number]["shots"][number]) {
+  return (shot.raw_text ?? "").toUpperCase().split(/\s+/).includes("OK") || shot.score_cost > 1;
+}
+
+function puttMade(
+  shot: RoundDetail["holes"][number]["shots"][number],
+  shots: RoundDetail["holes"][number]["shots"],
+) {
+  const putts = shots.filter((item) => ["P", "PT"].includes((item.club_normalized ?? item.club ?? "").toUpperCase()));
+  if (putts.length === 0) return false;
+  return shot.id === putts.reduce((latest, item) => item.shot_number > latest.shot_number ? item : latest).id && !puttOk(shot);
+}
+
+function shortGameItem(shot: RoundDetail["holes"][number]["shots"][number]) {
+  if ((shot.start_lie ?? "").toUpperCase() === "B") return "greenside_bunker";
+  const distance = shot.distance;
+  if (distance === null) return "short_unknown";
+  if (distance < 10) return "short_chip";
+  if (distance < 25) return "mid_approach";
+  return "long_approach";
+}
+
+function upAndDownSuccess(hole: RoundDetail["holes"][number]) {
+  return typeof hole.score === "number" && hole.score <= hole.par;
+}
+
+function controlShotItem(distance: number | null) {
+  if (distance === null) return "control_unknown";
+  if (distance < 60) return "control_40_60";
+  if (distance < 75) return "control_60_75";
+  return "control_75_90";
+}
+
+function ironItem(club: string) {
+  if (club === "I3" || club === "I4") return "long_iron";
+  if (["I5", "I6", "I7", "I8", "I9"].includes(club)) return club;
+  if (["IP", "IW", "IA", "PW"].includes(club)) return "pitching_wedge";
+  return "other_iron";
+}
+
+function teeItem(club: string) {
+  if (club === "D") return "driver";
+  if (club.startsWith("W") || club.startsWith("U")) return "wood_utility";
+  if (club.startsWith("I")) return "iron_tee";
+  return "other_tee";
+}
+
+function recoveryItem(shot: RoundDetail["holes"][number]["shots"][number]) {
+  const startLie = (shot.start_lie ?? "").toUpperCase();
+  if (startLie === "B") return typeof shot.distance === "number" && shot.distance < 40 ? "greenside_bunker" : "fairway_bunker";
+  if (startLie === "R") return "rough";
+  return "other_recovery";
+}
+
+function recoverySuccess(shot: RoundDetail["holes"][number]["shots"][number]) {
+  return !["R", "B", "H", "O"].includes((shot.end_lie ?? "").toUpperCase());
+}
+
+function penaltyItem(shot: RoundDetail["holes"][number]["shots"][number], isTee: boolean) {
+  const normalized = (shot.penalty_type ?? "").toUpperCase();
+  const prefix = isTee ? "tee" : "non_tee";
+  if (normalized === "OB") return `${prefix}_ob`;
+  if (normalized === "H") return `${prefix}_hazard`;
+  return `${prefix}_other_penalty`;
+}
+
+function qualityItem(shot: RoundDetail["holes"][number]["shots"][number]) {
+  const feel = grade(shot.feel_grade);
+  const result = grade(shot.result_grade);
+  if (result === "C" || shot.penalty_strokes > 0) {
+    if (feel === "A" || feel === "B") return "strategy_issue";
+    if (feel === "C") return "technical_miss";
+    return "high_risk_shot";
+  }
+  if (feel === "C" && (result === "A" || result === "B")) return "lucky_result";
+  if ((feel === "A" || feel === "B") && (result === "A" || result === "B")) return "reproducible_shot";
+  return null;
+}
+
+function qualityShotCount(rounds: RoundDetail[]) {
+  return rounds.reduce(
+    (sum, round) =>
+      sum + round.holes.reduce(
+        (holeSum, hole) =>
+          holeSum + hole.shots.filter((shot) => !["P", "PT"].includes((shot.club_normalized ?? shot.club ?? "").toUpperCase())).length,
+        0,
+      ),
+    0,
+  );
+}
+
+function clubGroup(club: string | null | undefined) {
+  const normalized = (club ?? "").toUpperCase();
+  if (normalized === "D") return "D";
+  if (normalized.startsWith("W")) return "W";
+  if (normalized.startsWith("U")) return "U";
+  if (["I3", "I4"].includes(normalized)) return "LI";
+  if (["I5", "I6", "I7"].includes(normalized)) return "MI";
+  if (normalized.startsWith("I") || ["48", "50", "52", "56", "58", "60"].includes(normalized)) return "SI";
+  return "OTHER";
 }
 
 function fallbackCategorySummaryFromRounds(rounds: RoundDetail[]) {

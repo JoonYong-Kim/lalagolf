@@ -184,8 +184,42 @@ export type AnalyticsTrend = {
     total_shot_value: number;
     avg_shot_value: number;
   }>;
+  item_summary: AnalysisItemSummary[];
   shot_quality_summary: ShotQualitySummary;
   insights: InsightUnit[];
+};
+
+export type AnalysisItemSummary = {
+  group: string;
+  item: string;
+  count: number;
+  total_shot_value: number;
+  avg_shot_value: number;
+  result_c_count: number;
+  feel_c_count: number;
+  penalty_count: number;
+  made_count?: number;
+  ok_count?: number;
+  recovered_count?: number;
+  failed_recovery_count?: number;
+  ob_count?: number;
+  hazard_count?: number;
+  good_feel_penalty_count?: number;
+  item_rate?: number | null;
+  primary_club_group?: string | null;
+  up_and_down_chance_count?: number;
+  up_and_down_success_count?: number;
+  result_c_rate: number | null;
+  feel_c_rate: number | null;
+  penalty_rate: number | null;
+  made_rate?: number | null;
+  ok_rate?: number | null;
+  recovered_rate?: number | null;
+  failed_recovery_rate?: number | null;
+  ob_rate?: number | null;
+  hazard_rate?: number | null;
+  good_feel_penalty_rate?: number | null;
+  up_and_down_success_rate?: number | null;
 };
 
 export type RoundAnalytics = {

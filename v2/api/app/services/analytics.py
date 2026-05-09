@@ -133,6 +133,7 @@ def get_trends(db: Session, *, owner: User, locale: str | None = None) -> dict[s
         "kpis": _kpis(rounds),
         "score_trend": _score_trend(rounds),
         "category_summary": category_summary,
+        "item_summary": _analysis_item_summary(rounds, shot_values),
         "shot_quality_summary": _shot_quality_summary_for_rounds(rounds),
         "insights": [_insight_response(insight, locale=locale) for insight in insights],
     }
@@ -633,6 +634,270 @@ def _category_label_ko(category: str) -> str:
         "penalty_impact": "페널티",
         "score": "스코어",
     }.get(category, category)
+
+
+def _analysis_item_summary(
+    rounds: list[Round],
+    shot_values: list[ShotValue],
+) -> list[dict[str, Any]]:
+    shot_value_by_id = {value.shot_id: value for value in shot_values}
+    buckets: dict[tuple[str, str], dict[str, Any]] = defaultdict(
+        lambda: {
+            "group": "",
+            "item": "",
+            "count": 0,
+            "total_shot_value": 0.0,
+            "result_c_count": 0,
+            "feel_c_count": 0,
+            "penalty_count": 0,
+            "made_count": 0,
+            "ok_count": 0,
+            "recovered_count": 0,
+            "failed_recovery_count": 0,
+            "ob_count": 0,
+            "hazard_count": 0,
+            "good_feel_penalty_count": 0,
+            "primary_clubs": defaultdict(int),
+            "up_and_down_chance_count": 0,
+            "up_and_down_success_count": 0,
+        }
+    )
+    for round_ in rounds:
+        for hole in round_.holes:
+            for shot in hole.shots:
+                for group, item in _analysis_items_for_shot(shot, hole):
+                    bucket = buckets[(group, item)]
+                    bucket["group"] = group
+                    bucket["item"] = item
+                    bucket["count"] += 1
+                    shot_value = shot_value_by_id.get(shot.id)
+                    bucket["total_shot_value"] += shot_value.shot_value if shot_value else 0
+                    if (shot.result_grade or "").upper() == "C":
+                        bucket["result_c_count"] += 1
+                    if (shot.feel_grade or "").upper() == "C":
+                        bucket["feel_c_count"] += 1
+                    if shot.penalty_strokes:
+                        bucket["penalty_count"] += 1
+                    if group == "putting":
+                        if _putt_ok(shot):
+                            bucket["ok_count"] += 1
+                        elif _putt_made(shot, hole):
+                            bucket["made_count"] += 1
+                    if group == "recovery":
+                        if _recovery_success(shot):
+                            bucket["recovered_count"] += 1
+                        else:
+                            bucket["failed_recovery_count"] += 1
+                    if group == "penalty_impact":
+                        penalty_type = (shot.penalty_type or "").upper()
+                        if penalty_type == "OB":
+                            bucket["ob_count"] += 1
+                        if penalty_type == "H":
+                            bucket["hazard_count"] += 1
+                        if (shot.feel_grade or "").upper() in {"A", "B"}:
+                            bucket["good_feel_penalty_count"] += 1
+                    if group == "shot_quality":
+                        bucket["primary_clubs"][_club_group(shot.club_normalized or shot.club)] += 1
+                    if group == "short_game":
+                        bucket["up_and_down_chance_count"] += 1
+                        if _up_and_down_success(hole):
+                            bucket["up_and_down_success_count"] += 1
+    rows = []
+    for bucket in buckets.values():
+        count = bucket["count"]
+        rows.append(
+            {
+                **bucket,
+                "total_shot_value": round(bucket["total_shot_value"], 3),
+                "avg_shot_value": round(bucket["total_shot_value"] / count, 3)
+                if count
+                else 0,
+                "result_c_rate": _safe_rate(bucket["result_c_count"], count),
+                "feel_c_rate": _safe_rate(bucket["feel_c_count"], count),
+                "penalty_rate": _safe_rate(bucket["penalty_count"], count),
+                "made_rate": _safe_rate(bucket["made_count"], count),
+                "ok_rate": _safe_rate(bucket["ok_count"], count),
+                "recovered_rate": _safe_rate(bucket["recovered_count"], count),
+                "failed_recovery_rate": _safe_rate(bucket["failed_recovery_count"], count),
+                "ob_rate": _safe_rate(bucket["ob_count"], count),
+                "hazard_rate": _safe_rate(bucket["hazard_count"], count),
+                "good_feel_penalty_rate": _safe_rate(bucket["good_feel_penalty_count"], count),
+                "item_rate": _safe_rate(count, _quality_denominator(rounds))
+                if bucket["group"] == "shot_quality"
+                else None,
+                "primary_club_group": _top_bucket(bucket["primary_clubs"]),
+                "up_and_down_success_rate": _safe_rate(
+                    bucket["up_and_down_success_count"],
+                    bucket["up_and_down_chance_count"],
+                ),
+            }
+        )
+    rows.sort(key=lambda item: (item["group"], item["total_shot_value"]))
+    return rows
+
+
+def _analysis_items_for_shot(shot: Shot, hole: Hole) -> list[tuple[str, str]]:
+    club = (shot.club_normalized or shot.club or "").upper()
+    items: list[tuple[str, str]] = []
+    if club in {"P", "PT"} or "PUTT" in club:
+        items.append(("putting", _putting_item(shot.distance)))
+    elif shot.shot_number == 1 and hole.par in {4, 5}:
+        items.append(("off_the_tee", _tee_item(club)))
+        if shot.penalty_strokes:
+            items.append(("penalty_impact", _penalty_item(shot, is_tee=True)))
+    elif shot.penalty_strokes:
+        items.append(("penalty_impact", _penalty_item(shot, is_tee=False)))
+    elif shot.distance is not None and shot.distance < 40:
+        items.append(("short_game", _short_game_item(shot)))
+    elif shot.start_lie in {"R", "B", "H", "O"}:
+        items.append(("recovery", _recovery_item(shot)))
+    elif shot.distance is not None and shot.distance < 90:
+        items.append(("control_shot", _control_shot_item(shot.distance)))
+    elif shot.distance is not None and shot.distance >= 90:
+        items.append(("iron_shot", _iron_item(club)))
+    else:
+        items.append(("control_shot", "unknown_distance"))
+
+    quality_item = _quality_item(shot)
+    if quality_item:
+        items.append(("shot_quality", quality_item))
+    return items
+
+
+def _putting_item(distance: int | None) -> str:
+    if distance is None:
+        return "putt_unknown"
+    if distance <= 2:
+        return "putt_0_2"
+    if distance <= 7:
+        return "putt_2_7"
+    if distance <= 10:
+        return "putt_7_10"
+    if distance <= 20:
+        return "putt_10_20"
+    return "putt_20_plus"
+
+
+def _putt_ok(shot: Shot) -> bool:
+    raw_text = (shot.raw_text or "").upper()
+    return "OK" in raw_text.split() or shot.score_cost > 1
+
+
+def _putt_made(shot: Shot, hole: Hole) -> bool:
+    putts = [
+        item
+        for item in hole.shots
+        if (item.club_normalized or item.club or "").upper() in {"P", "PT"}
+    ]
+    if not putts:
+        return False
+    return shot.id == max(putts, key=lambda item: item.shot_number).id and not _putt_ok(shot)
+
+
+def _short_game_item(shot: Shot) -> str:
+    if (shot.start_lie or "").upper() == "B":
+        return "greenside_bunker"
+    distance = shot.distance
+    if distance is None:
+        return "short_unknown"
+    if distance < 10:
+        return "short_chip"
+    if distance < 25:
+        return "mid_approach"
+    return "long_approach"
+
+
+def _up_and_down_success(hole: Hole) -> bool:
+    return hole.score is not None and hole.score <= hole.par
+
+
+def _control_shot_item(distance: int | None) -> str:
+    if distance is None:
+        return "control_unknown"
+    if distance < 60:
+        return "control_40_60"
+    if distance < 75:
+        return "control_60_75"
+    return "control_75_90"
+
+
+def _iron_item(club: str) -> str:
+    if club in {"I3", "I4"}:
+        return "long_iron"
+    if club in {"I5", "I6", "I7"}:
+        return club
+    if club in {"I8", "I9"}:
+        return club
+    if club in {"IP", "IW", "IA", "PW"}:
+        return "pitching_wedge"
+    return "other_iron"
+
+
+def _tee_item(club: str) -> str:
+    if club == "D":
+        return "driver"
+    if club.startswith("W") or club.startswith("U"):
+        return "wood_utility"
+    if club.startswith("I"):
+        return "iron_tee"
+    return "other_tee"
+
+
+def _recovery_item(shot: Shot) -> str:
+    start_lie = (shot.start_lie or "").upper()
+    if start_lie == "B":
+        if shot.distance is not None and shot.distance < 40:
+            return "greenside_bunker"
+        return "fairway_bunker"
+    if start_lie == "R":
+        return "rough"
+    return "other_recovery"
+
+
+def _recovery_success(shot: Shot) -> bool:
+    return (shot.end_lie or "").upper() not in {"R", "B", "H", "O"}
+
+
+def _penalty_item(shot: Shot, *, is_tee: bool) -> str:
+    penalty_type = (shot.penalty_type or "").upper()
+    prefix = "tee" if is_tee else "non_tee"
+    if penalty_type == "OB":
+        return f"{prefix}_ob"
+    if penalty_type == "H":
+        return f"{prefix}_hazard"
+    return f"{prefix}_other_penalty"
+
+
+def _quality_item(shot: Shot) -> str | None:
+    feel = (shot.feel_grade or "").upper()
+    result = (shot.result_grade or "").upper()
+    if result == "C" or shot.penalty_strokes:
+        if feel in {"A", "B"} and result == "C":
+            return "strategy_issue"
+        if feel == "C" and result == "C":
+            return "technical_miss"
+        return "high_risk_shot"
+    if feel == "C" and result in {"A", "B"}:
+        return "lucky_result"
+    if feel in {"A", "B"} and result in {"A", "B"}:
+        return "reproducible_shot"
+    return None
+
+
+def _quality_denominator(rounds: list[Round]) -> int:
+    return sum(
+        1
+        for round_ in rounds
+        for hole in round_.holes
+        for shot in hole.shots
+        if (shot.club_normalized or shot.club or "").upper() not in {"P", "PT"}
+    )
+
+
+def _top_bucket(values: dict[str, int]) -> str | None:
+    if not values:
+        return None
+    return max(values.items(), key=lambda item: item[1])[0]
 
 
 def _shot_quality_summary_for_rounds(rounds: list[Round]) -> dict[str, Any]:
