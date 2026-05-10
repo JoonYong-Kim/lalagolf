@@ -32,6 +32,10 @@ The v2 requirements and design documents live in the repository-level `docs/` di
 - `../docs/mvp_release_check_v2.md`
 - `../docs/mvp_plan_v2.md`
 - `../docs/implementation_plan_v2.md`
+- `../docs/insight_criteria_v2.md`
+- `../docs/insight_expansion_strategy_v2.md`
+- `../docs/round_logger_current.md`
+- `../docs/social_relations_v2.md`
 
 Use these documents as the source of truth until implementation-specific docs are added inside `v2/`.
 
@@ -129,6 +133,9 @@ Current UI behavior:
 - Round detail exposes scorecard actions in order: Share, Edit, Recalculate. Edit opens the existing
   upload review screen so raw source text can be corrected, reparsed, and saved back into the same
   round.
+- Round upload accepts the historical plain-text score format documented in
+  `../docs/input_text_format.md`; new files should follow the canonical format there, while legacy
+  variations remain parser-compatible.
 - Analysis shows deduplicated insights one at a time in a switchable insight widget. Each suggested
   routine exposes same-level actions for selecting a practice plan or selecting a next-round goal.
 - Round comparison is separate from Analysis. Selecting 2+ rounds from `/rounds` opens
@@ -141,14 +148,28 @@ Current UI behavior:
 - The entry/login UI keeps `Get started` on registration and opens the header `Login` action directly
   in login mode. Google sign-in is shown only when OAuth is configured.
 
-Start the worker skeleton:
+Start the worker:
+
+```bash
+cd v2
+python -m venv worker/.venv
+. worker/.venv/bin/activate
+pip install -e packages/analytics_core -e api -e worker
+export DATABASE_URL=postgresql+psycopg://lalagolf:lalagolf@localhost:5432/lalagolf_v2
+export REDIS_URL=redis://localhost:6379/0
+export ANALYSIS_ENQUEUE_ENABLED=true
+export RQ_QUEUES=analysis
+WORKER_USE_RQ=true python -m lalagolf_worker.main
+```
+
+For a quick import check without starting RQ:
 
 ```bash
 cd v2/worker
 python -m venv .venv
 . .venv/bin/activate
 pip install -e .
-WORKER_USE_RQ=true python -m app.main
+WORKER_RUN_ONCE=true python -m lalagolf_worker.main
 ```
 
 Install v2 as systemd services:

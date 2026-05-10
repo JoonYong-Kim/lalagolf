@@ -10,7 +10,7 @@ from lalagolf_analytics_core.boundary import (
 from lalagolf_analytics_core.insights import build_insight_unit, dedupe_insights
 from lalagolf_analytics_core.shot_model import normalize_shot_states
 from lalagolf_analytics_core.upload_normalizer import normalize_upload_content
-from sqlalchemy import select
+from sqlalchemy import and_, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import (
@@ -26,6 +26,8 @@ from app.models import (
 )
 from app.models.constants import COMPUTED_STATUS_FAILED, COMPUTED_STATUS_READY
 from app.services.insight_i18n import render_insight_payload
+
+PRIOR_BASELINE_ROUND_LIMIT = 10
 
 
 def parse_upload_preview(raw_content: str, *, file_name: str) -> dict[str, Any]:
@@ -53,11 +55,11 @@ def recalculate_round_metrics(db: Session, *, owner: User, round_id: uuid.UUID) 
     round_ = _get_round(db, owner=owner, round_id=round_id)
     try:
         _replace_round_metrics(db, round_)
-        _recalculate_expected_table(db, owner)
-        _replace_shot_values(db, owner=owner, round_=round_)
+        expected_table = _recalculate_round_prior_expected_table(db, owner=owner, round_=round_)
+        _replace_shot_values(db, owner=owner, round_=round_, expected_table=expected_table)
         active_insights = _replace_insights(db, owner=owner)
-        _replace_snapshot(db, owner=owner, insights=active_insights)
         round_.computed_status = COMPUTED_STATUS_READY
+        _replace_snapshot(db, owner=owner, insights=active_insights)
         db.commit()
     except Exception as exc:
         db.rollback()
@@ -104,10 +106,24 @@ def generate_insights(db: Session, *, owner: User) -> list[Insight]:
 
 
 def get_trends(db: Session, *, owner: User, locale: str | None = None) -> dict[str, Any]:
+    snapshot = _latest_trend_snapshot(db, owner)
+    if snapshot is not None:
+        payload = dict(snapshot.payload)
+        payload["insights"] = [
+            _insight_response(insight, locale=locale) for insight in _active_insights(db, owner)
+        ]
+        return payload
+
     rounds = _owned_rounds(db, owner)
     insights = _active_insights(db, owner)
     shot_values = db.scalars(select(ShotValue).where(ShotValue.user_id == owner.id)).all()
 
+    payload = _trend_payload(rounds, shot_values)
+    payload["insights"] = [_insight_response(insight, locale=locale) for insight in insights]
+    return payload
+
+
+def _trend_payload(rounds: list[Round], shot_values: list[ShotValue]) -> dict[str, Any]:
     category_totals: dict[str, dict[str, Any]] = defaultdict(
         lambda: {"category": "", "count": 0, "total_shot_value": 0.0}
     )
@@ -135,7 +151,7 @@ def get_trends(db: Session, *, owner: User, locale: str | None = None) -> dict[s
         "category_summary": category_summary,
         "item_summary": _analysis_item_summary(rounds, shot_values),
         "shot_quality_summary": _shot_quality_summary_for_rounds(rounds),
-        "insights": [_insight_response(insight, locale=locale) for insight in insights],
+        "insights": [],
     }
 
 
@@ -291,6 +307,50 @@ def _owned_rounds(db: Session, owner: User) -> list[Round]:
     ).all()
 
 
+def _prior_rounds_for_baseline(
+    db: Session,
+    *,
+    owner: User,
+    round_: Round,
+    limit: int = PRIOR_BASELINE_ROUND_LIMIT,
+) -> list[Round]:
+    rounds = db.scalars(
+        select(Round)
+        .options(selectinload(Round.holes).selectinload(Hole.shots))
+        .where(
+            Round.user_id == owner.id,
+            Round.deleted_at.is_(None),
+            Round.id != round_.id,
+            or_(
+                Round.play_date < round_.play_date,
+                and_(
+                    Round.play_date == round_.play_date,
+                    Round.created_at < round_.created_at,
+                ),
+            ),
+        )
+        .order_by(Round.play_date.desc(), Round.created_at.desc())
+        .limit(limit)
+    ).all()
+    return list(reversed(rounds))
+
+
+def _recent_rounds(
+    db: Session,
+    owner: User,
+    *,
+    limit: int = PRIOR_BASELINE_ROUND_LIMIT,
+) -> list[Round]:
+    rounds = db.scalars(
+        select(Round)
+        .options(selectinload(Round.holes).selectinload(Hole.shots))
+        .where(Round.user_id == owner.id, Round.deleted_at.is_(None))
+        .order_by(Round.play_date.desc(), Round.created_at.desc())
+        .limit(limit)
+    ).all()
+    return list(reversed(rounds))
+
+
 def _replace_round_metrics(db: Session, round_: Round) -> list[RoundMetric]:
     db.query(RoundMetric).filter(RoundMetric.round_id == round_.id).delete()
     holes = sorted(round_.holes, key=lambda item: item.hole_number)
@@ -349,22 +409,7 @@ def _metric(category: str, key: str, value: float | None, sample_count: int) -> 
 
 def _recalculate_expected_table(db: Session, owner: User) -> ExpectedScoreTable:
     rounds = _owned_rounds(db, owner)
-    category_samples: dict[str, list[int]] = defaultdict(list)
-    for round_ in rounds:
-        for hole in round_.holes:
-            remaining = hole.score or 0
-            for shot in sorted(hole.shots, key=lambda item: item.shot_number):
-                category_samples[_shot_category(shot, hole)].append(max(remaining, 0))
-                remaining -= (shot.score_cost or 1) + (shot.penalty_strokes or 0)
-
-    payload = {
-        category: {
-            "expected_strokes": round(sum(values) / len(values), 3),
-            "sample_count": len(values),
-        }
-        for category, values in category_samples.items()
-    }
-    sample_count = sum(len(values) for values in category_samples.values())
+    payload, sample_count = _expected_table_payload(rounds)
 
     table = db.scalars(
         select(ExpectedScoreTable).where(
@@ -381,9 +426,68 @@ def _recalculate_expected_table(db: Session, owner: User) -> ExpectedScoreTable:
     return table
 
 
-def _replace_shot_values(db: Session, *, owner: User, round_: Round) -> list[ShotValue]:
-    db.query(ShotValue).filter(ShotValue.round_id == round_.id).delete()
+def _recalculate_round_prior_expected_table(
+    db: Session,
+    *,
+    owner: User,
+    round_: Round,
+) -> ExpectedScoreTable:
+    rounds = _prior_rounds_for_baseline(db, owner=owner, round_=round_)
+    payload, sample_count = _expected_table_payload(rounds)
+    scope_key = _round_prior_baseline_scope_key(round_)
+
     table = db.scalars(
+        select(ExpectedScoreTable).where(
+            ExpectedScoreTable.user_id == owner.id,
+            ExpectedScoreTable.scope_type == "round_baseline",
+            ExpectedScoreTable.scope_key == scope_key,
+        )
+    ).first()
+    if table is None:
+        table = ExpectedScoreTable(
+            user_id=owner.id,
+            scope_type="round_baseline",
+            scope_key=scope_key,
+        )
+        db.add(table)
+    table.sample_count = sample_count
+    table.table_payload = payload
+    return table
+
+
+def _expected_table_payload(rounds: list[Round]) -> tuple[dict[str, Any], int]:
+    category_samples: dict[str, list[int]] = defaultdict(list)
+    for round_ in rounds:
+        for hole in round_.holes:
+            remaining = hole.score or 0
+            for shot in sorted(hole.shots, key=lambda item: item.shot_number):
+                category_samples[_shot_category(shot, hole)].append(max(remaining, 0))
+                remaining -= (shot.score_cost or 1) + (shot.penalty_strokes or 0)
+
+    payload = {
+        category: {
+            "expected_strokes": round(sum(values) / len(values), 3),
+            "sample_count": len(values),
+        }
+        for category, values in category_samples.items()
+    }
+    sample_count = sum(len(values) for values in category_samples.values())
+    return payload, sample_count
+
+
+def _round_prior_baseline_scope_key(round_: Round) -> str:
+    return f"round:{round_.id}:prior_recent:{PRIOR_BASELINE_ROUND_LIMIT}"
+
+
+def _replace_shot_values(
+    db: Session,
+    *,
+    owner: User,
+    round_: Round,
+    expected_table: ExpectedScoreTable | None = None,
+) -> list[ShotValue]:
+    db.query(ShotValue).filter(ShotValue.round_id == round_.id).delete()
+    table = expected_table or db.scalars(
         select(ExpectedScoreTable).where(
             ExpectedScoreTable.user_id == owner.id,
             ExpectedScoreTable.scope_type == "user",
@@ -391,6 +495,7 @@ def _replace_shot_values(db: Session, *, owner: User, round_: Round) -> list[Sho
         )
     ).first()
     expected = table.table_payload if table else {}
+    source_scope = table.scope_key if table else None
     rows: list[ShotValue] = []
     for hole in sorted(round_.holes, key=lambda item: item.hole_number):
         for shot in sorted(hole.shots, key=lambda item: item.shot_number):
@@ -417,7 +522,7 @@ def _replace_shot_values(db: Session, *, owner: User, round_: Round) -> list[Sho
                     shot_value=shot_value,
                     expected_lookup_level="category",
                     expected_sample_count=category_expected.get("sample_count") or 0,
-                    expected_source_scope="user",
+                    expected_source_scope=source_scope,
                     expected_confidence=_confidence(category_expected.get("sample_count") or 0),
                     payload={
                         "hole_number": hole.hole_number,
@@ -494,8 +599,18 @@ def _select_dashboard_insights(
 
 
 def _build_insight_candidates(db: Session, owner: User) -> list[dict[str, Any]]:
-    rounds = _owned_rounds(db, owner)
-    shot_values = db.scalars(select(ShotValue).where(ShotValue.user_id == owner.id)).all()
+    rounds = _recent_rounds(db, owner)
+    round_ids = [round_.id for round_ in rounds]
+    shot_values = (
+        db.scalars(
+            select(ShotValue).where(
+                ShotValue.user_id == owner.id,
+                ShotValue.round_id.in_(round_ids),
+            )
+        ).all()
+        if round_ids
+        else []
+    )
     candidates: list[dict[str, Any]] = []
     penalties = sum(hole.penalties for round_ in rounds for hole in round_.holes)
     putts = [hole.putts for round_ in rounds for hole in round_.holes if hole.putts is not None]
@@ -1062,14 +1177,48 @@ def _number_or_none(value: object) -> float | None:
 
 
 def _replace_snapshot(db: Session, *, owner: User, insights: list[Insight]) -> AnalysisSnapshot:
+    db.flush()
+    rounds = _owned_rounds(db, owner)
+    shot_values = db.scalars(select(ShotValue).where(ShotValue.user_id == owner.id)).all()
+    payload = _trend_payload(rounds, shot_values)
+    payload["insight_ids"] = [str(insight.id) for insight in insights]
+    db.query(AnalysisSnapshot).filter(
+        AnalysisSnapshot.user_id == owner.id,
+        AnalysisSnapshot.scope_type == "analytics_trends",
+        AnalysisSnapshot.scope_key == "all",
+    ).delete(synchronize_session=False)
     snapshot = AnalysisSnapshot(
         user_id=owner.id,
-        scope_type="window",
+        scope_type="analytics_trends",
         scope_key="all",
-        payload={"insight_ids": [str(insight.id) for insight in insights]},
+        payload=payload,
     )
     db.add(snapshot)
     return snapshot
+
+
+def _latest_trend_snapshot(db: Session, owner: User) -> AnalysisSnapshot | None:
+    snapshot = db.scalars(
+        select(AnalysisSnapshot)
+        .where(
+            AnalysisSnapshot.user_id == owner.id,
+            AnalysisSnapshot.scope_type == "analytics_trends",
+            AnalysisSnapshot.scope_key == "all",
+        )
+        .order_by(AnalysisSnapshot.created_at.desc())
+        .limit(1)
+    ).first()
+    if snapshot is None:
+        return None
+    changed_round_id = db.scalar(
+        select(Round.id)
+        .where(
+            Round.user_id == owner.id,
+            Round.updated_at > snapshot.created_at,
+        )
+        .limit(1)
+    )
+    return None if changed_round_id is not None else snapshot
 
 
 def _active_insights(db: Session, owner: User) -> list[Insight]:

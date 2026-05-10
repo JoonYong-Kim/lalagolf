@@ -2,7 +2,10 @@ import uuid
 from datetime import datetime
 from decimal import Decimal
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Numeric, String, Text
+from typing import Any
+
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, JSON, Numeric, String, Text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -58,6 +61,10 @@ class UserProfile(TimestampMixin, Base):
         Boolean,
         default=False,
         nullable=False,
+    )
+    club_bag: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON().with_variant(JSONB(), "postgresql"),
+        nullable=True,
     )
 
     user: Mapped[User] = relationship(back_populates="profile")

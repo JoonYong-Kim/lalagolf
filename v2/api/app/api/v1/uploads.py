@@ -14,6 +14,7 @@ from app.schemas.upload import (
     UploadReviewUpdateRequest,
     UploadRoundFileResponse,
 )
+from app.services.analysis_jobs import enqueue_round_analysis_job
 from app.services.uploads import (
     UploadError,
     UploadNotFoundError,
@@ -147,13 +148,13 @@ def commit_upload(
     payload: UploadCommitRequest,
     db: DbSession,
     current_user: CurrentUser,
+    settings: AppSettings,
 ) -> dict[str, UploadCommitResponse]:
     try:
         round_ = commit_upload_review(
             db,
             owner=current_user,
             upload_review_id=upload_review_id,
-            visibility=payload.visibility,
             share_course=payload.share_course,
             share_exact_date=payload.share_exact_date,
         )
@@ -179,11 +180,18 @@ def commit_upload(
             "computed_status": round_.computed_status,
         },
     )
+    analytics_job = enqueue_round_analysis_job(
+        db,
+        owner=current_user,
+        round_=round_,
+        settings=settings,
+    )
     return {
         "data": UploadCommitResponse(
             round_id=round_.id,
             computed_status=round_.computed_status,
-            analytics_job_id=round_.id,
+            analytics_job_id=analytics_job.id,
+            analytics_job_status=analytics_job.status,
         )
     }
 

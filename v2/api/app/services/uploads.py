@@ -21,7 +21,6 @@ from app.models.constants import (
     UPLOAD_REVIEW_STATUS_NEEDS_REVIEW,
     UPLOAD_REVIEW_STATUS_READY,
     VISIBILITY_PRIVATE,
-    VISIBILITY_VALUES,
 )
 from app.services.analytics import build_shot_facts_from_upload_preview, parse_upload_preview
 
@@ -143,10 +142,10 @@ def get_upload_review_raw_content(
 ) -> str | None:
     source_file = review.source_file
     if source_file is None or not source_file.storage_key:
-        return None
+        return _render_review_raw_content(review.parsed_round)
     storage_path = Path(settings.upload_storage_dir) / source_file.storage_key
     if not storage_path.exists():
-        return None
+        return _render_review_raw_content(review.parsed_round)
     return storage_path.read_text(encoding="utf-8")
 
 
@@ -202,20 +201,76 @@ def update_upload_review_raw_content(
     return review
 
 
+def _render_review_raw_content(parsed_round: dict[str, Any]) -> str | None:
+    if not isinstance(parsed_round, dict) or not parsed_round:
+        return None
+
+    lines: list[str] = []
+    tee_off_time = parsed_round.get("tee_off_time")
+    play_date = parsed_round.get("play_date")
+    if isinstance(tee_off_time, str) and tee_off_time.strip():
+        lines.append(tee_off_time.strip())
+    elif isinstance(play_date, str) and play_date.strip():
+        lines.append(play_date.strip())
+
+    course_name = parsed_round.get("course_name")
+    if isinstance(course_name, str) and course_name.strip():
+        lines.append(course_name.strip())
+
+    companions = parsed_round.get("companions") or []
+    if isinstance(companions, list) and companions:
+        lines.append(" ".join(str(name).strip() for name in companions if str(name).strip()))
+    elif len(lines) > 0:
+        lines.append("")
+
+    holes = parsed_round.get("holes") or []
+    if not isinstance(holes, list) or not holes:
+        return "\n".join(line for line in lines if line is not None).strip() or None
+
+    if lines and lines[-1] != "":
+        lines.append("")
+
+    for hole in holes:
+        if not isinstance(hole, dict):
+            continue
+        hole_number = hole.get("hole_number")
+        par = hole.get("par")
+        if hole_number is None or par is None:
+            continue
+        lines.append(f"{hole_number} P{par}")
+        for shot in hole.get("shots") or []:
+            if not isinstance(shot, dict):
+                continue
+            raw_text = shot.get("raw_text")
+            if isinstance(raw_text, str) and raw_text.strip():
+                lines.append(raw_text.strip())
+                continue
+            parts: list[str] = []
+            for key in ("club", "feel_grade", "result_grade"):
+                value = shot.get(key)
+                if isinstance(value, str) and value.strip():
+                    parts.append(value.strip())
+            distance = shot.get("distance")
+            if distance is not None:
+                parts.append(str(distance))
+            penalty_type = shot.get("penalty_type")
+            if isinstance(penalty_type, str) and penalty_type.strip():
+                parts.append(penalty_type.strip())
+            if parts:
+                lines.append(" ".join(parts))
+        lines.append("")
+
+    return "\n".join(lines).strip() or None
+
+
 def commit_upload_review(
     db: Session,
     *,
     owner: User,
     upload_review_id: UUID,
-    visibility: str = VISIBILITY_PRIVATE,
     share_course: bool = False,
     share_exact_date: bool = False,
 ) -> Round:
-    if visibility != VISIBILITY_PRIVATE:
-        raise UploadError("Only private visibility is allowed for MVP upload commit")
-    if visibility not in VISIBILITY_VALUES:
-        raise UploadError("Invalid visibility")
-
     review = get_upload_review(db, owner=owner, upload_review_id=upload_review_id)
     if review.status == UPLOAD_REVIEW_STATUS_COMMITTED and review.committed_round_id:
         round_ = db.get(Round, review.committed_round_id)
@@ -245,7 +300,7 @@ def commit_upload_review(
         owner=owner,
         round_=round_,
         parsed_round=parsed_round,
-        visibility=visibility,
+        visibility=VISIBILITY_PRIVATE,
         share_course=share_course,
         share_exact_date=share_exact_date,
     )
@@ -276,6 +331,7 @@ def _apply_parsed_round_to_round(
     round_.source_file_id = round_.source_file_id
     round_.course_name = _required_text(parsed_round.get("course_name"), "course_name")
     round_.play_date = _required_play_date(parsed_round)
+    round_.tee_off_time = parsed_round.get("tee_off_time")
     round_.total_score = parsed_round.get("total_score")
     round_.total_par = parsed_round.get("total_par")
     round_.score_to_par = parsed_round.get("score_to_par")

@@ -4,7 +4,7 @@
 
 GolfRaiders v2는 개인 골프 라운드 기록을 업로드, 분석, 공유하고, 자신의 기록을 기반으로 질의할 수 있는 멀티 유저 골프 분석 서비스다. v1의 라운드 파싱, 지표 계산, strokes gained 유사 분석, 추천 로직을 제품 코어로 유지하되, UI/UX, 계정 모델, 데이터 권한, 공유 경험, 자연어 질의 기능을 새 프로젝트 구조에서 재설계한다.
 
-MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, embedding 기반 RAG, social graph는 핵심 분석 경험과 link-only 공유가 검증된 뒤 단계적으로 확장한다.
+MVP는 private-first 개인 분석 앱으로 시작한다. 다만 라운드 공개 범위, follow, public round 검색, follow-scoped 댓글/좋아요, 지인 공개 스코어카드는 v2 범위에 포함한다. Public feed/profile과 embedding 기반 RAG는 핵심 분석 경험과 link-only 공유가 검증된 뒤 단계적으로 확장한다.
 
 ## 2. Goals
 
@@ -16,7 +16,7 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
 
 ## 3. Non-Goals
 
-- v2 초기 버전에서 모든 SNS 기능을 구현하지 않는다. 댓글, 좋아요, 팔로우는 단계적으로 도입한다.
+- Public feed/profile과 공개 피드 랭킹은 핵심 분석 경험보다 뒤에 둔다. 다만 라운드 공개 범위, 팔로우, public round 검색, follow-scoped 댓글/좋아요는 v2 범위에 포함한다.
 - 공식 핸디캡 산정 또는 경기 운영 플랫폼을 목표로 하지 않는다.
 - LLM이 자동으로 스윙 교정을 확정 진단하거나 의학적/부상 관련 조언을 제공하지 않는다.
 - 외부 상용 LLM 의존을 기본값으로 두지 않는다. Ollama 로컬 구동을 기본으로 한다.
@@ -34,9 +34,11 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
 - 사용자는 대시보드에서 최근 성과, 주요 약점, 개선 추세, 다음 연습 과제를 확인한다.
 - 사용자는 확인된 인사이트에서 연습 계획을 만들고, 연습 중 발견한 내용을 다이어리로 기록한다.
 - 사용자는 다음 라운드의 측정 가능한 목표를 만들고, 라운드 저장 후 달성 여부를 확인한다.
-- 사용자는 라운드를 private 또는 link-only로 공유한다. followers/public은 MVP 이후 도입한다.
+- 사용자는 업로드 후 라운드 상세에서 공개 범위를 private, followers, public 중 하나로 바꿀 수 있고, link-only 공유는 별도로 유지한다.
 - 사용자는 “최근 10라운드에서 드라이버가 스코어에 얼마나 영향을 줬어?”처럼 자연어로 질문한다.
 - 사용자는 특정 라운드, 기간, 골프장, 동반자, 클럽, 샷 유형을 필터링해 분석한다.
+- 사용자는 public으로 공개된 스코어카드를 검색해서 보고, follow가 허용된 지인의 라운드에 댓글과 좋아요를 남길 수 있다.
+- 사용자는 접근 가능한 다른 라운드와 자신의 라운드를 비교할 수 있다.
 - 운영자는 비정상 업로드, 신고된 공개 기록, LLM 오류 로그를 점검한다.
 
 ## 6. Product Scope
@@ -86,7 +88,7 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
   - Practice/Goals: 인사이트를 연습 계획, 다이어리, 다음 라운드 목표로 연결.
   - Ask GolfRaiders: 자연어 질의.
   - Upload Review: 파싱 결과 검토.
-  - Feed/Profile: post-MVP 공개 또는 공유된 라운드.
+- Social/Visibility: 공개 범위 설정, public round 검색, 팔로우, 댓글/좋아요, 접근 가능한 라운드 비교.
 - 디자인 방향:
   - 스포츠 기록장이 아니라 개인 퍼포먼스 분석 앱처럼 느껴지는 조용하고 밀도 있는 UI.
   - Linear/Stripe Dashboard 계열의 정돈된 SaaS 톤을 기준으로 하되, 골프 데이터의 맥락을 색상과 차트에 반영한다.
@@ -101,7 +103,7 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
   - 데스크톱은 좌측 사이드바를 기본으로 한다.
   - 모바일은 하단 탭 또는 상단 메뉴를 사용한다.
   - MVP 기본 메뉴는 Dashboard, Rounds, Analysis, Practice, Goals, Ask, Upload이다.
-  - Feed/Profile/Settings는 post-MVP 또는 별도 계정 설정 화면으로 분리한다.
+  - Social/Visibility는 별도 공개 기능 화면으로 분리하고, Settings는 별도 계정 설정 화면으로 분리한다.
 - Dashboard 구성:
   - 상단: 핵심 KPI와 최근 라운드 기반 스코어 추이 차트. 차트는 축 라벨, 평균선, 점수
     라벨, 최근 라운드별 스코어/파 대비 요약을 제공한다.
@@ -114,8 +116,11 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
     eagle/birdie/par/bogey/double+ 배지로 결과를 시각화한다.
   - 하단: 홀 선택 기반 샷 타임라인. 타임라인에는 expected before, shot cost,
     expected after, stroke gained를 함께 표시한다.
-  - 보조 영역: 스코어카드 헤더에 공유, 수정, 재계산 액션을 제공한다. 수정은 기존 업로드 검토
-    화면으로 이동해 원문 데이터를 수정/재파싱하고 기존 라운드를 갱신한다.
+  - 보조 영역: 스코어카드 헤더에 공유, 수정, 재계산, 동반자 비교 액션을 제공한다. 동반자 비교는
+    companion 정보가 있을 때 활성화되며, companion 매칭은 동반자 이름, 동일한 코스, 동일한
+    시간을 기준으로 한다. 최종적으로 비교 가능한지는 해당 라운드의 공개 기준을 따른다. 누르면
+    비교 가능한 라운드 후보를 보여준다. 수정은 기존 업로드 검토 화면으로 이동해 원문 데이터를
+    수정/재파싱하고 기존 라운드를 갱신한다.
 - Analysis 구성:
   - 상단 고정 필터: 기간, 골프장, 동반자, 클럽, 라운드 선택.
   - 탭: All, Tee, Short Game, Control Shot, Iron Shot, Putting, Recovery, Penalty.
@@ -208,8 +213,8 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
   - Ask: 내 라운드 기록에 자연어로 질문.
 - 프라이버시 신뢰 신호:
   - 기본 공개 범위는 private이다.
-  - 사용자는 라운드별로 private, link-only, public을 선택할 수 있다.
-  - public feed 도입 전 신고/숨김/차단 정책을 준비한다.
+  - 사용자는 라운드별로 private, followers, public을 선택할 수 있다.
+  - public round 검색과 social actions 도입 전 신고/숨김/차단 정책을 준비한다.
 - 로그인 후 `/` 접근은 개인 Dashboard로 이동한다.
 
 ### 6.6 Mobile Experience
@@ -225,7 +230,7 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
 - 모바일 내비게이션:
   - 하단 탭을 기본으로 한다.
   - MVP 탭은 Dashboard, Rounds, Analysis, Practice, Goals, Ask, Upload를 가로 스크롤로 제공한다.
-  - Feed, Profile, Settings는 post-MVP 또는 더보기 메뉴에서 접근한다.
+  - Social/Visibility와 Settings는 더보기 또는 별도 계정 화면에서 접근한다.
 - 모바일 Dashboard:
   - 첫 화면에는 최근 스코어 추세, 마지막 라운드 요약, 우선순위 인사이트 1~3개만 노출한다.
   - 긴 비교 테이블은 기본 숨김 처리하고, 차트/요약/상세 보기 순서로 드릴다운한다.
@@ -262,16 +267,15 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
   - 날짜, 골프장, 클럽 필터는 키보드 입력보다 선택 중심 UI를 우선한다.
   - 모바일에서 텍스트가 버튼/칩 밖으로 넘치지 않도록 줄바꿈과 최소/최대 너비를 정의한다.
 
-### 6.7 Sharing & Social
+### 6.7 Visibility & Social
 
-- 공개 범위:
-  - private: 본인만.
-  - link-only: 링크를 아는 사용자.
-  - public: 공개 프로필/피드 노출.
-  - followers: 팔로워만. MVP 이후 도입 가능.
-- 공유 가능한 단위: 라운드 요약, 특정 라운드 상세, 기간 분석 스냅샷, 연습 과제.
-- 공개 화면에서는 민감 정보 제거 옵션 제공: 동반자명, 정확한 날짜, 메모 숨김.
-- 신고/숨김/차단 기능은 public feed 도입 전 필수.
+- 업로드 직후 라운드는 항상 private으로 저장한다.
+- 라운드 상세에서 `private`, `followers`, `public` 공개 범위를 선택할 수 있다.
+- link-only 공유는 별도 토큰 공유로 유지한다.
+- public 라운드는 누구나 검색할 수 있다.
+- follow가 허용된 지인 범위에서만 댓글과 좋아요를 허용한다.
+- 동반자 비교는 접근 가능한 다른 라운드와 내 라운드를 기존 두 라운드 선택 비교 UI로 비교하는 기능으로 일반화한다.
+- companion 정보는 비교 후보를 좁히는 보조 정보로 쓴다.
 
 ### 6.8 LLM / Ollama
 
@@ -338,7 +342,7 @@ MVP는 private-first 개인 분석 앱으로 제한한다. Public feed/profile, 
 - Goals: GET/POST /goals, PATCH /goals/{id}, POST /goals/{id}/evaluate.
 - Sharing: POST /shares, PATCH /shares/{id}, GET /s/{token}.
 - Public: GET /.
-- Social: post-MVP.
+- Social: visibility settings, public round search, follows, comments, likes, companion compare.
 - LLM: POST /chat/threads, POST /chat/threads/{id}/messages, GET /chat/threads/{id}.
 - Admin: GET /admin/uploads/errors.
 
@@ -360,7 +364,7 @@ MVP에 반드시 포함:
 MVP 이후:
 
 - full public home과 sample analysis preview.
-- public feed, followers, comments, likes.
+- public feed, public profile, ranking.
 - embedding/RAG/citation framework.
 - 코치/그룹 기능.
 - 자동 라운드 요약 이미지 생성.

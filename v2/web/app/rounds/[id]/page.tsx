@@ -5,38 +5,128 @@ import { use, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/app/components/AppShell";
 import {
+  createRoundComment,
   createShare,
   getRound,
+  getComparisonCandidates,
   getRoundAnalytics,
+  getRoundAnalysisJob,
+  getRoundComments,
   requestRoundRecalculation,
+  updateRoundVisibility,
+  likeRound,
+  unlikeRound,
+  waitForAnalysisJob,
+  type CompareCandidate,
+  type AnalysisJob,
   type RoundAnalytics,
+  type RoundComment,
   type RoundDetail,
   type RoundHole,
+  type RoundLikeState,
   type ShotQualitySummary,
 } from "@/lib/api";
 import { useI18n, type MessageKey } from "@/lib/i18n";
+
+type RoundVisibility = "private" | "followers" | "public" | "link_only";
+type VisibilityChoice = "private" | "followers" | "public";
 
 export default function RoundDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [round, setRound] = useState<RoundDetail | null>(null);
   const [analytics, setAnalytics] = useState<RoundAnalytics | null>(null);
   const [shareUrl, setShareUrl] = useState("");
+  const [visibilityDraft, setVisibilityDraft] = useState<RoundVisibility>("private");
+  const [visibilityMessage, setVisibilityMessage] = useState("");
+  const [visibilitySaving, setVisibilitySaving] = useState(false);
   const [selectedHoleNumber, setSelectedHoleNumber] = useState(1);
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const [compareCandidates, setCompareCandidates] = useState<CompareCandidate[]>([]);
+  const [showCompareCandidates, setShowCompareCandidates] = useState(false);
+  const [comments, setComments] = useState<RoundComment[]>([]);
+  const [commentBody, setCommentBody] = useState("");
+  const [likeState, setLikeState] = useState<RoundLikeState | null>(null);
+  const [socialError, setSocialError] = useState("");
   const { t } = useI18n();
 
   useEffect(() => {
+    let cancelled = false;
     getRound(id)
       .then((loaded) => {
+        if (cancelled) return;
         setRound(loaded);
+        setVisibilityDraft(loaded.visibility as RoundVisibility);
         setSelectedHoleNumber(loaded.holes[0]?.hole_number ?? 1);
+        if (loaded.companions.length > 0) {
+          getComparisonCandidates(loaded.id)
+            .then((candidates) => {
+              if (!cancelled) setCompareCandidates(candidates);
+            })
+            .catch(() => {
+              if (!cancelled) setCompareCandidates([]);
+            });
+        } else {
+          setCompareCandidates([]);
+        }
+        if (loaded.visibility !== "private" && !loaded.upload_review_id) {
+          getRoundComments(loaded.id)
+            .then((loadedComments) => {
+              if (!cancelled) setComments(loadedComments);
+            })
+            .catch(() => {
+              if (!cancelled) setComments([]);
+            });
+        } else {
+          setComments([]);
+        }
+        if (loaded.computed_status === "pending") {
+          setIsRecalculating(true);
+          getRoundAnalysisJob(loaded.id)
+            .then((job) => trackAnalysisJob(job.id))
+            .catch(() => {
+              setStatus(t("analysisJobStillPending"));
+              setIsRecalculating(false);
+            });
+        }
       })
       .catch((roundError) => {
+        if (cancelled) return;
         setError(roundError instanceof Error ? roundError.message : t("loadingRound"));
       });
-    getRoundAnalytics(id).then(setAnalytics).catch(() => setAnalytics(null));
+    getRoundAnalytics(id)
+      .then((loadedAnalytics) => {
+        if (!cancelled) setAnalytics(loadedAnalytics);
+      })
+      .catch(() => {
+        if (!cancelled) setAnalytics(null);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
+
+  async function refreshRoundAndAnalytics() {
+    const [loadedRound, loadedAnalytics] = await Promise.all([
+      getRound(id),
+      getRoundAnalytics(id),
+    ]);
+    setRound(loadedRound);
+    setAnalytics(loadedAnalytics);
+  }
+
+  async function trackAnalysisJob(jobId: string) {
+    try {
+      const job = await waitForAnalysisJob(jobId);
+      setStatus(analysisJobStatusMessage(job, t));
+      if (job.status === "succeeded") {
+        await refreshRoundAndAnalytics();
+      }
+    } finally {
+      setIsRecalculating(false);
+    }
+  }
 
   const selectedHole = useMemo(
     () => round?.holes.find((hole) => hole.hole_number === selectedHoleNumber) ?? null,
@@ -53,13 +143,17 @@ export default function RoundDetailPage({ params }: { params: Promise<{ id: stri
   async function recalculate() {
     setStatus(t("requestingRecalculation"));
     setError("");
+    setIsRecalculating(true);
     try {
       const result = await requestRoundRecalculation(id);
       setRound((current) => current ? { ...current, computed_status: result.computed_status } : current);
       setStatus(t("recalculationQueued"));
+      await trackAnalysisJob(result.analytics_job_id);
     } catch (recalculateError) {
       setError(recalculateError instanceof Error ? recalculateError.message : t("requestingRecalculation"));
       setStatus("");
+    } finally {
+      setIsRecalculating(false);
     }
   }
 
@@ -76,6 +170,45 @@ export default function RoundDetailPage({ params }: { params: Promise<{ id: stri
     }
   }
 
+  async function saveVisibility(nextVisibility: VisibilityChoice) {
+    if (!round) return;
+    setVisibilitySaving(true);
+    setVisibilityMessage("");
+    try {
+      const updated = await updateRoundVisibility(round.id, nextVisibility);
+      setVisibilityDraft(updated.visibility as VisibilityChoice);
+      setRound((current) => (current ? { ...current, visibility: updated.visibility } : current));
+      setVisibilityMessage(t("saved"));
+    } catch (visibilityError) {
+      setError(visibilityError instanceof Error ? visibilityError.message : t("visibilityLabel"));
+    } finally {
+      setVisibilitySaving(false);
+    }
+  }
+
+  async function addComment() {
+    if (!round || !commentBody.trim()) return;
+    setSocialError("");
+    try {
+      const comment = await createRoundComment(round.id, commentBody.trim());
+      setComments((current) => [...current, comment]);
+      setCommentBody("");
+    } catch (commentError) {
+      setSocialError(commentError instanceof Error ? commentError.message : t("comment"));
+    }
+  }
+
+  async function toggleLike() {
+    if (!round) return;
+    setSocialError("");
+    try {
+      const next = likeState?.liked ? await unlikeRound(round.id) : await likeRound(round.id);
+      setLikeState(next);
+    } catch (likeError) {
+      setSocialError(likeError instanceof Error ? likeError.message : t("like"));
+    }
+  }
+
   return (
     <AppShell eyebrow={t("roundDetail")} title={round?.course_name ?? t("round")}>
       <div className="mt-5 space-y-5">
@@ -85,6 +218,53 @@ export default function RoundDetailPage({ params }: { params: Promise<{ id: stri
           </div>
         )}
         {error && <div className="rounded-md border border-[#e4c0bd] bg-[#fff2f0] p-3 text-sm text-[#a34242]">{error}</div>}
+
+        <section className="rounded-md border border-line bg-white px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-semibold text-muted">{t("visibilityLabel")}</span>
+              <VisibilityToggle
+                current={visibilityDraft}
+                disabled={visibilitySaving}
+                onChange={saveVisibility}
+                t={t}
+              />
+              {visibilityDraft === "link_only" && (
+                <span className="rounded-full border border-line bg-surface px-2 py-1 text-xs text-muted">
+                  {t("linkOnly")}
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button className="rounded-md border border-line px-3 py-2 text-sm font-semibold" onClick={shareRound}>
+                {t("share")}
+              </button>
+              {(round?.companions?.length ?? 0) > 0 ? (
+                <button
+                  className="rounded-md border border-line px-3 py-2 text-sm font-semibold"
+                  onClick={() => setShowCompareCandidates((current) => !current)}
+                >
+                  {t("companionCompare")}
+                </button>
+              ) : null}
+              {round?.upload_review_id && (
+                <Link
+                  className="rounded-md border border-line px-3 py-2 text-sm font-semibold"
+                  href={`/upload/${round.upload_review_id}/review?view=raw`}
+                >
+                  {t("edit")}
+                </Link>
+              )}
+              <button
+                className="rounded-md border border-line px-3 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={isRecalculating}
+                onClick={recalculate}
+              >
+                {t("recalculate")}
+              </button>
+            </div>
+          </div>
+        </section>
 
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <Metric label={t("date")} value={round?.play_date ?? "-"} />
@@ -121,24 +301,8 @@ export default function RoundDetailPage({ params }: { params: Promise<{ id: stri
         )}
 
         <section className="rounded-md border border-line bg-white">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+          <div className="border-b border-line px-4 py-3">
             <h2 className="text-base font-semibold">{t("scorecard")}</h2>
-            <div className="flex flex-wrap gap-2">
-              <button className="rounded-md border border-line px-3 py-2 text-sm font-semibold" onClick={shareRound}>
-                {t("share")}
-              </button>
-              {round?.upload_review_id && (
-                <Link
-                  className="rounded-md border border-line px-3 py-2 text-sm font-semibold"
-                  href={`/upload/${round.upload_review_id}/review`}
-                >
-                  {t("edit")}
-                </Link>
-              )}
-              <button className="rounded-md border border-line px-3 py-2 text-sm font-semibold" onClick={recalculate}>
-                {t("recalculate")}
-              </button>
-            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] table-fixed text-center text-sm">
@@ -167,8 +331,71 @@ export default function RoundDetailPage({ params }: { params: Promise<{ id: stri
             </p>
           )}
           {status && <p className="border-t border-line px-4 py-3 text-sm text-muted">{status}</p>}
+          {visibilityMessage && (
+            <p className="border-t border-line px-4 py-3 text-sm text-green-700">{visibilityMessage}</p>
+          )}
           {shareUrl && <p className="border-t border-line px-4 py-3 text-sm text-green-700">{shareUrl}</p>}
         </section>
+
+        {(round?.companions?.length ?? 0) > 0 && showCompareCandidates && (
+          <section className="rounded-md border border-line bg-white">
+            <div className="border-b border-line px-4 py-3">
+              <h2 className="text-base font-semibold">{t("compareCandidates")}</h2>
+            </div>
+            <div className="grid gap-2 p-4">
+              {compareCandidates.length === 0 ? (
+                <p className="text-sm text-muted">{t("noRoundsMatch")}</p>
+              ) : (
+                compareCandidates.map((candidate) => (
+                  <Link
+                    className="flex items-center justify-between rounded-md border border-line px-3 py-2 text-sm hover:bg-surface"
+                    href={`/rounds/compare?roundIds=${id},${candidate.round_id}`}
+                    key={candidate.round_id}
+                  >
+                    <span>
+                      {candidate.owner_display_name} · {candidate.course_name}
+                    </span>
+                    <span className="text-muted">{candidate.play_date}</span>
+                  </Link>
+                ))
+              )}
+            </div>
+          </section>
+        )}
+
+        {round?.visibility !== "private" && !round?.upload_review_id && (
+          <section className="rounded-md border border-line bg-white">
+            <div className="flex items-center justify-between border-b border-line px-4 py-3">
+              <h2 className="text-base font-semibold">{t("comments")}</h2>
+              <button className="rounded-md border border-line px-3 py-2 text-sm font-semibold" onClick={toggleLike}>
+                {t("like")}
+              </button>
+            </div>
+            <div className="grid gap-3 p-4">
+              <textarea
+                className="min-h-24 rounded-md border border-line bg-white p-3 text-sm"
+                placeholder={t("comment")}
+                value={commentBody}
+                onChange={(event) => setCommentBody(event.target.value)}
+              />
+              <div className="flex justify-end">
+                <button className="rounded-md border border-line px-3 py-2 text-sm font-semibold" onClick={addComment}>
+                  {t("comment")}
+                </button>
+              </div>
+              {socialError && <p className="text-sm text-[#b42318]">{socialError}</p>}
+              {comments.map((comment) => (
+                <article className="rounded-md border border-line bg-surface p-3 text-sm" key={comment.id}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold">{comment.author_display_name ?? comment.author_handle ?? "-"}</p>
+                    <span className="text-xs text-muted">{comment.created_at}</span>
+                  </div>
+                  <p className="mt-2 whitespace-pre-wrap">{comment.body}</p>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="grid gap-5 lg:grid-cols-[0.7fr_1.3fr]">
           <div className="rounded-md border border-line bg-white p-4">
@@ -257,6 +484,46 @@ function ScorecardRow({
         </td>
       ))}
     </tr>
+  );
+}
+
+function VisibilityToggle({
+  current,
+  disabled,
+  onChange,
+  t,
+}: {
+  current: VisibilityChoice | "link_only";
+  disabled: boolean;
+  onChange: (next: VisibilityChoice) => Promise<void>;
+  t: (key: MessageKey) => string;
+}) {
+  const active = current === "link_only" ? "private" : current;
+  const options: Array<{ value: VisibilityChoice; label: string }> = [
+    { value: "private", label: t("privateVisibility") },
+    { value: "followers", label: t("followersVisibility") },
+    { value: "public", label: t("publicVisibility") },
+  ];
+
+  return (
+    <div className="inline-flex overflow-hidden rounded-md border border-line bg-white">
+      {options.map((option) => {
+        const isActive = active === option.value;
+        return (
+          <button
+            className={`px-3 py-2 text-sm font-semibold transition ${
+              isActive ? "bg-green-700 text-white" : "bg-white text-ink hover:bg-surface"
+            } ${disabled ? "cursor-not-allowed opacity-60" : ""}`}
+            disabled={disabled}
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            type="button"
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
   );
 }
 
@@ -388,6 +655,17 @@ function strokeGainedRows(analytics: RoundAnalytics | null) {
     rows.set(value.category, row);
   }
   return [...rows.values()].sort((a, b) => a.total - b.total);
+}
+
+function analysisJobStatusMessage(
+  job: AnalysisJob,
+  t: (
+    key: "analysisJobSucceeded" | "analysisJobFailed" | "analysisJobStillPending"
+  ) => string,
+) {
+  if (job.status === "succeeded") return t("analysisJobSucceeded");
+  if (job.status === "failed") return `${t("analysisJobFailed")} ${job.error_message ?? ""}`.trim();
+  return t("analysisJobStillPending");
 }
 
 function categoryLabel(category: string, t: (key: "tee" | "approach" | "shortGame" | "controlShot" | "ironShot" | "putting" | "recovery" | "penalty") => string) {

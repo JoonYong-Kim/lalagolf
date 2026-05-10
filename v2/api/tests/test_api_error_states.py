@@ -73,7 +73,7 @@ def test_commit_not_ready_upload_returns_conflict(client: TestClient) -> None:
 
     response = client.post(
         f"/api/v1/uploads/{upload_review_id}/commit",
-        json={"visibility": "private", "share_course": False, "share_exact_date": False},
+        json={"share_course": False, "share_exact_date": False},
     )
 
     assert response.status_code == 409

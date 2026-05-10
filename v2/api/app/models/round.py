@@ -43,7 +43,7 @@ class Round(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             name="visibility",
         ),
         CheckConstraint(
-            "computed_status in ('pending', 'ready', 'stale', 'failed')",
+            "computed_status in ('draft', 'pending', 'ready', 'stale', 'failed')",
             name="computed_status",
         ),
         Index("ix_rounds_user_play_date", "user_id", "play_date"),
@@ -69,6 +69,7 @@ class Round(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     course_name: Mapped[str] = mapped_column(Text, nullable=False)
     course_variant: Mapped[str | None] = mapped_column(Text, nullable=True)
     play_date: Mapped[date] = mapped_column(Date, nullable=False)
+    tee_off_time: Mapped[str | None] = mapped_column(Text, nullable=True)
     tee: Mapped[str | None] = mapped_column(Text, nullable=True)
     total_score: Mapped[int | None] = mapped_column(nullable=True)
     total_par: Mapped[int | None] = mapped_column(nullable=True)

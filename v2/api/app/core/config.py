@@ -11,6 +11,11 @@ class Settings(BaseSettings):
         validation_alias="DATABASE_URL",
     )
     redis_url: str = Field(default="redis://localhost:6379/0", validation_alias="REDIS_URL")
+    analysis_enqueue_enabled: bool = Field(
+        default=False,
+        validation_alias="ANALYSIS_ENQUEUE_ENABLED",
+    )
+    analysis_queue_name: str = Field(default="analysis", validation_alias="ANALYSIS_QUEUE_NAME")
     secret_key: str = Field(default="change-me", validation_alias="SECRET_KEY")
     session_cookie_name: str = Field(
         default="lalagolf_session",

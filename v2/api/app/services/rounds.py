@@ -15,6 +15,7 @@ from app.schemas.round import (
     ShotResponse,
 )
 from app.services.analytics import active_priority_insights
+from app.services.social import SocialNotFoundError, load_viewable_round
 
 
 class RoundNotFoundError(Exception):
@@ -52,19 +53,28 @@ def list_rounds(
 
 
 def get_round_detail(db: Session, *, owner: User, round_id: uuid.UUID) -> RoundDetailResponse:
-    round_ = _get_round(db, owner=owner, round_id=round_id)
-    return _round_detail(round_, upload_review_id=_upload_review_id(db, owner=owner, round_id=round_.id))
+    round_ = _get_viewable_round(db, viewer=owner, round_id=round_id)
+    return _round_detail(
+        round_,
+        viewer=owner,
+        upload_review_id=_upload_review_id(db, owner=owner, round_id=round_.id)
+        if round_.user_id == owner.id
+        else None,
+    )
 
 
 def list_round_holes(db: Session, *, owner: User, round_id: uuid.UUID) -> list[HoleResponse]:
-    round_ = _get_round(db, owner=owner, round_id=round_id)
-    return [_hole_response(hole, include_shots=True) for hole in _sorted_holes(round_)]
+    round_ = _get_viewable_round(db, viewer=owner, round_id=round_id)
+    return [
+        _hole_response(hole, include_shots=True, include_raw_text=round_.user_id == owner.id)
+        for hole in _sorted_holes(round_)
+    ]
 
 
 def list_round_shots(db: Session, *, owner: User, round_id: uuid.UUID) -> list[ShotResponse]:
-    round_ = _get_round(db, owner=owner, round_id=round_id)
+    round_ = _get_viewable_round(db, viewer=owner, round_id=round_id)
     return [
-        _shot_response(shot)
+        _shot_response(shot, include_raw_text=round_.user_id == owner.id)
         for hole in _sorted_holes(round_)
         for shot in sorted(hole.shots, key=lambda item: item.shot_number)
     ]
@@ -78,13 +88,35 @@ def update_round(
     values: dict,
 ) -> RoundDetailResponse:
     round_ = _get_round(db, owner=owner, round_id=round_id)
-    for field in ("course_name", "play_date", "tee", "weather", "target_score", "notes_private"):
+    changed_fields: set[str] = set()
+    for field in (
+        "course_name",
+        "play_date",
+        "tee_off_time",
+        "tee",
+        "weather",
+        "target_score",
+        "notes_private",
+        "visibility",
+        "share_course",
+        "share_exact_date",
+    ):
         if field in values:
             setattr(round_, field, values[field])
-    _mark_round_stale(round_)
+            changed_fields.add(field)
+    if changed_fields & {
+        "course_name",
+        "play_date",
+        "tee_off_time",
+        "tee",
+        "weather",
+        "target_score",
+        "notes_private",
+    }:
+        _mark_round_stale(round_)
     db.commit()
     db.refresh(round_)
-    return _round_detail(_get_round(db, owner=owner, round_id=round_id))
+    return _round_detail(_get_round(db, owner=owner, round_id=round_id), viewer=owner)
 
 
 def delete_round(db: Session, *, owner: User, round_id: uuid.UUID) -> None:
@@ -248,6 +280,13 @@ def _get_round(db: Session, *, owner: User, round_id: uuid.UUID) -> Round:
     return round_
 
 
+def _get_viewable_round(db: Session, *, viewer: User, round_id: uuid.UUID) -> Round:
+    try:
+        return load_viewable_round(db, viewer=viewer, round_id=round_id)
+    except SocialNotFoundError as exc:
+        raise RoundNotFoundError from exc
+
+
 def _round_item(round_: Round) -> RoundListItem:
     return RoundListItem(
         id=round_.id,
@@ -258,20 +297,30 @@ def _round_item(round_: Round) -> RoundListItem:
         score_to_par=round_.score_to_par,
         hole_count=round_.hole_count,
         computed_status=round_.computed_status,
+        visibility=round_.visibility,
         companions=[companion.name for companion in round_.companions],
     )
 
 
-def _round_detail(round_: Round, *, upload_review_id: uuid.UUID | None = None) -> RoundDetailResponse:
+def _round_detail(
+    round_: Round,
+    *,
+    viewer: User,
+    upload_review_id: uuid.UUID | None = None,
+) -> RoundDetailResponse:
+    is_owner = round_.user_id == viewer.id
     return RoundDetailResponse(
         **_round_item(round_).model_dump(),
-        upload_review_id=upload_review_id,
+        upload_review_id=upload_review_id if is_owner else None,
+        tee_off_time=round_.tee_off_time,
         tee=round_.tee,
         weather=round_.weather,
         target_score=round_.target_score,
-        visibility=round_.visibility,
-        notes_private=round_.notes_private,
-        holes=[_hole_response(hole, include_shots=True) for hole in _sorted_holes(round_)],
+        notes_private=round_.notes_private if is_owner else None,
+        holes=[
+            _hole_response(hole, include_shots=True, include_raw_text=is_owner)
+            for hole in _sorted_holes(round_)
+        ],
         insights=[],
         metrics=_round_metrics(round_),
     )
@@ -286,7 +335,12 @@ def _upload_review_id(db: Session, *, owner: User, round_id: uuid.UUID) -> uuid.
     )
 
 
-def _hole_response(hole: Hole, *, include_shots: bool) -> HoleResponse:
+def _hole_response(
+    hole: Hole,
+    *,
+    include_shots: bool,
+    include_raw_text: bool = True,
+) -> HoleResponse:
     return HoleResponse(
         id=hole.id,
         round_id=hole.round_id,
@@ -300,14 +354,17 @@ def _hole_response(hole: Hole, *, include_shots: bool) -> HoleResponse:
         sand_save=hole.sand_save,
         penalties=hole.penalties,
         shots=(
-            [_shot_response(shot) for shot in sorted(hole.shots, key=lambda item: item.shot_number)]
+            [
+                _shot_response(shot, include_raw_text=include_raw_text)
+                for shot in sorted(hole.shots, key=lambda item: item.shot_number)
+            ]
             if include_shots
             else []
         ),
     )
 
 
-def _shot_response(shot: Shot) -> ShotResponse:
+def _shot_response(shot: Shot, *, include_raw_text: bool = True) -> ShotResponse:
     return ShotResponse(
         id=shot.id,
         round_id=shot.round_id,
@@ -323,7 +380,7 @@ def _shot_response(shot: Shot) -> ShotResponse:
         penalty_type=shot.penalty_type,
         penalty_strokes=shot.penalty_strokes,
         score_cost=shot.score_cost,
-        raw_text=shot.raw_text,
+        raw_text=shot.raw_text if include_raw_text else None,
     )
 
 

@@ -9,7 +9,14 @@ from fastapi import APIRouter, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
 
 from app.api.deps import AppSettings, CurrentUser, DbSession
-from app.schemas.auth import LoginRequest, ProfileUpdateRequest, RegisterRequest, UserResponse
+from app.schemas.auth import (
+    ClubBagSchema,
+    LoginRequest,
+    ProfileUpdateRequest,
+    RegisterRequest,
+    UserResponse,
+)
+from app.services.club_bags import get_club_bag, set_club_bag
 from app.services.auth import (
     DuplicateEmailError,
     InvalidCredentialsError,
@@ -252,6 +259,24 @@ def logout(
 @account_router.get("/me")
 def me(current_user: CurrentUser) -> dict[str, dict[str, UserResponse]]:
     return {"data": user_payload(current_user)}
+
+
+@account_router.get("/me/club-bag")
+def read_club_bag(
+    db: DbSession,
+    current_user: CurrentUser,
+) -> dict[str, ClubBagSchema]:
+    return {"data": ClubBagSchema(**get_club_bag(db, owner=current_user))}
+
+
+@account_router.put("/me/club-bag")
+def write_club_bag(
+    payload: ClubBagSchema,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> dict[str, ClubBagSchema]:
+    bag = set_club_bag(db, owner=current_user, bag=payload.model_dump())
+    return {"data": ClubBagSchema(**bag)}
 
 
 @account_router.patch("/me/profile")

@@ -12,7 +12,7 @@ from app.core.config import get_settings
 from app.db.base import Base
 from app.db.session import get_db
 from app.main import create_app
-from app.models import Hole, Round, Shot, SourceFile, UploadReview
+from app.models import AnalysisJob, Hole, Round, Shot, SourceFile, UploadReview
 
 
 @pytest.fixture
@@ -169,13 +169,18 @@ def test_update_review_and_commit_creates_private_round_rows(
 
     commit_response = client.post(
         f"/api/v1/uploads/{data['upload_review_id']}/commit",
-        json={"visibility": "private", "share_course": False, "share_exact_date": False},
+        json={"share_course": False, "share_exact_date": False},
     )
 
     assert commit_response.status_code == 200
     round_id = commit_response.json()["data"]["round_id"]
+    analytics_job_id = commit_response.json()["data"]["analytics_job_id"]
     round_ = db_session.get(Round, UUID(round_id))
+    analytics_job = db_session.get(AnalysisJob, UUID(analytics_job_id))
     assert round_ is not None
+    assert analytics_job is not None
+    assert analytics_job.round_id == round_.id
+    assert analytics_job.status == "queued"
     assert round_.course_name == "Edited CC"
     assert round_.play_date.isoformat() == "2026-04-12"
     assert round_.visibility == "private"
@@ -225,7 +230,30 @@ def test_update_review_raw_content_reparses_source_file(
     assert stored_raw == edited_raw
 
 
-def test_upload_rejects_non_private_commit(client: TestClient) -> None:
+def test_upload_review_raw_content_falls_back_when_source_file_missing(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    register(client)
+    data = upload_round(client)
+
+    review = db_session.get(UploadReview, UUID(data["upload_review_id"]))
+    assert review is not None
+    source_file = db_session.get(SourceFile, UUID(data["source_file_id"]))
+    assert source_file is not None
+
+    raw_path = Path(get_settings().upload_storage_dir) / source_file.storage_key
+    raw_path.unlink()
+
+    response = client.get(f"/api/v1/uploads/{data['upload_review_id']}/review")
+    assert response.status_code == 200
+    raw_content = response.json()["data"]["raw_content"]
+    assert raw_content is not None
+    assert "베르힐 영종" in raw_content
+    assert "1 P4" in raw_content
+
+
+def test_upload_commit_forbids_visibility_field(client: TestClient) -> None:
     register(client)
     data = upload_round(client)
 
@@ -234,4 +262,4 @@ def test_upload_rejects_non_private_commit(client: TestClient) -> None:
         json={"visibility": "public", "share_course": True, "share_exact_date": True},
     )
 
-    assert response.status_code == 400
+    assert response.status_code == 422

@@ -13,7 +13,7 @@ from app.core.security import (
     hash_password,
     verify_password,
 )
-from app.models import ShareLink, User
+from app.models import AnalysisJob, ShareLink, User
 from tests.test_rounds_api import create_committed_round
 from tests.test_uploads_api import register
 
@@ -121,6 +121,8 @@ def test_admin_upload_error_route_requires_admin(
 
     user_response = client.get("/api/v1/admin/uploads/errors")
     assert user_response.status_code == 403
+    jobs_response = client.get("/api/v1/admin/analysis/jobs")
+    assert jobs_response.status_code == 403
 
     client.post("/api/v1/auth/logout")
     register(client, "admin@example.com")
@@ -131,6 +133,7 @@ def test_admin_upload_error_route_requires_admin(
     response = client.get("/api/v1/admin/uploads/errors")
     assert response.status_code == 200
     assert response.json()["data"] == []
+    assert client.get("/api/v1/admin/analysis/jobs").status_code == 200
 
 
 def test_admin_upload_error_route_lists_failed_uploads(
@@ -156,3 +159,57 @@ def test_admin_upload_error_route_lists_failed_uploads(
     assert errors[0]["filename"] == "bad.txt"
     assert errors[0]["status"] == "failed"
     assert errors[0]["warnings"][0]["code"] == "invalid_encoding"
+
+
+def test_admin_analysis_jobs_route_lists_failed_jobs(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    register(client, "admin@example.com")
+    admin = db_session.scalars(select(User).where(User.email == "admin@example.com")).one()
+    admin.role = "admin"
+    db_session.commit()
+    round_id = create_committed_round(client)
+    recalculate_response = client.post(f"/api/v1/rounds/{round_id}/recalculate")
+    job_id = UUID(recalculate_response.json()["data"]["analytics_job_id"])
+    failed_job = db_session.get(AnalysisJob, job_id)
+    assert failed_job is not None
+    failed_job.status = "failed"
+    failed_job.error_message = "boom"
+    db_session.commit()
+
+    response = client.get("/api/v1/admin/analysis/jobs")
+
+    assert response.status_code == 200
+    jobs = response.json()["data"]
+    assert len(jobs) == 1
+    assert jobs[0]["id"] == str(job_id)
+    assert jobs[0]["user_email"] == "admin@example.com"
+    assert jobs[0]["status"] == "failed"
+    assert jobs[0]["error_message"] == "boom"
+
+
+def test_admin_can_retry_failed_analysis_job(
+    client: TestClient,
+    db_session: Session,
+) -> None:
+    register(client, "admin@example.com")
+    admin = db_session.scalars(select(User).where(User.email == "admin@example.com")).one()
+    admin.role = "admin"
+    db_session.commit()
+    round_id = create_committed_round(client)
+    recalculate_response = client.post(f"/api/v1/rounds/{round_id}/recalculate")
+    failed_job_id = UUID(recalculate_response.json()["data"]["analytics_job_id"])
+    failed_job = db_session.get(AnalysisJob, failed_job_id)
+    assert failed_job is not None
+    failed_job.status = "failed"
+    failed_job.error_message = "boom"
+    db_session.commit()
+
+    retry_response = client.post(f"/api/v1/admin/analysis/jobs/{failed_job_id}/retry")
+
+    assert retry_response.status_code == 200
+    retried = retry_response.json()["data"]
+    assert retried["id"] != str(failed_job_id)
+    assert retried["round_id"] == round_id
+    assert retried["status"] == "queued"

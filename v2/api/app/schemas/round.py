@@ -51,6 +51,7 @@ class RoundListItem(BaseModel):
     score_to_par: int | None
     hole_count: int
     computed_status: str
+    visibility: str = "private"
     companions: list[str] = Field(default_factory=list)
 
 
@@ -63,6 +64,7 @@ class RoundListResponse(BaseModel):
 
 class RoundDetailResponse(RoundListItem):
     upload_review_id: UUID | None = None
+    tee_off_time: str | None = None
     tee: str | None
     weather: str | None
     target_score: int | None
@@ -76,9 +78,11 @@ class RoundDetailResponse(RoundListItem):
 class RoundUpdateRequest(BaseModel):
     course_name: str | None = None
     play_date: date | None = None
+    tee_off_time: str | None = None
     tee: str | None = None
     weather: str | None = None
     target_score: int | None = None
+    visibility: str | None = Field(default=None, pattern="^(private|link_only|public|followers)$")
     notes_private: str | None = None
 
 
@@ -111,6 +115,40 @@ class RecalculateResponse(BaseModel):
     round_id: UUID
     computed_status: str
     analytics_job_id: UUID
+    analytics_job_status: str = "queued"
+
+
+class DraftShotInput(BaseModel):
+    club: str = Field(min_length=1, max_length=8)
+    feel: str = Field(pattern="^[ABC]$")
+    result: str = Field(pattern="^[ABC]$")
+    distance: int | None = Field(default=None, ge=0, le=999)
+    code: str | None = Field(default=None, pattern="^(OK|H|UN|OB|B)$")
+
+
+class DraftHoleUpsertRequest(BaseModel):
+    par: int = Field(ge=3, le=6)
+    shots: list[DraftShotInput] = Field(default_factory=list)
+
+
+class DraftMetaUpdate(BaseModel):
+    play_date: date | None = None
+    course_name: str | None = Field(default=None, max_length=200)
+    tee_off_time: str | None = None
+    companions: list[str] | None = None
+
+
+class AnalysisJobResponse(BaseModel):
+    id: UUID
+    round_id: UUID
+    kind: str
+    status: str
+    rq_job_id: str | None = None
+    attempts: int
+    error_message: str | None = None
+    payload: dict = Field(default_factory=dict)
+    started_at: str | None = None
+    finished_at: str | None = None
 
 
 class DashboardSummaryResponse(BaseModel):

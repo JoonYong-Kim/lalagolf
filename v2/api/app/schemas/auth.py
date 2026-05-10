@@ -75,3 +75,8 @@ class ProfileUpdateRequest(BaseModel):
 
 class AuthEnvelope(BaseModel):
     data: dict[str, UserResponse]
+
+
+class ClubBagSchema(BaseModel):
+    enabled: list[str] = Field(default_factory=list)
+    distances: dict[str, int] = Field(default_factory=dict)

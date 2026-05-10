@@ -3,13 +3,16 @@
 import { use, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 import { AppShell } from "@/app/components/AppShell";
 import {
   commitUploadReview,
   getUploadReview,
+  waitForAnalysisJob,
   updateUploadReviewRawContent,
   updateUploadReview,
+  type AnalysisJob,
   type ParsedRound,
   type ParsedHole,
   type UploadReview,
@@ -22,6 +25,7 @@ type PageParams = {
 
 export default function UploadReviewPage({ params }: PageParams) {
   const { id } = use(params);
+  const searchParams = useSearchParams();
   const [review, setReview] = useState<UploadReview | null>(null);
   const [courseName, setCourseName] = useState("");
   const [playDate, setPlayDate] = useState("");
@@ -33,7 +37,9 @@ export default function UploadReviewPage({ params }: PageParams) {
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
   const [committedRoundId, setCommittedRoundId] = useState<string | null>(null);
+  const [isCommitting, setIsCommitting] = useState(false);
   const { t } = useI18n();
+  const autoOpenRaw = searchParams.get("view") === "raw";
 
   useEffect(() => {
     getUploadReview(id)
@@ -41,11 +47,12 @@ export default function UploadReviewPage({ params }: PageParams) {
         setReview(loadedReview);
         hydrateForm(loadedReview.parsed_round);
         setRawContent(loadedReview.raw_content ?? "");
+        setShowRawContent(autoOpenRaw || Boolean(loadedReview.raw_content));
       })
       .catch((loadError) => {
         setError(loadError instanceof Error ? loadError.message : t("loadingUploadErrors"));
       });
-  }, [id]);
+  }, [autoOpenRaw, id, t]);
 
   const parsedRound = review?.parsed_round;
   const holes = editableHoles;
@@ -101,15 +108,20 @@ export default function UploadReviewPage({ params }: PageParams) {
   async function commitReview() {
     setStatus(t("committingPrivateRound"));
     setError("");
+    setIsCommitting(true);
     try {
       const committed = await commitUploadReview(id);
       setCommittedRoundId(committed.round_id);
-      setStatus(`${t("committed")}. ${t("analyticsStatus")}: ${committed.computed_status}`);
       const updated = await getUploadReview(id);
       setReview(updated);
+      setStatus(`${t("committed")}. ${t("analyticsStatus")}: ${t("analysisJobQueued")}`);
+      const job = await waitForAnalysisJob(committed.analytics_job_id);
+      setStatus(`${t("committed")}. ${analysisJobStatusMessage(job, t)}`);
     } catch (commitError) {
       setStatus("");
       setError(commitError instanceof Error ? commitError.message : t("committingPrivateRound"));
+    } finally {
+      setIsCommitting(false);
     }
   }
 
@@ -396,7 +408,11 @@ export default function UploadReviewPage({ params }: PageParams) {
 
             <div className="rounded-md border border-line bg-white p-4">
               <div className="flex flex-wrap items-center gap-3">
-                <button className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white" onClick={commitReview}>
+                <button
+                  className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={isCommitting}
+                  onClick={commitReview}
+                >
                   {t("commitPrivateRound")}
                 </button>
                 {status && <span className="text-sm text-muted">{status}</span>}
@@ -433,6 +449,17 @@ function summarize(round?: ParsedRound) {
     holes: String(round?.hole_count ?? holes.length),
     shots: String(shots),
   };
+}
+
+function analysisJobStatusMessage(
+  job: AnalysisJob,
+  t: (
+    key: "analysisJobSucceeded" | "analysisJobFailed" | "analysisJobStillPending"
+  ) => string,
+) {
+  if (job.status === "succeeded") return t("analysisJobSucceeded");
+  if (job.status === "failed") return `${t("analysisJobFailed")} ${job.error_message ?? ""}`.trim();
+  return t("analysisJobStillPending");
 }
 
 function Panel({ title, children }: { title: string; children: ReactNode }) {

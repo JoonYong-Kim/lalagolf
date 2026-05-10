@@ -82,6 +82,7 @@ LALAGOLF_ENV=production
 NEXT_PUBLIC_API_BASE_URL=http://localhost:2324/api/v1
 DATABASE_URL=postgresql+psycopg://lalagolf:lalagolf@localhost:5432/lalagolf_v2
 REDIS_URL=redis://localhost:6379/0
+ANALYSIS_ENQUEUE_ENABLED=true
 SECRET_KEY=${secret}
 SESSION_COOKIE_NAME=lalagolf_session
 SESSION_COOKIE_SECURE=true
@@ -95,7 +96,8 @@ WEB_BASE_URL=http://localhost:2323
 GOOGLE_OAUTH_CLIENT_ID=
 GOOGLE_OAUTH_CLIENT_SECRET=
 GOOGLE_OAUTH_REDIRECT_URI=http://localhost:2324/api/v1/auth/google/callback
-RQ_QUEUES=default
+ANALYSIS_QUEUE_NAME=analysis
+RQ_QUEUES=analysis
 WORKER_USE_RQ=true
 WORKER_POLL_INTERVAL_SECONDS=5
 OLLAMA_ENABLED=false
@@ -123,6 +125,8 @@ setup_api() {
 setup_worker() {
     python3 -m venv "${INSTALL_DIR}/worker/.venv"
     "${INSTALL_DIR}/worker/.venv/bin/pip" install --upgrade pip
+    "${INSTALL_DIR}/worker/.venv/bin/pip" install -e "${INSTALL_DIR}/packages/analytics_core"
+    "${INSTALL_DIR}/worker/.venv/bin/pip" install -e "${INSTALL_DIR}/api"
     "${INSTALL_DIR}/worker/.venv/bin/pip" install -e "${INSTALL_DIR}/worker"
 }
 
@@ -173,9 +177,9 @@ Wants=network.target
 Type=simple
 User=${APP_USER}
 Group=${APP_GROUP}
-WorkingDirectory=${INSTALL_DIR}/worker
+WorkingDirectory=${INSTALL_DIR}
 EnvironmentFile=${ENV_FILE}
-ExecStart=${INSTALL_DIR}/worker/.venv/bin/python -m app.main
+ExecStart=${INSTALL_DIR}/worker/.venv/bin/python -m lalagolf_worker.main
 Restart=on-failure
 RestartSec=5
 

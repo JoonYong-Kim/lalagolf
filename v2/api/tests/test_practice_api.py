@@ -1,13 +1,24 @@
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
+from uuid import UUID
 
+from app.services.analysis_jobs import run_analysis_job_in_session
 from tests.test_rounds_api import create_committed_round
 from tests.test_uploads_api import register
 
 
-def test_practice_plan_diary_goal_and_evaluation_flow(client: TestClient) -> None:
+def test_practice_plan_diary_goal_and_evaluation_flow(
+    client: TestClient,
+    db_session: Session,
+) -> None:
     register(client)
     round_id = create_committed_round(client)
-    client.post(f"/api/v1/rounds/{round_id}/recalculate")
+    recalculate_response = client.post(f"/api/v1/rounds/{round_id}/recalculate")
+    assert recalculate_response.status_code == 200
+    run_analysis_job_in_session(
+        db_session,
+        UUID(recalculate_response.json()["data"]["analytics_job_id"]),
+    )
 
     insights = client.get("/api/v1/insights").json()["data"]
     assert insights
@@ -77,6 +88,10 @@ def test_practice_plan_diary_goal_and_evaluation_flow(client: TestClient) -> Non
     closed_goal = client.get("/api/v1/goals").json()["data"][0]
     assert closed_goal["status"] == evaluation["evaluation_status"]
 
+    delete_response = client.delete(f"/api/v1/goals/{goal['id']}")
+    assert delete_response.status_code == 204
+    assert client.get("/api/v1/goals").json()["data"] == []
+
 
 def test_manual_goal_evaluation_and_owner_scope(client: TestClient) -> None:
     register(client, "a@example.com")
@@ -115,3 +130,7 @@ def test_manual_goal_evaluation_and_owner_scope(client: TestClient) -> None:
     assert manual_response.status_code == 201
     assert manual_response.json()["data"]["evaluated_by"] == "user"
     assert manual_response.json()["data"]["evaluation_status"] == "partial"
+
+    delete_response = client.delete(f"/api/v1/goals/{own_goal['id']}")
+    assert delete_response.status_code == 204
+    assert client.get("/api/v1/goals").json()["data"] == []

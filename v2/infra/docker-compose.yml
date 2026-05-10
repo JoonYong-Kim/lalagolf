@@ -17,6 +17,7 @@ services:
       LALAGOLF_ENV: development
       DATABASE_URL: postgresql+psycopg://lalagolf:lalagolf@postgres:5432/lalagolf_v2
       REDIS_URL: redis://redis:6379/0
+      ANALYSIS_ENQUEUE_ENABLED: "true"
       SECRET_KEY: change-me-in-local-env
       CORS_ORIGINS: http://localhost:2323,http://127.0.0.1:2323
       WEB_BASE_URL: http://localhost:2323
@@ -31,13 +32,20 @@ services:
 
   worker:
     build:
-      context: ../worker
+      context: ..
+      dockerfile: worker/Dockerfile
     environment:
+      LALAGOLF_ENV: development
+      DATABASE_URL: postgresql+psycopg://lalagolf:lalagolf@postgres:5432/lalagolf_v2
       REDIS_URL: redis://redis:6379/0
-      RQ_QUEUES: default
+      ANALYSIS_ENQUEUE_ENABLED: "true"
+      ANALYSIS_QUEUE_NAME: analysis
+      RQ_QUEUES: analysis
       WORKER_USE_RQ: "true"
       WORKER_POLL_INTERVAL_SECONDS: 5
     depends_on:
+      postgres:
+        condition: service_healthy
       redis:
         condition: service_healthy
 

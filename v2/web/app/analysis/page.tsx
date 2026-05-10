@@ -10,7 +10,6 @@ import {
   getRound,
   getRoundAnalytics,
   getRounds,
-  requestRoundRecalculation,
   updateInsightStatus,
   type AnalyticsTrend,
   type AnalysisItemSummary,
@@ -637,7 +636,6 @@ function itemMetricCells(row: AnalysisItemSummary, activeTab: string, t: (key: M
 }
 
 async function selectedRoundTrend(roundIds: string[], locale: "ko" | "en"): Promise<AnalyticsTrend> {
-  await Promise.all(roundIds.map((roundId) => requestRoundRecalculation(roundId).catch(() => null)));
   const [rounds, analytics] = await Promise.all([
     Promise.all(roundIds.map((roundId) => getRound(roundId))),
     Promise.all(roundIds.map((roundId) => getRoundAnalytics(roundId, locale))),

@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import JSON, DateTime, ForeignKey, Index, Text, UniqueConstraint
+from sqlalchemy import JSON, CheckConstraint, DateTime, ForeignKey, Index, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
@@ -130,3 +130,33 @@ class AnalysisSnapshot(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     scope_type: Mapped[str] = mapped_column(Text, nullable=False)
     scope_key: Mapped[str] = mapped_column(Text, nullable=False)
     payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+
+
+class AnalysisJob(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "analysis_jobs"
+    __table_args__ = (
+        CheckConstraint(
+            "status in ('queued', 'running', 'succeeded', 'failed')",
+            name="analysis_job_status",
+        ),
+        Index("ix_analysis_jobs_user_status_created", "user_id", "status", "created_at"),
+        Index("ix_analysis_jobs_round_created", "round_id", "created_at"),
+        Index("ix_analysis_jobs_rq_job_id", "rq_job_id"),
+    )
+
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    round_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("rounds.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    kind: Mapped[str] = mapped_column(Text, default="round_recalculation", nullable=False)
+    status: Mapped[str] = mapped_column(Text, default="queued", nullable=False)
+    rq_job_id: Mapped[str | None] = mapped_column(Text, nullable=True)
+    attempts: Mapped[int] = mapped_column(default=0, nullable=False)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    payload: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

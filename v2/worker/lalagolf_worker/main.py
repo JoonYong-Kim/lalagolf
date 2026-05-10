@@ -1,7 +1,7 @@
+import logging
 import os
 import signal
 import time
-import logging
 
 from redis import Redis
 from rq import Worker
@@ -15,7 +15,7 @@ def get_redis_connection() -> Redis:
 
 
 def create_worker(queues: list[str] | None = None) -> Worker:
-    queue_names = queues or os.getenv("RQ_QUEUES", "default").split(",")
+    queue_names = queues or os.getenv("RQ_QUEUES", "analysis").split(",")
     normalized_queues = [queue.strip() for queue in queue_names if queue.strip()]
     return Worker(normalized_queues, connection=get_redis_connection())
 
@@ -45,12 +45,23 @@ def run() -> None:
         return
 
     if use_rq:
+        _enqueue_pending_analysis_jobs()
         create_worker().work()
         return
 
     while running:
         time.sleep(poll_interval)
     logger.info("worker stopped", extra={"job_id": None})
+
+
+def _enqueue_pending_analysis_jobs() -> None:
+    try:
+        from app.services.analysis_jobs import enqueue_pending_analysis_jobs_once
+    except ImportError:
+        return
+    count = enqueue_pending_analysis_jobs_once()
+    if count:
+        logger.info("queued pending analysis jobs", extra={"job_id": None, "count": count})
 
 
 if __name__ == "__main__":

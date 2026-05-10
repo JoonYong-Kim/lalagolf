@@ -1,0 +1,1 @@
+"""LalaGolf background worker."""

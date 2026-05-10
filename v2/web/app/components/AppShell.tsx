@@ -23,7 +23,7 @@ const navItems: Array<{ href: string; labelKey: MessageKey; adminOnly?: boolean 
   { href: "/goals", labelKey: "navGoals" },
   { href: "/ask", labelKey: "navAsk" },
   { href: "/upload", labelKey: "navUpload" },
-  { href: "/admin/uploads/errors", labelKey: "navAdmin", adminOnly: true },
+  { href: "/admin/analysis/jobs", labelKey: "navAdmin", adminOnly: true },
 ];
 
 export function AppShell({

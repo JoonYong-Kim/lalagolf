@@ -49,7 +49,7 @@ export default function RoundsPage() {
     <AppShell eyebrow={t("roundArchive")} title={t("rounds")}>
       <div className="mt-5 space-y-5">
         <section className="rounded-md border border-line bg-white p-4">
-          <div className="grid gap-3 md:grid-cols-[120px_1fr_1fr_auto]">
+          <div className="grid gap-3 md:grid-cols-[120px_1fr_1fr_auto_auto]">
             <label className="text-sm font-medium">
               {t("year")}
               <input className={inputClass} value={year} onChange={(event) => setYear(event.target.value)} />
@@ -65,6 +65,9 @@ export default function RoundsPage() {
             <button className="self-end rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white" onClick={loadRounds}>
               {t("filter")}
             </button>
+            <Link className="self-end rounded-md border border-line px-4 py-2 text-sm font-semibold" href="/rounds/public">
+              {t("publicRounds")}
+            </Link>
           </div>
         </section>
 

@@ -23,6 +23,30 @@ export default function DashboardPage() {
   return (
     <AppShell eyebrow={t("privateDashboard")} title={t("dashboard")}>
       <div className="mt-5 space-y-5">
+        <section className="flex flex-col gap-2 rounded-md border border-green-700 bg-green-700 p-4 text-white sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-wide opacity-90">라운드 기록</p>
+            <p className="mt-1 text-base font-semibold">한 샷씩 모바일로 기록</p>
+            <p className="mt-1 text-xs opacity-90">
+              라운드 중에도 자동 저장. 끊겨도 이어쓰기 가능.
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Link
+              className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-green-700"
+              href="/rounds/log"
+            >
+              라운드 기록 시작 →
+            </Link>
+            <Link
+              className="rounded-md border border-white px-3 py-2 text-sm font-semibold"
+              href="/settings/clubs"
+            >
+              클럽 가방
+            </Link>
+          </div>
+        </section>
+
         {!summary && !error && (
           <div className="rounded-md border border-line bg-white p-3 text-sm text-muted">
             {t("loadingDashboard")}

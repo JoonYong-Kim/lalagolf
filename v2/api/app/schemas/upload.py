@@ -1,7 +1,7 @@
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class UploadRoundFileResponse(BaseModel):
@@ -30,7 +30,8 @@ class UploadReviewRawUpdateRequest(BaseModel):
 
 
 class UploadCommitRequest(BaseModel):
-    visibility: str = "private"
+    model_config = ConfigDict(extra="forbid")
+
     share_course: bool = False
     share_exact_date: bool = False
 
@@ -39,6 +40,7 @@ class UploadCommitResponse(BaseModel):
     round_id: UUID
     computed_status: str
     analytics_job_id: UUID
+    analytics_job_status: str = "queued"
 
 
 class JobResponse(BaseModel):

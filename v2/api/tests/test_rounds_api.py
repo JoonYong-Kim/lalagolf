@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.models import Round
+from app.services.analysis_jobs import run_analysis_job_in_session
 from tests.test_uploads_api import register, sample_round_text
 
 
@@ -17,7 +18,7 @@ def create_committed_round(client: TestClient) -> str:
 
     commit_response = client.post(
         f"/api/v1/uploads/{upload_id}/commit",
-        json={"visibility": "private", "share_course": False, "share_exact_date": False},
+        json={"share_course": False, "share_exact_date": False},
     )
     assert commit_response.status_code == 200
     return commit_response.json()["data"]["round_id"]
@@ -92,7 +93,12 @@ def test_round_filters_update_and_recalculate(client: TestClient, db_session: Se
 
     recalculate_response = client.post(f"/api/v1/rounds/{round_id}/recalculate")
     assert recalculate_response.status_code == 200
-    assert recalculate_response.json()["data"]["computed_status"] == "ready"
+    assert recalculate_response.json()["data"]["computed_status"] == "pending"
+    assert recalculate_response.json()["data"]["analytics_job_status"] == "queued"
+    run_analysis_job_in_session(
+        db_session,
+        UUID(recalculate_response.json()["data"]["analytics_job_id"]),
+    )
 
     round_ = db_session.get(Round, UUID(round_id))
     assert round_ is not None

@@ -244,6 +244,17 @@ def update_goal(
     return _goal_response(goal)
 
 
+def delete_goal(
+    db: Session,
+    *,
+    owner: User,
+    goal_id: uuid.UUID,
+) -> None:
+    goal = _goal(db, owner=owner, goal_id=goal_id)
+    db.delete(goal)
+    db.commit()
+
+
 def evaluate_goal(
     db: Session,
     *,

@@ -73,6 +73,7 @@ export type RoundListItem = {
   score_to_par: number | null;
   hole_count: number;
   computed_status: string;
+  visibility: string;
   companions: string[];
 };
 
@@ -85,6 +86,7 @@ export type RoundListResponse = {
 
 export type RoundDetail = RoundListItem & {
   upload_review_id: string | null;
+  tee_off_time: string | null;
   tee: string | null;
   weather: string | null;
   target_score: number | null;
@@ -131,6 +133,110 @@ export type RoundShot = {
   penalty_strokes: number;
   score_cost: number;
   raw_text: string | null;
+};
+
+export type PublicRoundCard = {
+  id: string;
+  owner_id: string;
+  owner_display_name: string;
+  owner_handle: string | null;
+  course_name: string;
+  play_date: string;
+  total_score: number | null;
+  total_par: number | null;
+  score_to_par: number | null;
+  hole_count: number;
+  visibility: string;
+  notes_public: string | null;
+};
+
+export type PublicRoundDetail = PublicRoundCard & {
+  tee_off_time: string | null;
+  tee: string | null;
+  weather: string | null;
+  target_score: number | null;
+  metrics: {
+    putts_total?: number | null;
+    gir_count?: number | null;
+    fairway_hit_rate?: number | null;
+    penalties_total?: number | null;
+  };
+  holes: Array<{
+    id: string;
+    round_id: string;
+    hole_number: number;
+    par: number;
+    score: number | null;
+    putts: number | null;
+    fairway_hit: boolean | null;
+    gir: boolean | null;
+    up_and_down: boolean | null;
+    sand_save: boolean | null;
+    penalties: number;
+    shots: Array<{
+      id: string;
+      round_id: string;
+      hole_id: string;
+      shot_number: number;
+      club: string | null;
+      club_normalized: string | null;
+      distance: number | null;
+      start_lie: string | null;
+      end_lie: string | null;
+      result_grade: string | null;
+      feel_grade: string | null;
+      penalty_type: string | null;
+      penalty_strokes: number;
+      score_cost: number;
+    }>;
+  }>;
+  insights: Array<Record<string, unknown>>;
+  like_count: number;
+  comment_count: number;
+};
+
+export type CompareCandidate = {
+  round_id: string;
+  course_name: string;
+  play_date: string;
+  tee_off_time: string | null;
+  companion_name: string;
+  visibility: string;
+  owner_display_name: string;
+  owner_handle: string | null;
+};
+
+export type Follow = {
+  follower_id: string;
+  following_id: string;
+  status: string;
+  requested_at: string;
+  accepted_at: string | null;
+  blocked_at: string | null;
+  follower_display_name: string | null;
+  follower_handle: string | null;
+  following_display_name: string | null;
+  following_handle: string | null;
+};
+
+export type RoundComment = {
+  id: string;
+  round_id: string;
+  user_id: string;
+  parent_comment_id: string | null;
+  body: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  author_display_name: string | null;
+  author_handle: string | null;
+};
+
+export type RoundLikeState = {
+  round_id: string;
+  like_count: number;
+  liked: boolean;
 };
 
 export type DashboardSummary = {
@@ -236,6 +342,19 @@ export type RoundAnalytics = {
     expected_confidence: string | null;
   }>;
   insights: InsightUnit[];
+};
+
+export type AnalysisJob = {
+  id: string;
+  round_id: string;
+  kind: string;
+  status: string;
+  rq_job_id: string | null;
+  attempts: number;
+  error_message: string | null;
+  payload: Record<string, unknown>;
+  started_at: string | null;
+  finished_at: string | null;
 };
 
 export type ShotQualitySummary = {
@@ -359,6 +478,14 @@ export type AdminUploadError = {
   filename: string | null;
   status: string;
   warnings: UploadWarning[];
+  created_at: string;
+};
+
+export type AdminAnalysisJob = AnalysisJob & {
+  user_id: string;
+  user_email: string;
+  course_name: string;
+  play_date: string;
   created_at: string;
 };
 
@@ -564,18 +691,27 @@ export async function commitUploadReview(uploadReviewId: string): Promise<{
   round_id: string;
   computed_status: string;
   analytics_job_id: string;
+  analytics_job_status: string;
 }> {
   const response = await apiFetch<ApiEnvelope<{
     round_id: string;
     computed_status: string;
     analytics_job_id: string;
+    analytics_job_status: string;
   }>>(`/uploads/${uploadReviewId}/commit`, {
     method: "POST",
     body: JSON.stringify({
-      visibility: "private",
       share_course: false,
       share_exact_date: false,
     }),
+  });
+  return response.data;
+}
+
+export async function updateRoundVisibility(roundId: string, visibility: "private" | "followers" | "public" | "link_only"): Promise<RoundDetail> {
+  const response = await apiFetch<ApiEnvelope<RoundDetail>>(`/rounds/${roundId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ visibility }),
   });
   return response.data;
 }
@@ -608,6 +744,146 @@ export async function getRound(roundId: string): Promise<RoundDetail> {
   return response.data;
 }
 
+export async function getComparisonCandidates(roundId: string): Promise<CompareCandidate[]> {
+  const response = await apiFetch<ApiEnvelope<CompareCandidate[]>>(
+    `/rounds/${roundId}/comparison-candidates`,
+    { method: "GET" },
+  );
+  return response.data;
+}
+
+export async function getPublicRounds(params?: {
+  limit?: number;
+  offset?: number;
+  year?: number;
+  course?: string;
+  handle?: string;
+  keyword?: string;
+}): Promise<{ items: PublicRoundCard[]; total: number; limit: number; offset: number }> {
+  const search = new URLSearchParams();
+  if (params?.limit) search.set("limit", String(params.limit));
+  if (params?.offset) search.set("offset", String(params.offset));
+  if (params?.year) search.set("year", String(params.year));
+  if (params?.course) search.set("course", params.course);
+  if (params?.handle) search.set("handle", params.handle);
+  if (params?.keyword) search.set("keyword", params.keyword);
+  const query = search.toString();
+  const response = await fetch(`${apiBaseUrl}/rounds/public${query ? `?${query}` : ""}`, {
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(await responseText(response, "Public rounds not found"));
+  }
+  const json = (await response.json()) as {
+    data: PublicRoundCard[];
+    meta: { total: number; limit: number; offset: number };
+  };
+  return {
+    items: json.data,
+    total: json.meta.total,
+    limit: json.meta.limit,
+    offset: json.meta.offset,
+  };
+}
+
+export async function getPublicRound(roundId: string, locale?: ApiLocale): Promise<PublicRoundDetail> {
+  const query = locale ? `?locale=${locale}` : "";
+  const response = await fetch(`${apiBaseUrl}/rounds/public/${roundId}${query}`, {
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(await responseText(response, "Public round not found"));
+  }
+  const json = (await response.json()) as ApiEnvelope<PublicRoundDetail>;
+  return json.data;
+}
+
+export async function createFollow(followingId: string): Promise<Follow> {
+  const response = await apiFetch<ApiEnvelope<Follow>>("/follows", {
+    method: "POST",
+    body: JSON.stringify({ following_id: followingId }),
+  });
+  return response.data;
+}
+
+export async function listFollows(scope: "all" | "incoming" | "outgoing" = "all"): Promise<Follow[]> {
+  const response = await apiFetch<ApiEnvelope<Follow[]>>(`/follows?scope=${scope}`, {
+    method: "GET",
+  });
+  return response.data;
+}
+
+export async function updateFollow(
+  followerId: string,
+  followingId: string,
+  status: "pending" | "accepted" | "blocked",
+): Promise<Follow> {
+  const response = await apiFetch<ApiEnvelope<Follow>>(
+    `/follows/${followerId}/${followingId}`,
+    {
+      method: "PATCH",
+      body: JSON.stringify({ status }),
+    },
+  );
+  return response.data;
+}
+
+export async function deleteFollow(followerId: string, followingId: string): Promise<void> {
+  const response = await fetch(`${apiBaseUrl}/follows/${followerId}/${followingId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(await responseText(response, `API request failed: ${response.status}`));
+  }
+}
+
+export async function likeRound(roundId: string): Promise<RoundLikeState> {
+  const response = await apiFetch<ApiEnvelope<RoundLikeState>>(`/rounds/${roundId}/likes`, {
+    method: "POST",
+    body: "{}",
+  });
+  return response.data;
+}
+
+export async function unlikeRound(roundId: string): Promise<RoundLikeState> {
+  const response = await apiFetch<ApiEnvelope<RoundLikeState>>(`/rounds/${roundId}/likes`, {
+    method: "DELETE",
+    body: "{}",
+  });
+  return response.data;
+}
+
+export async function getRoundComments(roundId: string): Promise<RoundComment[]> {
+  const response = await apiFetch<ApiEnvelope<RoundComment[]>>(`/rounds/${roundId}/comments`, {
+    method: "GET",
+  });
+  return response.data;
+}
+
+export async function createRoundComment(
+  roundId: string,
+  body: string,
+  parentCommentId?: string | null,
+): Promise<RoundComment> {
+  const response = await apiFetch<ApiEnvelope<RoundComment>>(`/rounds/${roundId}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ body, parent_comment_id: parentCommentId ?? null }),
+  });
+  return response.data;
+}
+
+export async function deleteRoundComment(roundId: string, commentId: string): Promise<RoundComment> {
+  const response = await apiFetch<ApiEnvelope<RoundComment>>(
+    `/rounds/${roundId}/comments/${commentId}`,
+    {
+      method: "DELETE",
+      body: "{}",
+    },
+  );
+  return response.data;
+}
+
 export async function getDashboardSummary(locale?: ApiLocale): Promise<DashboardSummary> {
   const query = locale ? `?locale=${locale}` : "";
   const response = await apiFetch<ApiEnvelope<DashboardSummary>>(`/analytics/summary${query}`, {
@@ -620,13 +896,53 @@ export async function requestRoundRecalculation(roundId: string): Promise<{
   round_id: string;
   computed_status: string;
   analytics_job_id: string;
+  analytics_job_status: string;
 }> {
   const response = await apiFetch<ApiEnvelope<{
     round_id: string;
     computed_status: string;
     analytics_job_id: string;
+    analytics_job_status: string;
   }>>(`/rounds/${roundId}/recalculate`, { method: "POST" });
   return response.data;
+}
+
+export async function getAnalysisJob(jobId: string): Promise<AnalysisJob> {
+  const response = await apiFetch<ApiEnvelope<AnalysisJob>>(`/analysis-jobs/${jobId}`, {
+    method: "GET",
+  });
+  return response.data;
+}
+
+export async function getRoundAnalysisJob(roundId: string): Promise<AnalysisJob> {
+  const response = await apiFetch<ApiEnvelope<AnalysisJob>>(`/rounds/${roundId}/analysis-job`, {
+    method: "GET",
+  });
+  return response.data;
+}
+
+export async function retryAnalysisJob(jobId: string): Promise<AnalysisJob> {
+  const response = await apiFetch<ApiEnvelope<AnalysisJob>>(`/analysis-jobs/${jobId}/retry`, {
+    method: "POST",
+  });
+  return response.data;
+}
+
+export async function waitForAnalysisJob(
+  jobId: string,
+  options: { intervalMs?: number; maxAttempts?: number } = {},
+): Promise<AnalysisJob> {
+  const intervalMs = options.intervalMs ?? 2000;
+  const maxAttempts = options.maxAttempts ?? 15;
+  let latest = await getAnalysisJob(jobId);
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    if (["succeeded", "failed"].includes(latest.status)) {
+      return latest;
+    }
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+    latest = await getAnalysisJob(jobId);
+  }
+  return latest;
 }
 
 export async function updateShot(
@@ -741,6 +1057,22 @@ export async function getAdminUploadErrors(limit = 50): Promise<AdminUploadError
   return response.data;
 }
 
+export async function getAdminAnalysisJobs(limit = 50): Promise<AdminAnalysisJob[]> {
+  const response = await apiFetch<ApiEnvelope<AdminAnalysisJob[]>>(
+    `/admin/analysis/jobs?limit=${limit}`,
+    { method: "GET" },
+  );
+  return response.data;
+}
+
+export async function retryAdminAnalysisJob(jobId: string): Promise<AdminAnalysisJob> {
+  const response = await apiFetch<ApiEnvelope<AdminAnalysisJob>>(
+    `/admin/analysis/jobs/${jobId}/retry`,
+    { method: "POST" },
+  );
+  return response.data;
+}
+
 export async function getPracticePlans(): Promise<PracticePlan[]> {
   const response = await apiFetch<ApiEnvelope<PracticePlan[]>>("/practice/plans", {
     method: "GET",
@@ -773,6 +1105,16 @@ export async function updatePracticePlan(
     body: JSON.stringify(payload),
   });
   return response.data;
+}
+
+export async function deleteGoal(goalId: string): Promise<void> {
+  const response = await fetch(`${apiBaseUrl}/goals/${goalId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`Goal delete failed: ${response.status}`);
+  }
 }
 
 export async function getPracticeDiary(): Promise<PracticeDiaryEntry[]> {
@@ -833,7 +1175,7 @@ export async function evaluateGoal(goalId: string, roundId?: string): Promise<Go
 
 export async function manuallyEvaluateGoal(
   goalId: string,
-  payload: { evaluation_status: string; note?: string },
+  payload: { evaluation_status: string; note?: string; round_id?: string },
 ): Promise<GoalEvaluation> {
   const response = await apiFetch<ApiEnvelope<GoalEvaluation>>(
     `/goals/${goalId}/manual-evaluation`,
@@ -843,6 +1185,122 @@ export async function manuallyEvaluateGoal(
     },
   );
   return response.data;
+}
+
+// --- Round logger (draft + club bag) ---
+
+export type ClubBagPayload = {
+  enabled: string[];
+  distances: Record<string, number>;
+};
+
+export async function getClubBag(): Promise<ClubBagPayload> {
+  const response = await apiFetch<ApiEnvelope<ClubBagPayload>>("/me/club-bag", {
+    method: "GET"
+  });
+  return response.data;
+}
+
+export async function putClubBag(payload: ClubBagPayload): Promise<ClubBagPayload> {
+  const response = await apiFetch<ApiEnvelope<ClubBagPayload>>("/me/club-bag", {
+    method: "PUT",
+    body: JSON.stringify(payload)
+  });
+  return response.data;
+}
+
+export async function getCurrentDraft(): Promise<RoundDetail | null> {
+  const response = await fetch(`${apiBaseUrl}/rounds/draft`, {
+    credentials: "include",
+    cache: "no-store"
+  });
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new Error(await responseText(response, `API request failed: ${response.status}`));
+  }
+  const json = (await response.json()) as ApiEnvelope<RoundDetail>;
+  return json.data;
+}
+
+export async function createDraft(): Promise<RoundDetail> {
+  const response = await apiFetch<ApiEnvelope<RoundDetail>>("/rounds/draft", {
+    method: "POST",
+    body: "{}"
+  });
+  return response.data;
+}
+
+export async function discardDraft(): Promise<void> {
+  await fetch(`${apiBaseUrl}/rounds/draft`, {
+    method: "DELETE",
+    credentials: "include"
+  });
+}
+
+export type DraftMetaPayload = {
+  play_date?: string;
+  course_name?: string;
+  companions?: string[];
+};
+
+export async function patchDraftMeta(
+  roundId: string,
+  payload: DraftMetaPayload
+): Promise<RoundDetail> {
+  const response = await apiFetch<ApiEnvelope<RoundDetail>>(
+    `/rounds/${roundId}/meta`,
+    { method: "PATCH", body: JSON.stringify(payload) }
+  );
+  return response.data;
+}
+
+export type DraftShotPayload = {
+  club: string;
+  feel: "A" | "B" | "C";
+  result: "A" | "B" | "C";
+  distance?: number | null;
+  code?: "OK" | "H" | "UN" | "OB" | "B" | null;
+};
+
+export type DraftHolePayload = {
+  par: number;
+  shots: DraftShotPayload[];
+};
+
+export async function patchDraftHole(
+  roundId: string,
+  holeNumber: number,
+  payload: DraftHolePayload
+): Promise<RoundDetail> {
+  const response = await apiFetch<ApiEnvelope<RoundDetail>>(
+    `/rounds/${roundId}/holes/${holeNumber}`,
+    { method: "PATCH", body: JSON.stringify(payload) }
+  );
+  return response.data;
+}
+
+export type FinalizeDraftResponse = {
+  round_id: string;
+  computed_status: string;
+  analytics_job_id: string;
+  analytics_job_status: string;
+};
+
+export async function finalizeDraft(roundId: string): Promise<FinalizeDraftResponse> {
+  const response = await apiFetch<ApiEnvelope<FinalizeDraftResponse>>(
+    `/rounds/${roundId}/finalize`,
+    { method: "POST", body: "{}" }
+  );
+  return response.data;
+}
+
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+    this.name = "ApiError";
+  }
 }
 
 async function apiFetch<T>(path: string, init: RequestInit): Promise<T> {
@@ -855,7 +1313,10 @@ async function apiFetch<T>(path: string, init: RequestInit): Promise<T> {
     },
   });
   if (!response.ok) {
-    throw new Error(await responseText(response, `API request failed: ${response.status}`));
+    throw new ApiError(
+      response.status,
+      await responseText(response, `API request failed: ${response.status}`)
+    );
   }
   return response.json() as Promise<T>;
 }

@@ -584,13 +584,16 @@ Indexes:
 
 ### 8.2 follows
 
-MVP 이후 도입 가능.
+Stores directional follow relationships.
 
 | Column | Type | Notes |
 | --- | --- | --- |
-| follower_id | uuid fk users.id | |
-| following_id | uuid fk users.id | |
+| follower_id | uuid fk users.id | requester |
+| following_id | uuid fk users.id | target |
 | status | text not null | `pending`, `accepted`, `blocked` |
+| requested_at | timestamptz not null | |
+| accepted_at | timestamptz nullable | |
+| blocked_at | timestamptz nullable | |
 | created_at | timestamptz not null | |
 | updated_at | timestamptz not null | |
 
@@ -598,7 +601,42 @@ Constraints:
 
 - primary key `(follower_id, following_id)`
 
-### 8.3 public_feed_items
+### 8.3 round_likes
+
+Stores like reactions on round visibility posts.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| round_id | uuid fk rounds.id not null | |
+| user_id | uuid fk users.id not null | liker |
+| created_at | timestamptz not null | |
+
+Constraints:
+
+- primary key `(round_id, user_id)`
+
+### 8.4 round_comments
+
+Stores comments on visible rounds.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| id | uuid pk | |
+| round_id | uuid fk rounds.id not null | |
+| user_id | uuid fk users.id not null | author |
+| parent_comment_id | uuid fk round_comments.id nullable | optional thread |
+| body | text not null | |
+| status | text not null | `active`, `deleted`, `hidden` |
+| created_at | timestamptz not null | |
+| updated_at | timestamptz not null | |
+| deleted_at | timestamptz nullable | |
+
+Indexes:
+
+- `(round_id, created_at desc)`
+- `(user_id, created_at desc)`
+
+### 8.5 public_feed_items
 
 Post-MVP optional materialized feed table.
 
@@ -763,14 +801,21 @@ Indexes:
 
 ### 11.3 Public
 
-- Resource can appear on public profile/feed.
+- Resource can appear in public search.
 - Public-safe serializer removes private fields.
-- Public resource may generate `public_feed_items`.
+- Public resource may later generate `public_feed_items`.
 
 ### 11.4 Followers
 
-- MVP 이후.
 - Requires accepted follow relationship.
+- Follower-visible rounds can be read by accepted followers.
+- Followed users' rounds can be surfaced in companion compare and social lists.
+
+### 11.5 Social Actions
+
+- Likes and comments require accepted follow relationship.
+- First implementation limits social actions to follow-scoped visibility, even on public rounds.
+- Owners and admins can moderate or remove comments.
 
 ## 12. Public-Safe Serialization
 
@@ -832,7 +877,7 @@ Migration notes:
 7. practice_plans, practice_diary_entries, round_goals, goal_evaluations.
 8. shares.
 9. llm_threads, llm_messages.
-10. post-MVP: follows, public_feed_items, embedding_documents, embeddings.
+10. post-MVP: public_feed_items, embedding_documents, embeddings.
 11. audit_logs, reports.
 
 ## 15. Open Decisions

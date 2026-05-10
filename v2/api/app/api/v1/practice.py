@@ -22,6 +22,7 @@ from app.services.practice import (
     PracticeValidationError,
     create_diary_entry,
     create_goal,
+    delete_goal,
     create_manual_evaluation,
     create_practice_plan,
     evaluate_goal,
@@ -170,6 +171,18 @@ def patch_goal(
     except PracticeValidationError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     return {"data": RoundGoalResponse(**goal)}
+
+
+@router.delete("/goals/{goal_id}", status_code=status.HTTP_204_NO_CONTENT)
+def remove_goal(
+    goal_id: UUID,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> None:
+    try:
+        delete_goal(db, owner=current_user, goal_id=goal_id)
+    except PracticeNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Goal not found") from exc
 
 
 @router.post("/goals/{goal_id}/evaluate")

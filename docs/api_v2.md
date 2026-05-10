@@ -190,6 +190,7 @@ Query:
 ### POST /uploads/round-file
 
 Uploads a text round file. This endpoint uses multipart form data.
+The supported text input format is documented in [input_text_format.md](input_text_format.md).
 
 Request fields:
 
@@ -254,12 +255,12 @@ Request:
 ### POST /uploads/{upload_review_id}/commit
 
 Commits parsed data into rounds/holes/shots.
+Rounds are always stored as private at commit time; visibility can be changed later from round detail.
 
 Request:
 
 ```json
 {
-  "visibility": "private",
   "share_course": false,
   "share_exact_date": false
 }
@@ -348,6 +349,8 @@ Response:
 
 Creates a round manually. MVP can delay this if upload-only is enough.
 
+For the current in-round logging flow, see [round_logger_current.md](round_logger_current.md).
+
 ### GET /rounds/{round_id}
 
 Returns round detail for owner.
@@ -364,6 +367,7 @@ Response includes:
 ### PATCH /rounds/{round_id}
 
 Updates metadata and privacy fields.
+The `visibility` field is used after upload to move a round from private to followers or public.
 
 Request:
 
@@ -505,6 +509,11 @@ Insight text fields use the MVP unit shape: `problem`, `evidence`, `impact`, `ne
 `confidence`. Korean is the default stored/generated language. For `locale=en`, the API renders
 supported deterministic MVP insight templates into English at the response boundary without changing
 stored rows.
+
+Related docs:
+
+- [insight_criteria_v2.md](insight_criteria_v2.md)
+- [insight_expansion_strategy_v2.md](insight_expansion_strategy_v2.md)
 
 ### PATCH /insights/{insight_id}
 
@@ -802,31 +811,60 @@ Response excerpt:
 
 ## 13. Social
 
-Post-MVP. Public profiles, public rounds, feed, follows, comments, and likes are not part of the MVP.
+Social features are centered on visibility, follows, and direct interactions rather than a ranked feed.
+See also: [social_relations_v2.md](social_relations_v2.md)
 
-### GET /users/{handle}
+### GET /rounds/public
 
-Returns public-safe profile.
+Returns public-safe scorecards that anyone can search.
 
-### GET /users/{handle}/rounds
+Query:
 
-Returns public rounds for a user.
+- `query`
+- `course`
+- `play_date`
+- `handle`
+- `limit`
 
-### GET /feed
+### POST /follows
 
-Returns public or following feed.
-
-### POST /follow
-
-MVP 이후 가능.
+Creates a follow request.
 
 Request:
 
 ```json
 {
-  "user_id": "uuid"
+  "following_id": "uuid"
 }
 ```
+
+### PATCH /follows/{follow_id}
+
+Accepts, blocks, or revokes a follow relationship.
+
+### GET /users/{handle}
+
+Returns public-safe profile when available.
+
+### GET /users/{handle}/rounds
+
+Returns the user's public or follower-visible rounds, depending on the viewer relationship.
+
+### POST /rounds/{round_id}/likes
+
+Creates a like for an allowed round.
+
+### DELETE /rounds/{round_id}/likes
+
+Removes the viewer's like.
+
+### GET /rounds/{round_id}/comments
+
+Returns visible comments for the round.
+
+### POST /rounds/{round_id}/comments
+
+Creates a comment on an allowed round.
 
 ## 14. Ask GolfRaiders
 
@@ -963,10 +1001,10 @@ implementation contract:
 | --- | --- | --- | --- | --- | --- |
 | private round | read/write | no | no | no | audited read |
 | link-only round | read/write | public-safe read | no feed | no | audited read |
-| public round | post-MVP | post-MVP | post-MVP | post-MVP | audited read |
+| public round | read/write via visibility rules | public-safe read | yes | follow-scoped read | audited read |
 | source file | read/write | no | no | no | audited read |
 | private chat | read/write | no | no | no | audited read only if needed |
-| public profile | post-MVP | post-MVP | post-MVP | post-MVP | audited read/write moderation |
+| public profile | post-MVP | post-MVP | yes | post-MVP | audited read/write moderation |
 
 ## 19. Rate Limits
 
@@ -975,7 +1013,7 @@ Suggested initial limits:
 - login: strict per IP/email.
 - upload: per user per hour.
 - chat: per user per minute and per day.
-- public feed: post-MVP, per IP.
+- public round search: per IP.
 - share token access: per IP/token.
 
 ## 20. Open Decisions
