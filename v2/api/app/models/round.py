@@ -46,13 +46,14 @@ class Round(UUIDPrimaryKeyMixin, TimestampMixin, Base):
             "computed_status in ('draft', 'pending', 'ready', 'stale', 'failed')",
             name="computed_status",
         ),
-        Index("ix_rounds_user_play_date", "user_id", "play_date"),
-        Index("ix_rounds_user_course_name", "user_id", "course_name"),
-        Index("ix_rounds_user_visibility", "user_id", "visibility"),
-        Index(
-            "ix_rounds_public_play_date",
-            "visibility",
-            "play_date",
+    Index("ix_rounds_user_play_date", "user_id", "play_date"),
+    Index("ix_rounds_user_course_name", "user_id", "course_name"),
+    Index("ix_rounds_user_visibility", "user_id", "visibility"),
+    Index("ix_rounds_visibility_social_published", "visibility", "social_published_at", "id"),
+    Index(
+        "ix_rounds_public_play_date",
+        "visibility",
+        "play_date",
             postgresql_where=text("visibility = 'public'"),
         ),
     )
@@ -80,6 +81,10 @@ class Round(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     visibility: Mapped[str] = mapped_column(Text, default=VISIBILITY_PRIVATE, nullable=False)
     share_course: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     share_exact_date: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    social_published_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     notes_private: Mapped[str | None] = mapped_column(Text, nullable=True)
     notes_public: Mapped[str | None] = mapped_column(Text, nullable=True)
     computed_status: Mapped[str] = mapped_column(

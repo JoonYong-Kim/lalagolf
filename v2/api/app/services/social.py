@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import json
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -7,8 +9,24 @@ from typing import Any
 from sqlalchemy import Select, func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
-from app.models import Follow, Hole, Round, RoundComment, RoundCompanion, RoundLike, User
-from app.models.constants import VISIBILITY_FOLLOWERS, VISIBILITY_LINK_ONLY, VISIBILITY_PUBLIC
+from app.models import (
+    CompanionAccountLink,
+    Follow,
+    GoalEvaluation,
+    Hole,
+    PracticeDiaryEntry,
+    Round,
+    RoundComment,
+    RoundGoal,
+    RoundLike,
+    User,
+)
+from app.models.constants import (
+    VISIBILITY_FOLLOWERS,
+    VISIBILITY_LINK_ONLY,
+    VISIBILITY_PRIVATE,
+    VISIBILITY_PUBLIC,
+)
 from app.services.insight_i18n import render_insight_payload
 
 
@@ -18,6 +36,56 @@ class SocialAccessError(Exception):
 
 class SocialNotFoundError(Exception):
     pass
+
+
+FEED_SCOPES = {"all", "public", "following"}
+
+
+def create_companion_account_link(
+    db: Session,
+    *,
+    owner: User,
+    companion_name: str,
+    companion_user_id: uuid.UUID | None = None,
+    companion_email: str | None = None,
+) -> dict[str, Any]:
+    normalized_name = _normalize_companion_name(companion_name)
+    if not normalized_name:
+        raise SocialAccessError("Companion name is required")
+    companion_user = _resolve_companion_user(
+        db,
+        owner=owner,
+        companion_user_id=companion_user_id,
+        companion_email=companion_email,
+    )
+    existing = db.scalars(
+        select(CompanionAccountLink).where(
+            CompanionAccountLink.owner_id == owner.id,
+            func.lower(CompanionAccountLink.companion_name) == normalized_name.casefold(),
+        )
+    ).first()
+    if existing is None:
+        existing = CompanionAccountLink(
+            owner_id=owner.id,
+            companion_name=normalized_name,
+            companion_user_id=companion_user.id,
+        )
+        db.add(existing)
+    else:
+        existing.companion_name = normalized_name
+        existing.companion_user_id = companion_user.id
+    db.commit()
+    db.refresh(existing)
+    return _companion_link_payload(db, existing)
+
+
+def list_companion_account_links(db: Session, *, owner: User) -> list[dict[str, Any]]:
+    links = db.scalars(
+        select(CompanionAccountLink)
+        .where(CompanionAccountLink.owner_id == owner.id)
+        .order_by(CompanionAccountLink.companion_name.asc())
+    ).all()
+    return [_companion_link_payload(db, link) for link in links]
 
 
 def load_viewable_round(
@@ -141,8 +209,7 @@ def create_follow(db: Session, *, viewer: User, following_id: uuid.UUID) -> Foll
     now = datetime.now(UTC)
     if existing is not None:
         if existing.status == "blocked":
-            existing.requested_at = now
-            existing.blocked_at = None
+            raise SocialAccessError("Follow request is blocked")
         elif existing.status == "accepted":
             return existing
         existing.status = "pending"
@@ -212,6 +279,12 @@ def update_follow(
 
     if status not in {"pending", "accepted", "blocked"}:
         raise SocialAccessError("Invalid follow status")
+    if status in {"accepted", "blocked"} and viewer.id != following_id:
+        raise SocialAccessError("Only the requested user can accept or block a follow")
+    if status == "pending" and viewer.id != follower_id:
+        raise SocialAccessError("Only the requester can reopen a follow request")
+    if follow.status == "blocked" and viewer.id != following_id:
+        raise SocialAccessError("Blocked follow requests cannot be reopened by the requester")
 
     now = datetime.now(UTC)
     follow.status = status
@@ -357,6 +430,8 @@ def list_comparison_candidates(
     round_id: uuid.UUID,
 ) -> list[dict[str, Any]]:
     base_round = load_viewable_round(db, viewer=viewer, round_id=round_id)
+    if base_round.user_id != viewer.id:
+        raise SocialAccessError("Comparison candidates are available only for your own rounds")
     companion_names = [
         companion.name.strip()
         for companion in base_round.companions
@@ -366,15 +441,21 @@ def list_comparison_candidates(
         return []
 
     candidates: dict[uuid.UUID, dict[str, Any]] = {}
-    for companion_name in companion_names:
+    companion_links = _companion_links_for_names(
+        db,
+        owner_id=viewer.id,
+        companion_names=companion_names,
+    )
+    if not companion_links:
+        return []
+    for companion_name, companion_user_id in companion_links.items():
         query = (
             select(Round, User.display_name, User.handle)
             .join(User, User.id == Round.user_id)
-            .join(RoundCompanion, RoundCompanion.round_id == Round.id)
             .where(
                 Round.deleted_at.is_(None),
                 Round.id != base_round.id,
-                RoundCompanion.name.ilike(companion_name),
+                Round.user_id == companion_user_id,
                 Round.course_name == base_round.course_name,
                 Round.play_date == base_round.play_date,
             )
@@ -396,6 +477,427 @@ def list_comparison_candidates(
                 "owner_handle": handle,
             }
     return list(candidates.values())
+
+
+def list_social_feed(
+    db: Session,
+    *,
+    viewer: User | None,
+    scope: str = "all",
+    cursor: str | None = None,
+    limit: int = 20,
+    locale: str | None = None,
+    include_self: bool = False,
+) -> dict[str, Any]:
+    if scope not in FEED_SCOPES:
+        raise SocialAccessError("Invalid feed scope")
+    if viewer is None and scope == "following":
+        raise SocialAccessError("Login required for following feed")
+
+    cursor_value = _decode_cursor(cursor)
+    items: list[dict[str, Any]] = []
+    items.extend(
+        _round_feed_items(
+            db,
+            viewer=viewer,
+            scope=scope,
+            locale=locale,
+            include_self=include_self,
+        )
+    )
+    items.extend(
+        _diary_feed_items(
+            db,
+            viewer=viewer,
+            scope=scope,
+            include_self=include_self,
+        )
+    )
+    items.extend(
+        _goal_feed_items(
+            db,
+            viewer=viewer,
+            scope=scope,
+            include_self=include_self,
+        )
+    )
+
+    for item in items:
+        item["social_published_at"] = _as_utc(item["social_published_at"])
+    items.sort(
+        key=lambda item: (
+            item["social_published_at"],
+            str(item["item_id"]),
+        ),
+        reverse=True,
+    )
+    if cursor_value is not None:
+        cursor_time, cursor_id = cursor_value
+        items = [
+            item
+            for item in items
+            if (
+                item["social_published_at"] < cursor_time
+                or (
+                    item["social_published_at"] == cursor_time
+                    and str(item["item_id"]) < cursor_id
+                )
+            )
+        ]
+
+    page = items[: limit + 1]
+    has_more = len(page) > limit
+    page = page[:limit]
+    next_cursor = _encode_cursor(page[-1]) if has_more and page else None
+    return {
+        "items": page,
+        "next_cursor": next_cursor,
+        "has_more": has_more,
+    }
+
+
+def _round_feed_items(
+    db: Session,
+    *,
+    viewer: User | None,
+    scope: str,
+    locale: str | None,
+    include_self: bool,
+) -> list[dict[str, Any]]:
+    rounds = db.scalars(
+        select(Round)
+        .options(
+            selectinload(Round.holes).selectinload(Hole.shots),
+            selectinload(Round.shared_insights),
+        )
+        .where(
+            Round.deleted_at.is_(None),
+            Round.social_published_at.is_not(None),
+            Round.visibility.in_([VISIBILITY_PUBLIC, VISIBILITY_FOLLOWERS]),
+        )
+    ).all()
+    items = []
+    for round_ in rounds:
+        if not _can_view_feed_item(
+            db,
+            viewer=viewer,
+            owner_id=round_.user_id,
+            visibility=round_.visibility,
+            scope=scope,
+            include_self=include_self,
+        ):
+            continue
+        owner = db.get(User, round_.user_id)
+        if owner is None:
+            continue
+        top_insights = _public_insights(round_, locale=locale)
+        items.append(
+            {
+                "item_type": "round",
+                "item_id": round_.id,
+                "round_id": round_.id,
+                "owner": _feed_owner(owner),
+                "visibility": round_.visibility,
+                "social_published_at": round_.social_published_at,
+                "course_name": round_.course_name,
+                "play_date": round_.play_date if round_.share_exact_date else None,
+                "play_month": round_.play_date.strftime("%Y-%m"),
+                "total_score": round_.total_score,
+                "score_to_par": round_.score_to_par,
+                "hole_count": round_.hole_count,
+                "metrics": _round_metrics(round_),
+                "top_insight": top_insights[0] if top_insights else None,
+                "like_count": _like_count(db, round_.id),
+                "comment_count": _comment_count(db, round_.id),
+                "liked_by_me": _liked_by_viewer(db, viewer=viewer, round_id=round_.id),
+                "viewer_can_react": (
+                    can_react_to_round(db, viewer=viewer, round_=round_)
+                    if viewer is not None
+                    else False
+                ),
+            }
+        )
+    return items
+
+
+def _diary_feed_items(
+    db: Session,
+    *,
+    viewer: User | None,
+    scope: str,
+    include_self: bool,
+) -> list[dict[str, Any]]:
+    entries = db.scalars(
+        select(PracticeDiaryEntry).where(
+            PracticeDiaryEntry.social_published_at.is_not(None),
+            PracticeDiaryEntry.visibility.in_([VISIBILITY_PUBLIC, VISIBILITY_FOLLOWERS]),
+        )
+    ).all()
+    items = []
+    for entry in entries:
+        if not _can_view_feed_item(
+            db,
+            viewer=viewer,
+            owner_id=entry.user_id,
+            visibility=entry.visibility,
+            scope=scope,
+            include_self=include_self,
+        ):
+            continue
+        owner = db.get(User, entry.user_id)
+        if owner is None:
+            continue
+        linked_round = _feed_linked_round(db, entry.round_id)
+        items.append(
+            {
+                "item_type": "practice_diary",
+                "item_id": entry.id,
+                "owner": _feed_owner(owner),
+                "visibility": entry.visibility,
+                "social_published_at": entry.social_published_at,
+                "entry_date": entry.entry_date,
+                "title": entry.title,
+                "body_preview": _preview(entry.body),
+                "category": entry.category,
+                "tags": entry.tags,
+                "linked_round": linked_round,
+            }
+        )
+    return items
+
+
+def _goal_feed_items(
+    db: Session,
+    *,
+    viewer: User | None,
+    scope: str,
+    include_self: bool,
+) -> list[dict[str, Any]]:
+    goals = db.scalars(
+        select(RoundGoal).where(
+            RoundGoal.social_published_at.is_not(None),
+            RoundGoal.visibility.in_([VISIBILITY_PUBLIC, VISIBILITY_FOLLOWERS]),
+        )
+    ).all()
+    items = []
+    for goal in goals:
+        if not _can_view_feed_item(
+            db,
+            viewer=viewer,
+            owner_id=goal.user_id,
+            visibility=goal.visibility,
+            scope=scope,
+            include_self=include_self,
+        ):
+            continue
+        owner = db.get(User, goal.user_id)
+        if owner is None:
+            continue
+        items.append(
+            {
+                "item_type": "round_goal",
+                "item_id": goal.id,
+                "owner": _feed_owner(owner),
+                "visibility": goal.visibility,
+                "social_published_at": goal.social_published_at,
+                "title": goal.title,
+                "description": goal.description,
+                "category": goal.category,
+                "target": {
+                    "metric_key": goal.metric_key,
+                    "operator": goal.target_operator,
+                    "value": goal.target_value,
+                    "value_max": goal.target_value_max,
+                },
+                "status": goal.status,
+                "due_date": goal.due_date,
+                "latest_evaluation": _latest_goal_evaluation(db, goal.id),
+            }
+        )
+    return items
+
+
+def _can_view_feed_item(
+    db: Session,
+    *,
+    viewer: User | None,
+    owner_id: uuid.UUID,
+    visibility: str,
+    scope: str,
+    include_self: bool,
+) -> bool:
+    if visibility in {VISIBILITY_PRIVATE, VISIBILITY_LINK_ONLY}:
+        return False
+    if viewer is not None and owner_id == viewer.id:
+        return include_self
+    if scope == "public":
+        return visibility == VISIBILITY_PUBLIC
+    if viewer is None:
+        return visibility == VISIBILITY_PUBLIC
+    is_followed = _has_accepted_follow(db, follower_id=viewer.id, following_id=owner_id)
+    if scope == "following":
+        return is_followed and visibility in {VISIBILITY_PUBLIC, VISIBILITY_FOLLOWERS}
+    return visibility == VISIBILITY_PUBLIC or (
+        visibility == VISIBILITY_FOLLOWERS and is_followed
+    )
+
+
+def _feed_owner(owner: User) -> dict[str, Any]:
+    return {
+        "id": owner.id,
+        "display_name": owner.display_name,
+        "handle": owner.handle,
+    }
+
+
+def _feed_linked_round(db: Session, round_id: uuid.UUID | None) -> dict[str, Any] | None:
+    if round_id is None:
+        return None
+    round_ = db.get(Round, round_id)
+    if round_ is None or round_.deleted_at is not None:
+        return None
+    return {
+        "round_id": round_.id,
+        "course_name": round_.course_name,
+        "play_month": round_.play_date.strftime("%Y-%m"),
+    }
+
+
+def _latest_goal_evaluation(db: Session, goal_id: uuid.UUID) -> dict[str, Any] | None:
+    evaluation = db.scalars(
+        select(GoalEvaluation)
+        .where(GoalEvaluation.goal_id == goal_id)
+        .order_by(GoalEvaluation.evaluated_at.desc(), GoalEvaluation.created_at.desc())
+    ).first()
+    if evaluation is None:
+        return None
+    return {
+        "round_id": evaluation.round_id,
+        "evaluation_status": evaluation.evaluation_status,
+        "actual_value": evaluation.actual_value,
+        "evaluated_at": evaluation.evaluated_at,
+    }
+
+
+def _preview(value: str, limit: int = 120) -> str:
+    stripped = " ".join(value.split())
+    return stripped if len(stripped) <= limit else f"{stripped[: limit - 1]}..."
+
+
+def _comment_count(db: Session, round_id: uuid.UUID) -> int:
+    return (
+        db.scalar(
+            select(func.count())
+            .select_from(RoundComment)
+            .where(RoundComment.round_id == round_id, RoundComment.status == "active")
+        )
+        or 0
+    )
+
+
+def _liked_by_viewer(db: Session, *, viewer: User | None, round_id: uuid.UUID) -> bool:
+    if viewer is None:
+        return False
+    return db.get(RoundLike, (round_id, viewer.id)) is not None
+
+
+def _as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
+
+
+def _encode_cursor(item: dict[str, Any]) -> str:
+    payload = {
+        "published_at": item["social_published_at"].isoformat(),
+        "item_id": str(item["item_id"]),
+    }
+    return base64.urlsafe_b64encode(json.dumps(payload).encode("utf-8")).decode("ascii")
+
+
+def _decode_cursor(cursor: str | None) -> tuple[datetime, str] | None:
+    if not cursor:
+        return None
+    try:
+        payload = json.loads(base64.urlsafe_b64decode(cursor.encode("ascii")).decode("utf-8"))
+        published_at = datetime.fromisoformat(str(payload["published_at"]))
+        if published_at.tzinfo is None:
+            published_at = published_at.replace(tzinfo=UTC)
+        return published_at, str(payload["item_id"])
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
+        raise SocialAccessError("Invalid feed cursor") from exc
+
+
+def _normalize_companion_name(value: str) -> str:
+    return " ".join(value.strip().split())
+
+
+def _resolve_companion_user(
+    db: Session,
+    *,
+    owner: User,
+    companion_user_id: uuid.UUID | None,
+    companion_email: str | None,
+) -> User:
+    if companion_user_id is None and not companion_email:
+        raise SocialAccessError("Companion user id or email is required")
+    if companion_user_id is not None and companion_email:
+        raise SocialAccessError("Use either companion user id or email")
+
+    if companion_user_id is not None:
+        user = db.get(User, companion_user_id)
+    else:
+        user = db.scalars(
+            select(User).where(func.lower(User.email) == companion_email.strip().lower())
+        ).first()
+
+    if user is None or user.status != "active":
+        raise SocialNotFoundError
+    if user.id == owner.id:
+        raise SocialAccessError("Cannot link yourself as a companion")
+    return user
+
+
+def _companion_link_payload(db: Session, link: CompanionAccountLink) -> dict[str, Any]:
+    companion_user = db.get(User, link.companion_user_id)
+    if companion_user is None:
+        raise SocialNotFoundError
+    return {
+        "id": link.id,
+        "companion_name": link.companion_name,
+        "companion_user_id": link.companion_user_id,
+        "companion_email": companion_user.email,
+        "companion_display_name": companion_user.display_name,
+        "companion_handle": companion_user.handle,
+        "created_at": link.created_at,
+        "updated_at": link.updated_at,
+    }
+
+
+def _companion_links_for_names(
+    db: Session,
+    *,
+    owner_id: uuid.UUID,
+    companion_names: list[str],
+) -> dict[str, uuid.UUID]:
+    normalized_names = {
+        _normalize_companion_name(name).casefold(): _normalize_companion_name(name)
+        for name in companion_names
+        if _normalize_companion_name(name)
+    }
+    if not normalized_names:
+        return {}
+    links = db.scalars(
+        select(CompanionAccountLink).where(
+            CompanionAccountLink.owner_id == owner_id,
+            func.lower(CompanionAccountLink.companion_name).in_(normalized_names.keys()),
+        )
+    ).all()
+    return {
+        normalized_names[link.companion_name.casefold()]: link.companion_user_id
+        for link in links
+        if link.companion_name.casefold() in normalized_names
+    }
 
 
 def _apply_public_filters(

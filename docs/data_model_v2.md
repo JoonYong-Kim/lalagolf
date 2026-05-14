@@ -82,7 +82,7 @@ Stores profile and defaults.
 | home_course | text nullable | |
 | handicap_target | numeric(4,1) nullable | |
 | privacy_default | text not null | default `private` |
-| share_course_by_default | boolean not null | default false |
+| share_course_by_default | boolean not null | deprecated; course name is shown for shared/public rounds |
 | share_exact_date_by_default | boolean not null | default false |
 | created_at | timestamptz not null | |
 | updated_at | timestamptz not null | |
@@ -174,8 +174,9 @@ Stores one played round.
 | weather | text nullable | |
 | target_score | integer nullable | |
 | visibility | text not null | default `private` |
-| share_course | boolean not null | |
+| share_course | boolean not null | deprecated; course name is shown for shared/public rounds |
 | share_exact_date | boolean not null | |
+| social_published_at | timestamptz nullable | set when a round enters `public` or `followers` visibility |
 | notes_private | text nullable | never public |
 | notes_public | text nullable | public-safe note |
 | computed_status | text not null | `pending`, `ready`, `stale`, `failed` |
@@ -189,6 +190,7 @@ Indexes:
 - `(user_id, course_name)`
 - `(user_id, visibility)`
 - `(visibility, play_date desc)` where visibility = `public`
+- `(visibility, social_published_at desc, id desc)` where social_published_at is not null
 
 ### 5.3 round_companions
 
@@ -478,11 +480,13 @@ can also be standalone.
 | round_id | uuid fk rounds.id nullable | related round if any |
 | entry_date | date not null | |
 | title | text not null | |
-| body | text not null | private diary text |
+| body | text not null | diary text; private by default, public only when visibility allows |
 | category | text nullable | same category set as plans |
 | tags | jsonb not null | user tags |
 | confidence | text nullable | user-reported `low`, `medium`, `high` |
 | mood | text nullable | optional practice context |
+| visibility | text not null | default `private`; `private`, `followers`, `public` |
+| social_published_at | timestamptz nullable | set when entry enters `public` or `followers` visibility |
 | created_at | timestamptz not null | |
 | updated_at | timestamptz not null | |
 
@@ -491,6 +495,7 @@ Indexes:
 - `(user_id, entry_date desc)`
 - `(user_id, category)`
 - `(practice_plan_id)`
+- `(visibility, social_published_at desc, id desc)` where social_published_at is not null
 
 ### 7.3 round_goals
 
@@ -515,6 +520,8 @@ be evaluated automatically after a round is committed or recalculated.
 | due_round_id | uuid fk rounds.id nullable | explicit round target when known |
 | due_date | date nullable | |
 | status | text not null | `active`, `achieved`, `missed`, `partial`, `not_evaluable`, `cancelled` |
+| visibility | text not null | default `private`; `private`, `followers`, `public` |
+| social_published_at | timestamptz nullable | set when goal enters `public` or `followers` visibility |
 | created_at | timestamptz not null | |
 | updated_at | timestamptz not null | |
 | closed_at | timestamptz nullable | |
@@ -525,6 +532,7 @@ Indexes:
 - `(user_id, category)`
 - `(source_insight_id)`
 - `(practice_plan_id)`
+- `(visibility, social_published_at desc, id desc)` where social_published_at is not null
 
 ### 7.4 goal_evaluations
 
@@ -638,7 +646,9 @@ Indexes:
 
 ### 8.5 public_feed_items
 
-Post-MVP optional materialized feed table.
+Post-MVP optional materialized feed table. The first social feed implementation should query
+`rounds` directly with `social_published_at` keyset pagination. Add this table only when dynamic
+queries become too slow or the product needs non-round feed resources.
 
 | Column | Type | Notes |
 | --- | --- | --- |
@@ -817,6 +827,24 @@ Indexes:
 - First implementation limits social actions to follow-scoped visibility, even on public rounds.
 - Owners and admins can moderate or remove comments.
 
+### 11.6 Social Feed
+
+- The initial feed is chronological, not ranked.
+- Logged-out feed includes only `visibility = public`.
+- Logged-in feed includes `visibility = public` plus `visibility = followers` where the viewer has
+  an accepted follow relationship to the round owner.
+- `private` and `link_only` rounds are never feedable.
+- Public/follower-visible practice diary entries and round goals can also be feed items.
+- `social_published_at` is set when a round, diary entry, or goal becomes `public` or `followers`,
+  retained when moving between those two states, and cleared when moving back to `private`.
+- Existing public/followers rows can backfill `social_published_at` from `updated_at` or `created_at`.
+- Feed cards use a stricter public-safe serializer than round detail and never expose companions,
+  private notes, source file metadata, raw upload text, shot raw text, link-only tokens, or private
+  LLM/practice data.
+- Public/follower-visible rounds always expose `course_name`; exact `play_date` still follows
+  `share_exact_date`.
+- Public/follower-visible round feed cards include at most one public-safe top insight.
+
 ## 12. Public-Safe Serialization
 
 Never expose:
@@ -828,15 +856,17 @@ Never expose:
 - exact tee time
 - private upload warnings containing raw private text
 - private LLM messages
-- practice diary entries
+- private practice diary entries
 - private practice plans and goals
 
 Expose only if allowed:
 
-- course name
+- course name for shared/public/follower-visible rounds
 - exact play date
 - public note
 - profile fields
+- public/follower-visible practice diary title/body/tags/category
+- public/follower-visible round goal title/description/normalized target/status
 
 Always safe to expose for public rounds:
 

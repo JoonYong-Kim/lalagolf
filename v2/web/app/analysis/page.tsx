@@ -2,7 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import Link from "next/link";
+
 import { AppShell } from "@/app/components/AppShell";
+import { EmptyState } from "@/app/components/EmptyState";
 import {
   createGoal,
   createPracticePlan,
@@ -186,6 +189,21 @@ export default function AnalysisPage() {
             ))}
           </div>
         </section>
+
+        {trend && trend.kpis.round_count === 0 && (
+          <EmptyState
+            action={
+              <Link
+                className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white"
+                href="/rounds"
+              >
+                {t("goToRounds")}
+              </Link>
+            }
+            description={t("noAnalysisYetHint")}
+            title={t("noAnalysisYet")}
+          />
+        )}
 
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Kpi label={t("rounds")} value={trend?.kpis.round_count ?? "-"} />

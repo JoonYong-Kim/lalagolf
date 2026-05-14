@@ -1,6 +1,7 @@
+from uuid import UUID
+
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
-from uuid import UUID
 
 from app.services.analysis_jobs import run_analysis_job_in_session
 from tests.test_rounds_api import create_committed_round

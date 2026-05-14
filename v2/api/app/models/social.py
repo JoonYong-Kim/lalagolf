@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Text
+from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Index, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
@@ -26,6 +26,25 @@ class Follow(TimestampMixin, Base):
     requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     accepted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     blocked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class CompanionAccountLink(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    __tablename__ = "companion_account_links"
+    __table_args__ = (
+        UniqueConstraint("owner_id", "companion_name", name="uq_companion_links_owner_name"),
+        Index("ix_companion_links_owner", "owner_id"),
+        Index("ix_companion_links_companion_user", "companion_user_id"),
+    )
+
+    owner_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    companion_name: Mapped[str] = mapped_column(Text, nullable=False)
+    companion_user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    )
 
 
 class RoundLike(TimestampMixin, Base):

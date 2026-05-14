@@ -34,6 +34,7 @@ def create_share(
         expires_at=expires_at,
     )
     round_.visibility = VISIBILITY_LINK_ONLY
+    round_.social_published_at = None
     db.add(share)
     db.commit()
     db.refresh(share)
@@ -142,7 +143,7 @@ def _public_round_payload(
         "title": share.title or "Shared round",
         "round": {
             "id": str(round_.id),
-            "course_name": round_.course_name if round_.share_course else "Shared course",
+            "course_name": round_.course_name,
             "play_date": round_.play_date.isoformat() if round_.share_exact_date else None,
             "play_month": round_.play_date.strftime("%Y-%m"),
             "total_score": round_.total_score,

@@ -47,6 +47,9 @@ def enqueue_round_analysis_job(
                 existing_job.rq_job_id = rq_job_id
         db.commit()
         db.refresh(existing_job)
+        if existing_job.rq_job_id is None and existing_job.status == "queued":
+            _maybe_run_inline(db, existing_job.id, settings=settings)
+            db.refresh(existing_job)
         return existing_job
 
     job = AnalysisJob(
@@ -64,6 +67,9 @@ def enqueue_round_analysis_job(
         job.rq_job_id = rq_job_id
     db.commit()
     db.refresh(job)
+    if rq_job_id is None:
+        _maybe_run_inline(db, job.id, settings=settings)
+        db.refresh(job)
     return job
 
 
@@ -167,6 +173,15 @@ def run_analysis_job_in_session(db: Session, job_id: uuid.UUID) -> dict[str, Any
         }
     db.commit()
     return {"job_id": str(job_id), "status": "succeeded", **result}
+
+
+def _maybe_run_inline(db: Session, job_id: uuid.UUID, *, settings: Settings) -> None:
+    if not settings.analysis_inline_fallback:
+        return
+    try:
+        run_analysis_job_in_session(db, job_id)
+    except Exception:
+        db.rollback()
 
 
 def _try_enqueue_rq_job(job_id: uuid.UUID, *, settings: Settings) -> str | None:

@@ -5,7 +5,12 @@ from sqlalchemy import Select, func, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.models import Hole, Round, RoundCompanion, Shot, UploadReview, User
-from app.models.constants import COMPUTED_STATUS_PENDING, COMPUTED_STATUS_STALE
+from app.models.constants import (
+    COMPUTED_STATUS_PENDING,
+    COMPUTED_STATUS_STALE,
+    VISIBILITY_FOLLOWERS,
+    VISIBILITY_PUBLIC,
+)
 from app.schemas.round import (
     DashboardSummaryResponse,
     HoleResponse,
@@ -104,6 +109,7 @@ def update_round(
         if field in values:
             setattr(round_, field, values[field])
             changed_fields.add(field)
+    _sync_social_published_at(round_)
     if changed_fields & {
         "course_name",
         "play_date",
@@ -298,6 +304,7 @@ def _round_item(round_: Round) -> RoundListItem:
         hole_count=round_.hole_count,
         computed_status=round_.computed_status,
         visibility=round_.visibility,
+        share_exact_date=round_.share_exact_date,
         companions=[companion.name for companion in round_.companions],
     )
 
@@ -317,6 +324,9 @@ def _round_detail(
         weather=round_.weather,
         target_score=round_.target_score,
         notes_private=round_.notes_private if is_owner else None,
+        social_published_at=(
+            round_.social_published_at.isoformat() if round_.social_published_at else None
+        ),
         holes=[
             _hole_response(hole, include_shots=True, include_raw_text=is_owner)
             for hole in _sorted_holes(round_)
@@ -466,6 +476,14 @@ def _priority_insights(
 
 def _mark_round_stale(round_: Round) -> None:
     round_.computed_status = COMPUTED_STATUS_STALE
+
+
+def _sync_social_published_at(round_: Round) -> None:
+    if round_.visibility in {VISIBILITY_PUBLIC, VISIBILITY_FOLLOWERS}:
+        if round_.social_published_at is None:
+            round_.social_published_at = datetime.now(UTC)
+    else:
+        round_.social_published_at = None
 
 
 def _recompute_round_totals(round_: Round) -> None:

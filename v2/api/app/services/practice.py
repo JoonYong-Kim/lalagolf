@@ -16,10 +16,12 @@ from app.models import (
     RoundGoal,
     User,
 )
+from app.models.constants import VISIBILITY_FOLLOWERS, VISIBILITY_PRIVATE, VISIBILITY_PUBLIC
 
 PLAN_STATUSES = {"planned", "in_progress", "done", "skipped"}
 GOAL_STATUSES = {"active", "achieved", "missed", "partial", "not_evaluable", "cancelled"}
 EVALUATION_STATUSES = {"achieved", "missed", "partial", "not_evaluable"}
+SOCIAL_VISIBILITIES = {VISIBILITY_PRIVATE, VISIBILITY_FOLLOWERS, VISIBILITY_PUBLIC}
 SUPPORTED_METRICS = {
     "score_to_par",
     "total_score",
@@ -155,8 +157,38 @@ def create_diary_entry(
         tags=values.get("tags") or [],
         confidence=values.get("confidence"),
         mood=values.get("mood"),
+        visibility=values.get("visibility") or VISIBILITY_PRIVATE,
     )
+    _sync_social_published_at(entry)
     db.add(entry)
+    db.commit()
+    db.refresh(entry)
+    return _diary_response(entry)
+
+
+def update_diary_entry(
+    db: Session,
+    *,
+    owner: User,
+    entry_id: uuid.UUID,
+    values: dict[str, Any],
+) -> dict[str, Any]:
+    entry = _diary_entry(db, owner=owner, entry_id=entry_id)
+    if "visibility" in values and values["visibility"] not in SOCIAL_VISIBILITIES:
+        raise PracticeValidationError("Invalid diary visibility")
+    for field in (
+        "entry_date",
+        "title",
+        "body",
+        "category",
+        "tags",
+        "confidence",
+        "mood",
+        "visibility",
+    ):
+        if field in values:
+            setattr(entry, field, values[field])
+    _sync_social_published_at(entry)
     db.commit()
     db.refresh(entry)
     return _diary_response(entry)
@@ -202,7 +234,9 @@ def create_goal(db: Session, *, owner: User, values: dict[str, Any]) -> dict[str
         due_round_id=values.get("due_round_id"),
         due_date=values.get("due_date"),
         status="active",
+        visibility=values.get("visibility") or VISIBILITY_PRIVATE,
     )
+    _sync_social_published_at(goal)
     db.add(goal)
     db.commit()
     db.refresh(goal)
@@ -219,6 +253,8 @@ def update_goal(
     goal = _goal(db, owner=owner, goal_id=goal_id)
     if "status" in values and values["status"] not in GOAL_STATUSES:
         raise PracticeValidationError("Invalid goal status")
+    if "visibility" in values and values["visibility"] not in SOCIAL_VISIBILITIES:
+        raise PracticeValidationError("Invalid goal visibility")
     if "due_round_id" in values and values["due_round_id"] is not None:
         _round(db, owner=owner, round_id=values["due_round_id"])
     for field in (
@@ -234,9 +270,11 @@ def update_goal(
         "due_round_id",
         "due_date",
         "status",
+        "visibility",
     ):
         if field in values:
             setattr(goal, field, values[field])
+    _sync_social_published_at(goal)
     if goal.status != "active" and goal.closed_at is None:
         goal.closed_at = datetime.now(UTC)
     db.commit()
@@ -508,6 +546,31 @@ def _goal(db: Session, *, owner: User, goal_id: uuid.UUID) -> RoundGoal:
     return goal
 
 
+def _diary_entry(
+    db: Session,
+    *,
+    owner: User,
+    entry_id: uuid.UUID,
+) -> PracticeDiaryEntry:
+    entry = db.scalars(
+        select(PracticeDiaryEntry).where(
+            PracticeDiaryEntry.id == entry_id,
+            PracticeDiaryEntry.user_id == owner.id,
+        )
+    ).first()
+    if entry is None:
+        raise PracticeNotFoundError
+    return entry
+
+
+def _sync_social_published_at(entry_or_goal: PracticeDiaryEntry | RoundGoal) -> None:
+    if entry_or_goal.visibility in {VISIBILITY_PUBLIC, VISIBILITY_FOLLOWERS}:
+        if entry_or_goal.social_published_at is None:
+            entry_or_goal.social_published_at = datetime.now(UTC)
+    else:
+        entry_or_goal.social_published_at = None
+
+
 def _default_drill(insight: Insight | None) -> dict[str, Any]:
     if insight is None:
         return {}
@@ -553,6 +616,8 @@ def _diary_response(entry: PracticeDiaryEntry) -> dict[str, Any]:
         "tags": entry.tags,
         "confidence": entry.confidence,
         "mood": entry.mood,
+        "visibility": entry.visibility,
+        "social_published_at": entry.social_published_at,
         "created_at": entry.created_at,
         "updated_at": entry.updated_at,
     }
@@ -575,6 +640,8 @@ def _goal_response(goal: RoundGoal) -> dict[str, Any]:
         "due_round_id": goal.due_round_id,
         "due_date": goal.due_date,
         "status": goal.status,
+        "visibility": goal.visibility,
+        "social_published_at": goal.social_published_at,
         "closed_at": goal.closed_at,
         "created_at": goal.created_at,
         "updated_at": goal.updated_at,

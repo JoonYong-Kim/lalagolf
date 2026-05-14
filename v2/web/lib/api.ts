@@ -195,6 +195,65 @@ export type PublicRoundDetail = PublicRoundCard & {
   comment_count: number;
 };
 
+export type SocialFeedItem = {
+  item_type: "round" | "practice_diary" | "round_goal";
+  item_id: string;
+  owner: {
+    id: string;
+    display_name: string;
+    handle: string | null;
+  };
+  visibility: string;
+  social_published_at: string;
+  round_id: string | null;
+  course_name: string | null;
+  play_date: string | null;
+  play_month: string | null;
+  total_score: number | null;
+  score_to_par: number | null;
+  hole_count: number | null;
+  metrics: {
+    putts_total?: number | null;
+    gir_count?: number | null;
+    penalties_total?: number | null;
+  };
+  top_insight: {
+    category?: string;
+    problem?: string;
+    confidence?: string;
+  } | null;
+  like_count: number;
+  comment_count: number;
+  liked_by_me: boolean;
+  viewer_can_react: boolean;
+  entry_date: string | null;
+  title: string | null;
+  body_preview: string | null;
+  description: string | null;
+  category: string | null;
+  tags: string[];
+  linked_round: {
+    round_id: string;
+    course_name: string;
+    play_month: string;
+  } | null;
+  target: {
+    metric_key: string;
+    operator: string;
+    value: string | number | null;
+    value_max: string | number | null;
+  } | null;
+  status: string | null;
+  due_date: string | null;
+  latest_evaluation: Record<string, unknown> | null;
+};
+
+export type SocialFeedResponse = {
+  items: SocialFeedItem[];
+  next_cursor: string | null;
+  has_more: boolean;
+};
+
 export type CompareCandidate = {
   round_id: string;
   course_name: string;
@@ -204,6 +263,17 @@ export type CompareCandidate = {
   visibility: string;
   owner_display_name: string;
   owner_handle: string | null;
+};
+
+export type CompanionAccountLink = {
+  id: string;
+  companion_name: string;
+  companion_user_id: string;
+  companion_email: string;
+  companion_display_name: string;
+  companion_handle: string | null;
+  created_at: string;
+  updated_at: string;
 };
 
 export type Follow = {
@@ -752,6 +822,24 @@ export async function getComparisonCandidates(roundId: string): Promise<CompareC
   return response.data;
 }
 
+export async function getCompanionAccountLinks(): Promise<CompanionAccountLink[]> {
+  const response = await apiFetch<ApiEnvelope<CompanionAccountLink[]>>("/companions/links", {
+    method: "GET",
+  });
+  return response.data;
+}
+
+export async function createCompanionAccountLink(input: {
+  companion_name: string;
+  companion_email: string;
+}): Promise<CompanionAccountLink> {
+  const response = await apiFetch<ApiEnvelope<CompanionAccountLink>>("/companions/links", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return response.data;
+}
+
 export async function getPublicRounds(params?: {
   limit?: number;
   offset?: number;
@@ -796,6 +884,31 @@ export async function getPublicRound(roundId: string, locale?: ApiLocale): Promi
   }
   const json = (await response.json()) as ApiEnvelope<PublicRoundDetail>;
   return json.data;
+}
+
+export async function getSocialFeed(params?: {
+  scope?: "all" | "public" | "following";
+  cursor?: string | null;
+  limit?: number;
+  locale?: ApiLocale;
+  include_self?: boolean;
+}): Promise<SocialFeedResponse> {
+  const search = new URLSearchParams();
+  if (params?.scope) search.set("scope", params.scope);
+  if (params?.cursor) search.set("cursor", params.cursor);
+  if (params?.limit) search.set("limit", String(params.limit));
+  if (params?.locale) search.set("locale", params.locale);
+  if (params?.include_self) search.set("include_self", "true");
+  const query = search.toString();
+  const response = await apiFetch<{
+    data: SocialFeedItem[];
+    meta: { next_cursor: string | null; has_more: boolean };
+  }>(`/social/feed${query ? `?${query}` : ""}`, { method: "GET" });
+  return {
+    items: response.data,
+    next_cursor: response.meta.next_cursor,
+    has_more: response.meta.has_more,
+  };
 }
 
 export async function createFollow(followingId: string): Promise<Follow> {

@@ -10,8 +10,8 @@ from app.models.chat import LlmMessage, LlmThread
 from app.models.migration import MigrationIdMap, MigrationIssue, MigrationRun
 from app.models.practice import GoalEvaluation, PracticeDiaryEntry, PracticePlan, RoundGoal
 from app.models.round import Course, Hole, Round, RoundCompanion, Shot
-from app.models.social import Follow, RoundComment, RoundLike
 from app.models.share import ShareLink
+from app.models.social import CompanionAccountLink, Follow, RoundComment, RoundLike
 from app.models.upload import SourceFile, UploadReview
 from app.models.user import User, UserProfile, UserSession
 
@@ -19,6 +19,7 @@ __all__ = [
     "Course",
     "AnalysisJob",
     "AnalysisSnapshot",
+    "CompanionAccountLink",
     "ExpectedScoreTable",
     "GoalEvaluation",
     "Follow",

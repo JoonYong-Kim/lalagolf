@@ -9,10 +9,10 @@ from app.api.v1.auth import router as auth_router
 from app.api.v1.chat import router as chat_router
 from app.api.v1.health import router as health_router
 from app.api.v1.practice import router as practice_router
-from app.api.v1.social import router as social_router
 from app.api.v1.rounds import analytics_router
 from app.api.v1.rounds import router as rounds_router
 from app.api.v1.shares import router as shares_router
+from app.api.v1.social import router as social_router
 from app.api.v1.uploads import router as uploads_router
 from app.core.config import get_settings
 from app.core.logging import request_logging_middleware

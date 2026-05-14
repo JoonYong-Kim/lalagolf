@@ -16,7 +16,6 @@ from app.schemas.auth import (
     RegisterRequest,
     UserResponse,
 )
-from app.services.club_bags import get_club_bag, set_club_bag
 from app.services.auth import (
     DuplicateEmailError,
     InvalidCredentialsError,
@@ -27,6 +26,7 @@ from app.services.auth import (
     get_or_create_google_user,
     revoke_session,
 )
+from app.services.club_bags import get_club_bag, set_club_bag
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 account_router = APIRouter(tags=["auth"])

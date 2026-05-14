@@ -15,6 +15,10 @@ class Settings(BaseSettings):
         default=False,
         validation_alias="ANALYSIS_ENQUEUE_ENABLED",
     )
+    analysis_inline_fallback: bool = Field(
+        default=True,
+        validation_alias="ANALYSIS_INLINE_FALLBACK",
+    )
     analysis_queue_name: str = Field(default="analysis", validation_alias="ANALYSIS_QUEUE_NAME")
     secret_key: str = Field(default="change-me", validation_alias="SECRET_KEY")
     session_cookie_name: str = Field(

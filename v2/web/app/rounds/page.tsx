@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/app/components/AppShell";
+import { EmptyState } from "@/app/components/EmptyState";
 import { getRound, getRounds, type RoundDetail, type RoundListResponse } from "@/lib/api";
 import { useI18n } from "@/lib/i18n";
 
@@ -102,6 +103,21 @@ export default function RoundsPage() {
             <SummaryMetric label={t("rounds")} value={rounds?.items.length ?? "-"} />
           </div>
         </section>
+
+        {rounds && rounds.total === 0 && course === "" && companion === "" && (
+          <EmptyState
+            action={
+              <Link
+                className="rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white"
+                href="/upload"
+              >
+                {t("goToUpload")}
+              </Link>
+            }
+            description={t("noRoundsYetHint")}
+            title={t("noRoundsYet")}
+          />
+        )}
 
         <section className="rounded-md border border-line bg-white">
           <div className="border-b border-line px-4 py-3 text-sm text-muted">

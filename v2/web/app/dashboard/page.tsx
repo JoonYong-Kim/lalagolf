@@ -74,7 +74,7 @@ export default function DashboardPage() {
               <h2 className="text-base font-semibold">{t("priorityInsights")}</h2>
             </div>
             <div className="divide-y divide-line">
-              {(summary?.priority_insights ?? []).map((insight) => (
+              {(summary?.priority_insights ?? []).slice(0, 3).map((insight) => (
                 <article className="p-4" key={`${insight.problem}-${insight.evidence}`}>
                   <h3 className="text-sm font-semibold">{insight.problem}</h3>
                   <p className="mt-2 text-sm leading-6 text-muted" title={insight.evidence}>

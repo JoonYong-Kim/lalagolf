@@ -7,6 +7,7 @@ from sqlalchemy import JSON, Date, DateTime, ForeignKey, Index, Numeric, Text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
+from app.models.constants import VISIBILITY_PRIVATE
 from app.models.mixins import TimestampMixin, UUIDPrimaryKeyMixin
 
 
@@ -43,6 +44,12 @@ class PracticeDiaryEntry(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_practice_diary_user_entry_date", "user_id", "entry_date"),
         Index("ix_practice_diary_user_category", "user_id", "category"),
         Index("ix_practice_diary_plan", "practice_plan_id"),
+        Index(
+            "ix_practice_diary_visibility_published",
+            "visibility",
+            "social_published_at",
+            "id",
+        ),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -68,6 +75,11 @@ class PracticeDiaryEntry(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     tags: Mapped[list[str]] = mapped_column(JSON, default=list, nullable=False)
     confidence: Mapped[str | None] = mapped_column(Text, nullable=True)
     mood: Mapped[str | None] = mapped_column(Text, nullable=True)
+    visibility: Mapped[str] = mapped_column(Text, default=VISIBILITY_PRIVATE, nullable=False)
+    social_published_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
 
 
 class RoundGoal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
@@ -77,6 +89,12 @@ class RoundGoal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("ix_round_goals_user_category", "user_id", "category"),
         Index("ix_round_goals_source_insight", "source_insight_id"),
         Index("ix_round_goals_practice_plan", "practice_plan_id"),
+        Index(
+            "ix_round_goals_visibility_published",
+            "visibility",
+            "social_published_at",
+            "id",
+        ),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -106,6 +124,11 @@ class RoundGoal(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     due_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     status: Mapped[str] = mapped_column(Text, default="active", nullable=False)
+    visibility: Mapped[str] = mapped_column(Text, default=VISIBILITY_PRIVATE, nullable=False)
+    social_published_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
     closed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 

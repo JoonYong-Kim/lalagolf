@@ -83,28 +83,6 @@ def recalculate_round_metrics(db: Session, *, owner: User, round_id: uuid.UUID) 
     return {"round_id": round_.id, "computed_status": round_.computed_status}
 
 
-def recalculate_user_expected_table(db: Session, *, owner: User) -> ExpectedScoreTable:
-    table = _recalculate_expected_table(db, owner)
-    db.commit()
-    return table
-
-
-def recalculate_shot_values(db: Session, *, owner: User) -> list[ShotValue]:
-    rounds = _owned_rounds(db, owner)
-    rows: list[ShotValue] = []
-    for round_ in rounds:
-        rows.extend(_replace_shot_values(db, owner=owner, round_=round_))
-    db.commit()
-    return rows
-
-
-def generate_insights(db: Session, *, owner: User) -> list[Insight]:
-    insights = _replace_insights(db, owner=owner)
-    _replace_snapshot(db, owner=owner, insights=insights)
-    db.commit()
-    return insights
-
-
 def get_trends(db: Session, *, owner: User, locale: str | None = None) -> dict[str, Any]:
     snapshot = _latest_trend_snapshot(db, owner)
     if snapshot is not None:

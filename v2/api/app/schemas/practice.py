@@ -53,6 +53,18 @@ class PracticeDiaryCreateRequest(BaseModel):
     tags: list[str] = Field(default_factory=list)
     confidence: str | None = None
     mood: str | None = None
+    visibility: str | None = Field(default=None, pattern="^(private|followers|public)$")
+
+
+class PracticeDiaryUpdateRequest(BaseModel):
+    entry_date: date | None = None
+    title: str | None = None
+    body: str | None = None
+    category: str | None = None
+    tags: list[str] | None = None
+    confidence: str | None = None
+    mood: str | None = None
+    visibility: str | None = Field(default=None, pattern="^(private|followers|public)$")
 
 
 class PracticeDiaryResponse(BaseModel):
@@ -67,6 +79,8 @@ class PracticeDiaryResponse(BaseModel):
     tags: list[str]
     confidence: str | None
     mood: str | None
+    visibility: str
+    social_published_at: datetime | None
     created_at: datetime
     updated_at: datetime
 
@@ -85,6 +99,7 @@ class RoundGoalCreateRequest(BaseModel):
     applies_to: str = "next_round"
     due_round_id: UUID | None = None
     due_date: date | None = None
+    visibility: str | None = Field(default=None, pattern="^(private|followers|public)$")
 
 
 class RoundGoalUpdateRequest(BaseModel):
@@ -100,6 +115,7 @@ class RoundGoalUpdateRequest(BaseModel):
     due_round_id: UUID | None = None
     due_date: date | None = None
     status: str | None = None
+    visibility: str | None = Field(default=None, pattern="^(private|followers|public)$")
 
 
 class RoundGoalResponse(BaseModel):
@@ -118,6 +134,8 @@ class RoundGoalResponse(BaseModel):
     due_round_id: UUID | None
     due_date: date | None
     status: str
+    visibility: str
+    social_published_at: datetime | None
     closed_at: datetime | None
     created_at: datetime
     updated_at: datetime

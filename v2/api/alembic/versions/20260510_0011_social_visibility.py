@@ -36,7 +36,10 @@ def upgrade() -> None:
         sa.Column("accepted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("blocked_at", sa.DateTime(timezone=True), nullable=True),
         *timestamp_columns(),
-        sa.CheckConstraint("status in ('pending', 'accepted', 'blocked')", name=op.f("ck_follows_status")),
+        sa.CheckConstraint(
+            "status in ('pending', 'accepted', 'blocked')",
+            name=op.f("ck_follows_status"),
+        ),
         sa.ForeignKeyConstraint(
             ["follower_id"],
             ["users.id"],
@@ -82,7 +85,10 @@ def upgrade() -> None:
         sa.Column("status", sa.Text(), nullable=False),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         *timestamp_columns(),
-        sa.CheckConstraint("status in ('active', 'deleted', 'hidden')", name=op.f("ck_round_comments_status")),
+        sa.CheckConstraint(
+            "status in ('active', 'deleted', 'hidden')",
+            name=op.f("ck_round_comments_status"),
+        ),
         sa.ForeignKeyConstraint(
             ["round_id"],
             ["rounds.id"],

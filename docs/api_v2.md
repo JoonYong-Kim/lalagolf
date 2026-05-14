@@ -138,7 +138,6 @@ Request:
   "handle": "lala",
   "bio": "Weekend golfer",
   "privacy_default": "private",
-  "share_course_by_default": false,
   "share_exact_date_by_default": false
 }
 ```
@@ -261,7 +260,6 @@ Request:
 
 ```json
 {
-  "share_course": false,
   "share_exact_date": false
 }
 ```
@@ -376,7 +374,6 @@ Request:
   "course_name": "Sky72",
   "play_date": "2026-04-10",
   "visibility": "link_only",
-  "share_course": true,
   "share_exact_date": false,
   "notes_private": "Driver felt unstable"
 }
@@ -536,11 +533,12 @@ Request:
 These endpoints close the loop from analysis to action:
 
 - create a practice plan from an insight,
-- record practice discoveries in a private diary,
+- record practice discoveries in a diary that is private by default and can be shared explicitly,
 - define a measurable next-round goal,
 - evaluate the goal after a round is committed or recalculated.
 
-All endpoints are owner-scoped and require authentication.
+Owner write endpoints require authentication. Public/follower-visible read endpoints use
+public-safe serializers.
 
 ### GET /practice/plans
 
@@ -614,7 +612,7 @@ Request:
 
 ### GET /practice/diary
 
-Lists private practice diary entries.
+Lists the current user's practice diary entries.
 
 Query:
 
@@ -625,7 +623,7 @@ Query:
 
 ### POST /practice/diary
 
-Creates a diary entry.
+Creates a diary entry. Entries are private by default.
 
 Request:
 
@@ -637,7 +635,64 @@ Request:
   "body": "8m uphill putts were consistently short. 6m downhill putts needed a smaller stroke than expected.",
   "category": "putting",
   "tags": ["lag-putt", "distance-control"],
-  "confidence": "medium"
+  "confidence": "medium",
+  "visibility": "private"
+}
+```
+
+### PATCH /practice/diary/{entry_id}
+
+Updates diary content or visibility.
+
+Request:
+
+```json
+{
+  "visibility": "public"
+}
+```
+
+Visibility values:
+
+- `private`
+- `followers`
+- `public`
+
+When a diary entry becomes `public` or `followers`, set `social_published_at` if it is not already
+set. When it becomes `private`, clear `social_published_at`.
+
+### GET /practice/diary/public/{entry_id}
+
+Returns a public-safe diary entry.
+
+Auth:
+
+- Optional for `public`.
+- Required for `followers`.
+
+Response:
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "owner": {
+      "id": "uuid",
+      "display_name": "Lala Golfer",
+      "handle": "lala"
+    },
+    "visibility": "public",
+    "entry_date": "2026-05-10",
+    "title": "Lag putting discovery",
+    "body": "8m uphill putts were consistently short.",
+    "category": "putting",
+    "tags": ["lag-putt", "distance-control"],
+    "linked_round": {
+      "round_id": "uuid",
+      "course_name": "베르힐영종",
+      "play_month": "2026-04"
+    }
+  }
 }
 ```
 
@@ -652,7 +707,7 @@ Query:
 
 ### POST /goals
 
-Creates a measurable goal for a future round.
+Creates a measurable goal for a future round. Goals are private by default.
 
 Request:
 
@@ -666,7 +721,8 @@ Request:
   "target_operator": "<=",
   "target_value": 1,
   "applies_to": "next_round",
-  "due_date": "2026-05-20"
+  "due_date": "2026-05-20",
+  "visibility": "private"
 }
 ```
 
@@ -683,7 +739,55 @@ Supported first-pass `metric_key` candidates:
 
 ### PATCH /goals/{goal_id}
 
-Updates goal content or status.
+Updates goal content, status, or visibility.
+
+Request:
+
+```json
+{
+  "visibility": "followers"
+}
+```
+
+When a goal becomes `public` or `followers`, set `social_published_at` if it is not already set.
+When it becomes `private`, clear `social_published_at`.
+
+### GET /goals/public/{goal_id}
+
+Returns a public-safe round goal.
+
+Auth:
+
+- Optional for `public`.
+- Required for `followers`.
+
+Response:
+
+```json
+{
+  "data": {
+    "id": "uuid",
+    "owner": {
+      "id": "uuid",
+      "display_name": "Lala Golfer",
+      "handle": "lala"
+    },
+    "visibility": "followers",
+    "title": "Keep 3-putts to one or fewer",
+    "description": "Distance control first, avoid leaving long second putts.",
+    "category": "putting",
+    "target": {
+      "metric_key": "three_putt_holes",
+      "operator": "<=",
+      "value": 1
+    },
+    "applies_to": "next_round",
+    "due_date": "2026-05-20",
+    "status": "active",
+    "latest_evaluation": null
+  }
+}
+```
 
 ### POST /goals/{goal_id}/evaluate
 
@@ -775,6 +879,7 @@ Public route, not under `/api/v1` if rendered by Next.js. API equivalent can be:
 
 Returns public-safe serialized resource. For shared scorecards, `insights` contains at most one
 public-safe top issue for that round.
+Shared scorecards show `course_name`; exact `play_date` still follows `share_exact_date`.
 
 Query:
 
@@ -787,7 +892,7 @@ Response excerpt:
   "data": {
     "title": "Weekend round",
     "round": {
-      "course_name": "Shared course",
+      "course_name": "베르힐영종",
       "play_date": null,
       "play_month": "2026-04",
       "total_score": 91
@@ -811,8 +916,113 @@ Response excerpt:
 
 ## 13. Social
 
-Social features are centered on visibility, follows, and direct interactions rather than a ranked feed.
+Social features are centered on visibility, follows, direct interactions, and a chronological
+scroll feed. The feed is not a ranked public feed; it is a keyset-paginated list of rounds,
+practice diary entries, and round goals the viewer is allowed to see.
 See also: [social_relations_v2.md](social_relations_v2.md)
+
+### GET /social/feed
+
+Returns a scrollable social feed.
+
+Auth:
+
+- Optional.
+- Logged-out viewers only receive `public` items.
+- Logged-in viewers receive `public` items plus `followers` items from accepted follow
+  relationships.
+
+Query:
+
+- `scope`: `all`, `public`, or `following`. Default `all`.
+- `cursor`: opaque cursor from the previous response.
+- `limit`: default 20, max 50.
+- `locale`: `ko` or `en`, default `ko`.
+- `include_self`: default false.
+
+Response:
+
+```json
+{
+  "data": [
+    {
+      "item_type": "round",
+      "item_id": "uuid",
+      "round_id": "uuid",
+      "owner": {
+        "id": "uuid",
+        "display_name": "Lala Golfer",
+        "handle": "lala"
+      },
+      "visibility": "public",
+      "social_published_at": "2026-05-10T12:00:00Z",
+      "course_name": "베르힐영종",
+      "play_date": null,
+      "play_month": "2026-04",
+      "total_score": 82,
+      "score_to_par": 10,
+      "hole_count": 18,
+      "metrics": {
+        "putts_total": 32,
+        "gir_count": 7,
+        "penalties_total": 2
+      },
+      "top_insight": {
+        "category": "putting",
+        "problem": "3퍼트가 이 라운드의 최우선 이슈입니다.",
+        "confidence": "medium"
+      },
+      "like_count": 3,
+      "comment_count": 1,
+      "liked_by_me": false,
+      "viewer_can_react": true
+    }
+  ],
+  "meta": {
+    "next_cursor": "opaque-cursor",
+    "has_more": true
+  }
+}
+```
+
+Notes:
+
+- `link_only` and `private` rounds never appear in the feed.
+- `followers` rounds require an accepted follow relationship.
+- `course_name` is shown for public/follower-visible rounds.
+- `play_date` follows `share_exact_date`; when false, return `play_date: null` and `play_month`.
+- Public round cards include at most one `top_insight`.
+- Public or follower-visible practice diary entries and round goals may also appear as feed items.
+- Feed cards must not include companion names, private notes, source files, upload raw text, shot
+  raw text, link-only tokens, or private LLM/practice data.
+- Ordering is `social_published_at desc, item_id desc`.
+
+### GET /companions/links
+
+Returns the current user's explicit companion-to-account mappings. These mappings are private and
+must not be included in public/shared/feed responses.
+
+### POST /companions/links
+
+Creates or updates a private mapping from a companion name in the current user's scorecards to a
+registered user account.
+
+Request:
+
+```json
+{
+  "companion_name": "홍성걸",
+  "companion_email": "companion@example.com"
+}
+```
+
+`companion_user_id` may be sent instead of `companion_email`.
+
+### GET /rounds/{round_id}/comparison-candidates
+
+Returns comparison candidates only for the current user's own round. Candidates are found from
+explicit companion-account mappings, same course, same play date, and same tee-off time when the
+base round has one. Candidate rounds must still pass the normal visibility rules.
 
 ### GET /rounds/public
 
@@ -951,7 +1161,6 @@ Request:
 ```json
 {
   "privacy_default": "private",
-  "share_course_by_default": false,
   "share_exact_date_by_default": false
 }
 ```

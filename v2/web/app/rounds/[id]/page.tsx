@@ -5,10 +5,11 @@ import { use, useEffect, useMemo, useState } from "react";
 
 import { AppShell } from "@/app/components/AppShell";
 import {
+  createCompanionAccountLink,
   createRoundComment,
   createShare,
-  getRound,
   getComparisonCandidates,
+  getRound,
   getRoundAnalytics,
   getRoundAnalysisJob,
   getRoundComments,
@@ -45,6 +46,10 @@ export default function RoundDetailPage({ params }: { params: Promise<{ id: stri
   const [isRecalculating, setIsRecalculating] = useState(false);
   const [compareCandidates, setCompareCandidates] = useState<CompareCandidate[]>([]);
   const [showCompareCandidates, setShowCompareCandidates] = useState(false);
+  const [companionLinkName, setCompanionLinkName] = useState("");
+  const [companionLinkEmail, setCompanionLinkEmail] = useState("");
+  const [companionLinkMessage, setCompanionLinkMessage] = useState("");
+  const [companionLinkSaving, setCompanionLinkSaving] = useState(false);
   const [comments, setComments] = useState<RoundComment[]>([]);
   const [commentBody, setCommentBody] = useState("");
   const [likeState, setLikeState] = useState<RoundLikeState | null>(null);
@@ -59,6 +64,7 @@ export default function RoundDetailPage({ params }: { params: Promise<{ id: stri
         setRound(loaded);
         setVisibilityDraft(loaded.visibility as RoundVisibility);
         setSelectedHoleNumber(loaded.holes[0]?.hole_number ?? 1);
+        setCompanionLinkName((current) => current || loaded.companions[0] || "");
         if (loaded.companions.length > 0) {
           getComparisonCandidates(loaded.id)
             .then((candidates) => {
@@ -114,6 +120,30 @@ export default function RoundDetailPage({ params }: { params: Promise<{ id: stri
     ]);
     setRound(loadedRound);
     setAnalytics(loadedAnalytics);
+  }
+
+  async function saveCompanionLink() {
+    if (!companionLinkName.trim() || !companionLinkEmail.trim()) {
+      setCompanionLinkMessage(t("companionLinkRequired"));
+      return;
+    }
+    setCompanionLinkSaving(true);
+    setCompanionLinkMessage("");
+    try {
+      await createCompanionAccountLink({
+        companion_name: companionLinkName.trim(),
+        companion_email: companionLinkEmail.trim(),
+      });
+      setCompanionLinkEmail("");
+      setCompanionLinkMessage(t("companionLinkSaved"));
+      if (round) {
+        setCompareCandidates(await getComparisonCandidates(round.id));
+      }
+    } catch (linkError) {
+      setCompanionLinkMessage(linkError instanceof Error ? linkError.message : t("companionLinkFailed"));
+    } finally {
+      setCompanionLinkSaving(false);
+    }
   }
 
   async function trackAnalysisJob(jobId: string) {
@@ -341,6 +371,43 @@ export default function RoundDetailPage({ params }: { params: Promise<{ id: stri
           <section className="rounded-md border border-line bg-white">
             <div className="border-b border-line px-4 py-3">
               <h2 className="text-base font-semibold">{t("compareCandidates")}</h2>
+            </div>
+            <div className="border-b border-line p-4">
+              <div className="grid gap-3 md:grid-cols-[1fr_1fr_auto]">
+                <label className="grid gap-1 text-sm font-semibold">
+                  {t("companionName")}
+                  <select
+                    className="rounded-md border border-line px-3 py-2 text-sm font-normal"
+                    onChange={(event) => setCompanionLinkName(event.target.value)}
+                    value={companionLinkName}
+                  >
+                    {(round?.companions ?? []).map((companion) => (
+                      <option key={companion} value={companion}>
+                        {companion}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="grid gap-1 text-sm font-semibold">
+                  {t("companionEmail")}
+                  <input
+                    className="rounded-md border border-line px-3 py-2 text-sm font-normal"
+                    onChange={(event) => setCompanionLinkEmail(event.target.value)}
+                    placeholder="companion@example.com"
+                    type="email"
+                    value={companionLinkEmail}
+                  />
+                </label>
+                <button
+                  className="self-end rounded-md bg-green-700 px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  disabled={companionLinkSaving}
+                  onClick={saveCompanionLink}
+                  type="button"
+                >
+                  {companionLinkSaving ? t("saving") : t("saveCompanionLink")}
+                </button>
+              </div>
+              {companionLinkMessage && <p className="mt-2 text-sm text-muted">{companionLinkMessage}</p>}
             </div>
             <div className="grid gap-2 p-4">
               {compareCandidates.length === 0 ? (

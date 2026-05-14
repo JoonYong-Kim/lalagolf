@@ -10,6 +10,7 @@ from app.schemas.practice import (
     ManualGoalEvaluationRequest,
     PracticeDiaryCreateRequest,
     PracticeDiaryResponse,
+    PracticeDiaryUpdateRequest,
     PracticePlanCreateRequest,
     PracticePlanResponse,
     PracticePlanUpdateRequest,
@@ -22,13 +23,14 @@ from app.services.practice import (
     PracticeValidationError,
     create_diary_entry,
     create_goal,
-    delete_goal,
     create_manual_evaluation,
     create_practice_plan,
+    delete_goal,
     evaluate_goal,
     list_diary_entries,
     list_goals,
     list_practice_plans,
+    update_diary_entry,
     update_goal,
     update_practice_plan,
 )
@@ -122,6 +124,30 @@ def create_diary(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Source not found",
         ) from exc
+    return {"data": PracticeDiaryResponse(**entry)}
+
+
+@router.patch("/practice/diary/{entry_id}")
+def patch_diary(
+    entry_id: UUID,
+    payload: PracticeDiaryUpdateRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> dict[str, PracticeDiaryResponse]:
+    try:
+        entry = update_diary_entry(
+            db,
+            owner=current_user,
+            entry_id=entry_id,
+            values=payload.model_dump(exclude_unset=True),
+        )
+    except PracticeNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Diary entry not found",
+        ) from exc
+    except PracticeValidationError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     return {"data": PracticeDiaryResponse(**entry)}
 
 

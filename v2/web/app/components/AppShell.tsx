@@ -18,6 +18,7 @@ import { useI18n, type MessageKey } from "@/lib/i18n";
 const navItems: Array<{ href: string; labelKey: MessageKey; adminOnly?: boolean }> = [
   { href: "/dashboard", labelKey: "navDashboard" },
   { href: "/rounds", labelKey: "navRounds" },
+  { href: "/social", labelKey: "navSocial" },
   { href: "/analysis", labelKey: "navAnalysis" },
   { href: "/practice", labelKey: "navPractice" },
   { href: "/goals", labelKey: "navGoals" },

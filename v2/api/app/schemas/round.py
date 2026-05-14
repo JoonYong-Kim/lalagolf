@@ -52,6 +52,7 @@ class RoundListItem(BaseModel):
     hole_count: int
     computed_status: str
     visibility: str = "private"
+    share_exact_date: bool = False
     companions: list[str] = Field(default_factory=list)
 
 
@@ -69,6 +70,7 @@ class RoundDetailResponse(RoundListItem):
     weather: str | None
     target_score: int | None
     visibility: str
+    social_published_at: str | None = None
     notes_private: str | None
     holes: list[HoleResponse] = Field(default_factory=list)
     insights: list[dict] = Field(default_factory=list)
@@ -83,6 +85,7 @@ class RoundUpdateRequest(BaseModel):
     weather: str | None = None
     target_score: int | None = None
     visibility: str | None = Field(default=None, pattern="^(private|link_only|public|followers)$")
+    share_exact_date: bool | None = None
     notes_private: str | None = None
 
 

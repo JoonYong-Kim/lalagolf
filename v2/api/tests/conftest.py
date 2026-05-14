@@ -39,6 +39,7 @@ def client(db_session: Session, tmp_path: Path) -> Generator[TestClient, None, N
     settings = get_settings()
     settings.upload_storage_dir = str(tmp_path / "uploads")
     settings.upload_max_bytes = 100_000
+    settings.analysis_inline_fallback = False
 
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_settings] = lambda: settings

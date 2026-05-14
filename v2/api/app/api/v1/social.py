@@ -2,8 +2,10 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.api.deps import CurrentUser, DbSession
+from app.api.deps import CurrentUser, DbSession, OptionalCurrentUser
 from app.schemas.social import (
+    CompanionAccountLinkCreateRequest,
+    CompanionAccountLinkResponse,
     CompareCandidateResponse,
     FollowCreateRequest,
     FollowResponse,
@@ -13,27 +15,95 @@ from app.schemas.social import (
     RoundCommentCreateRequest,
     RoundCommentResponse,
     RoundLikeResponse,
+    SocialFeedItemResponse,
 )
 from app.services.social import (
     SocialAccessError,
     SocialNotFoundError,
     add_comment,
     add_like,
+    create_companion_account_link,
     create_follow,
     delete_comment,
     delete_follow,
     follow_payload,
     get_public_round_detail,
+    list_companion_account_links,
     list_comparison_candidates,
     list_follows,
     list_public_rounds,
     list_round_comments,
+    list_social_feed,
     load_viewable_round,
     remove_like,
     update_follow,
 )
 
 router = APIRouter(tags=["social"])
+
+
+@router.get("/companions/links")
+def read_companion_account_links(
+    db: DbSession,
+    current_user: CurrentUser,
+) -> dict[str, list[CompanionAccountLinkResponse]]:
+    links = list_companion_account_links(db, owner=current_user)
+    return {"data": [CompanionAccountLinkResponse(**item) for item in links]}
+
+
+@router.post("/companions/links", status_code=status.HTTP_201_CREATED)
+def create_companion_link(
+    payload: CompanionAccountLinkCreateRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> dict[str, CompanionAccountLinkResponse]:
+    try:
+        link = create_companion_account_link(
+            db,
+            owner=current_user,
+            companion_name=payload.companion_name,
+            companion_user_id=payload.companion_user_id,
+            companion_email=payload.companion_email,
+        )
+    except SocialNotFoundError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Companion user not found",
+        ) from exc
+    except SocialAccessError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    return {"data": CompanionAccountLinkResponse(**link)}
+
+
+@router.get("/social/feed")
+def read_social_feed(
+    db: DbSession,
+    current_user: OptionalCurrentUser,
+    scope: str = Query(default="all", pattern="^(all|public|following)$"),
+    cursor: str | None = None,
+    limit: int = Query(default=20, ge=1, le=50),
+    locale: str = Query(default="ko", pattern="^(ko|en)$"),
+    include_self: bool = False,
+) -> dict[str, object]:
+    try:
+        payload = list_social_feed(
+            db,
+            viewer=current_user,
+            scope=scope,
+            cursor=cursor,
+            limit=limit,
+            locale=locale,
+            include_self=include_self,
+        )
+    except SocialAccessError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+    return {
+        "data": [SocialFeedItemResponse(**item) for item in payload["items"]],
+        "meta": {
+            "next_cursor": payload["next_cursor"],
+            "has_more": payload["has_more"],
+        },
+    }
 
 
 @router.get("/rounds/public")
@@ -90,6 +160,8 @@ def read_comparison_candidates(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Round not found",
         ) from exc
+    except SocialAccessError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
     return {"data": [CompareCandidateResponse(**item) for item in candidates]}
 
 

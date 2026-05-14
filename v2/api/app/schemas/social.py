@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from decimal import Decimal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -84,6 +85,23 @@ class FollowResponse(BaseModel):
     following_handle: str | None = None
 
 
+class CompanionAccountLinkCreateRequest(BaseModel):
+    companion_name: str = Field(min_length=1, max_length=200)
+    companion_user_id: UUID | None = None
+    companion_email: str | None = Field(default=None, max_length=320)
+
+
+class CompanionAccountLinkResponse(BaseModel):
+    id: UUID
+    companion_name: str
+    companion_user_id: UUID
+    companion_email: str
+    companion_display_name: str
+    companion_handle: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
 class RoundLikeResponse(BaseModel):
     round_id: UUID
     like_count: int
@@ -118,3 +136,59 @@ class CompareCandidateResponse(BaseModel):
     visibility: str
     owner_display_name: str
     owner_handle: str | None = None
+
+
+class SocialFeedOwnerResponse(BaseModel):
+    id: UUID
+    display_name: str
+    handle: str | None = None
+
+
+class SocialFeedLinkedRoundResponse(BaseModel):
+    round_id: UUID
+    course_name: str
+    play_month: str
+
+
+class SocialFeedTargetResponse(BaseModel):
+    metric_key: str
+    operator: str
+    value: Decimal | None = None
+    value_max: Decimal | None = None
+
+
+class SocialFeedItemResponse(BaseModel):
+    item_type: str
+    item_id: UUID
+    owner: SocialFeedOwnerResponse
+    visibility: str
+    social_published_at: datetime
+    round_id: UUID | None = None
+    course_name: str | None = None
+    play_date: date | None = None
+    play_month: str | None = None
+    total_score: int | None = None
+    score_to_par: int | None = None
+    hole_count: int | None = None
+    metrics: dict = Field(default_factory=dict)
+    top_insight: dict | None = None
+    like_count: int = 0
+    comment_count: int = 0
+    liked_by_me: bool = False
+    viewer_can_react: bool = False
+    entry_date: date | None = None
+    title: str | None = None
+    body_preview: str | None = None
+    description: str | None = None
+    category: str | None = None
+    tags: list[str] = Field(default_factory=list)
+    linked_round: SocialFeedLinkedRoundResponse | None = None
+    target: SocialFeedTargetResponse | None = None
+    status: str | None = None
+    due_date: date | None = None
+    latest_evaluation: dict | None = None
+
+
+class SocialFeedMetaResponse(BaseModel):
+    next_cursor: str | None = None
+    has_more: bool = False
