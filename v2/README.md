@@ -179,6 +179,24 @@ cd v2
 sudo bash scripts/install_systemd.sh
 ```
 
+For a server that users access through a hostname, domain, or public IP, pass the public host when
+installing so the browser does not call `localhost`:
+
+```bash
+cd v2
+sudo PUBLIC_HOST=croft bash scripts/install_systemd.sh
+```
+
+For a domain or reverse-proxy HTTPS deployment, set the exact public origins:
+
+```bash
+cd v2
+sudo \
+  PUBLIC_WEB_ORIGIN=https://golf.example.com \
+  PUBLIC_API_BASE_URL=https://golf.example.com/api/v1 \
+  bash scripts/install_systemd.sh
+```
+
 This installs three services:
 
 - `lalagolf-v2-api.service`
@@ -188,7 +206,9 @@ This installs three services:
 The installer writes `/etc/lalagolf-v2/lalagolf-v2.env`, installs application files under
 `/opt/lalagolf-v2`, stores uploads under `/var/lib/lalagolf-v2/uploads`, builds the web app, and
 runs Alembic migrations. Set `SKIP_DB_MIGRATION=true` when running the installer if PostgreSQL is
-not ready yet.
+not ready yet. If `/etc/lalagolf-v2/lalagolf-v2.env` already exists, review and update
+`NEXT_PUBLIC_API_BASE_URL`, `CORS_ORIGINS`, `WEB_BASE_URL`, and `GOOGLE_OAUTH_REDIRECT_URI` before
+rebuilding/restarting services.
 
 Uninstall the systemd deployment:
 

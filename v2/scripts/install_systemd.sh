@@ -76,10 +76,20 @@ setup_env_file() {
 
     if [[ ! -f "${ENV_FILE}" ]]; then
         local secret
+        local public_host
+        local public_web_origin
+        local public_api_base_url
+        local cors_origins
+        local google_oauth_redirect_uri
         secret="$(python3 -c 'import secrets; print(secrets.token_hex(32))')"
+        public_host="${PUBLIC_HOST:-${LALAGOLF_PUBLIC_HOST:-$(hostname -f 2>/dev/null || hostname)}}"
+        public_web_origin="${PUBLIC_WEB_ORIGIN:-${WEB_BASE_URL:-http://${public_host}:2323}}"
+        public_api_base_url="${PUBLIC_API_BASE_URL:-${NEXT_PUBLIC_API_BASE_URL:-http://${public_host}:2324/api/v1}}"
+        cors_origins="${CORS_ORIGINS:-${public_web_origin}}"
+        google_oauth_redirect_uri="${GOOGLE_OAUTH_REDIRECT_URI:-${public_api_base_url}/auth/google/callback}"
         cat > "${ENV_FILE}" <<EOF
 LALAGOLF_ENV=production
-NEXT_PUBLIC_API_BASE_URL=http://localhost:2324/api/v1
+NEXT_PUBLIC_API_BASE_URL=${public_api_base_url}
 DATABASE_URL=postgresql+psycopg://lalagolf:lalagolf@localhost:5432/lalagolf_v2
 REDIS_URL=redis://localhost:6379/0
 ANALYSIS_ENQUEUE_ENABLED=true
@@ -91,11 +101,11 @@ REQUEST_ID_HEADER=X-Request-ID
 LOG_LEVEL=INFO
 UPLOAD_STORAGE_DIR=${UPLOAD_DIR}
 UPLOAD_MAX_BYTES=1000000
-CORS_ORIGINS=http://localhost:2323
-WEB_BASE_URL=http://localhost:2323
+CORS_ORIGINS=${cors_origins}
+WEB_BASE_URL=${public_web_origin}
 GOOGLE_OAUTH_CLIENT_ID=
 GOOGLE_OAUTH_CLIENT_SECRET=
-GOOGLE_OAUTH_REDIRECT_URI=http://localhost:2324/api/v1/auth/google/callback
+GOOGLE_OAUTH_REDIRECT_URI=${google_oauth_redirect_uri}
 ANALYSIS_QUEUE_NAME=analysis
 RQ_QUEUES=analysis
 WORKER_USE_RQ=true
@@ -105,6 +115,8 @@ OLLAMA_BASE_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.1
 OLLAMA_TIMEOUT_SECONDS=5
 EOF
+    else
+        echo "Keeping existing ${ENV_FILE}. Review NEXT_PUBLIC_API_BASE_URL, CORS_ORIGINS, WEB_BASE_URL, and GOOGLE_OAUTH_REDIRECT_URI for the public host."
     fi
 }
 
